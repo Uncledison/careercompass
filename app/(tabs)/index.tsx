@@ -13,7 +13,7 @@ import {
 import { useRouter, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { Circle, Path, Rect, G, Defs, LinearGradient as SvgGradient, Stop } from 'react-native-svg';
+import LottieView from 'lottie-react-native';
 import { Colors, Spacing, BorderRadius, Shadow, TextStyle } from '../../src/constants';
 import { useAssessmentStore, SavedAssessmentState } from '../../src/stores/assessmentStore';
 import { useProfileStore } from '../../src/stores/profileStore';
@@ -21,21 +21,16 @@ import { useProfileStore } from '../../src/stores/profileStore';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_WIDTH = SCREEN_WIDTH - Spacing.lg * 2;
 
-// 작은 캐릭터 아바타
+// 작은 캐릭터 아바타 (Lottie)
 const SmallCharacter = () => (
-  <Svg width={48} height={48} viewBox="0 0 48 48">
-    <Defs>
-      <SvgGradient id="miniGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <Stop offset="0%" stopColor={Colors.primary.main} />
-        <Stop offset="100%" stopColor={Colors.secondary.main} />
-      </SvgGradient>
-    </Defs>
-    <Circle cx={24} cy={24} r={22} fill="url(#miniGrad)" />
-    <Circle cx={24} cy={26} r={14} fill={Colors.character.skin.light} />
-    <Circle cx={20} cy={24} r={2} fill={Colors.character.hair.black} />
-    <Circle cx={28} cy={24} r={2} fill={Colors.character.hair.black} />
-    <Path d="M 20 30 Q 24 34 28 30" stroke={Colors.character.mouth} strokeWidth={2} fill="none" />
-  </Svg>
+  <View style={styles.smallCharacterContainer}>
+    <LottieView
+      source={require('../../assets/girl-waving.json')}
+      autoPlay
+      loop
+      style={styles.smallCharacterLottie}
+    />
+  </View>
 );
 
 // 학년 선택 카드
@@ -708,5 +703,17 @@ const styles = StyleSheet.create({
     color: Colors.text.inverse,
     fontWeight: '300',
     lineHeight: 22,
+  },
+  // Lottie 캐릭터 스타일
+  smallCharacterContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    overflow: 'hidden',
+    backgroundColor: Colors.primary.main + '15',
+  },
+  smallCharacterLottie: {
+    width: 56,
+    height: 56,
   },
 });
