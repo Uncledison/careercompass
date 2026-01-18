@@ -1,0 +1,712 @@
+import React, { useEffect, useState, useRef, useCallback } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Pressable,
+  Dimensions,
+  Platform,
+  Animated,
+  Easing,
+} from 'react-native';
+import { useRouter, useFocusEffect } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import Svg, { Circle, Path, Rect, G, Defs, LinearGradient as SvgGradient, Stop } from 'react-native-svg';
+import { Colors, Spacing, BorderRadius, Shadow, TextStyle } from '../../src/constants';
+import { useAssessmentStore, SavedAssessmentState } from '../../src/stores/assessmentStore';
+import { useProfileStore } from '../../src/stores/profileStore';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const CARD_WIDTH = SCREEN_WIDTH - Spacing.lg * 2;
+
+// 작은 캐릭터 아바타
+const SmallCharacter = () => (
+  <Svg width={48} height={48} viewBox="0 0 48 48">
+    <Defs>
+      <SvgGradient id="miniGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <Stop offset="0%" stopColor={Colors.primary.main} />
+        <Stop offset="100%" stopColor={Colors.secondary.main} />
+      </SvgGradient>
+    </Defs>
+    <Circle cx={24} cy={24} r={22} fill="url(#miniGrad)" />
+    <Circle cx={24} cy={26} r={14} fill={Colors.character.skin.light} />
+    <Circle cx={20} cy={24} r={2} fill={Colors.character.hair.black} />
+    <Circle cx={28} cy={24} r={2} fill={Colors.character.hair.black} />
+    <Path d="M 20 30 Q 24 34 28 30" stroke={Colors.character.mouth} strokeWidth={2} fill="none" />
+  </Svg>
+);
+
+// 학년 선택 카드
+interface GradeLevelCardProps {
+  title: string;
+  subtitle: string;
+  emoji: string;
+  colors: readonly [string, string, ...string[]];
+  onPress: () => void;
+}
+
+const GradeLevelCard = ({ title, subtitle, emoji, colors, onPress }: GradeLevelCardProps) => (
+  <Pressable
+    style={({ pressed }) => [
+      styles.gradeLevelCard,
+      pressed && styles.gradeLevelCardPressed,
+    ]}
+    onPress={onPress}
+  >
+    <LinearGradient
+      colors={colors}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={styles.gradeLevelCardGradient}
+    >
+      <Text style={styles.gradeLevelEmoji}>{emoji}</Text>
+      <View>
+        <Text style={styles.gradeLevelTitle}>{title}</Text>
+        <Text style={styles.gradeLevelSubtitle}>{subtitle}</Text>
+      </View>
+    </LinearGradient>
+  </Pressable>
+);
+
+// 퀵 액션 버튼
+interface QuickActionProps {
+  icon: string;
+  label: string;
+  onPress: () => void;
+}
+
+const QuickAction = ({ icon, label, onPress }: QuickActionProps) => (
+  <Pressable
+    style={({ pressed }) => [
+      styles.quickAction,
+      pressed && styles.quickActionPressed,
+    ]}
+    onPress={onPress}
+  >
+    <View style={styles.quickActionIcon}>
+      <Text style={styles.quickActionEmoji}>{icon}</Text>
+    </View>
+    <Text style={styles.quickActionLabel}>{label}</Text>
+  </Pressable>
+);
+
+// 이론 배지 컴포넌트 - 반짝반짝 펄스 효과
+const TheoryBadge = () => {
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const glowAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    // 펄스 효과 (살짝 커졌다 작아짐)
+    const pulseAnimation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1.02,
+          duration: 1500,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 1500,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+
+    // 글로우 효과 (밝기 변화)
+    const glowAnimation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(glowAnim, {
+          toValue: 1,
+          duration: 2000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(glowAnim, {
+          toValue: 0,
+          duration: 2000,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+
+    pulseAnimation.start();
+    glowAnimation.start();
+
+    return () => {
+      pulseAnimation.stop();
+      glowAnimation.stop();
+    };
+  }, []);
+
+  const animatedStyle = {
+    transform: [{ scale: pulseAnim }],
+    opacity: glowAnim.interpolate({
+      inputRange: [0, 1],
+      outputRange: [0.85, 1],
+    }),
+  };
+
+  return (
+    <Animated.View style={[styles.theoryBadge, animatedStyle]}>
+      <LinearGradient
+        colors={[Colors.primary.main + '15', Colors.secondary.main + '15'] as const}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={styles.theoryBadgeGradient}
+      >
+        <Text style={styles.theoryBadgeIcon}>🎓</Text>
+        <View style={styles.theoryBadgeTextContainer}>
+          <Text style={styles.theoryBadgeTitle}>과학적 검사 기반</Text>
+          <Text style={styles.theoryBadgeSubtitle}>
+            HOLLAND 직업흥미이론 · 다중지능이론 · 진로발달이론
+          </Text>
+        </View>
+      </LinearGradient>
+    </Animated.View>
+  );
+};
+
+// 레벨 한글 변환
+const getLevelLabel = (level: string): string => {
+  switch (level) {
+    case 'elementary_lower':
+    case 'elementary_upper':
+      return '초등학생';
+    case 'middle':
+      return '중학생';
+    case 'high':
+      return '고등학생';
+    default:
+      return '검사';
+  }
+};
+
+// 레벨을 라우트 파라미터로 변환
+const getLevelRoute = (level: string): string => {
+  if (level.startsWith('elementary')) return 'elementary';
+  return level;
+};
+
+export default function HomeScreen() {
+  const router = useRouter();
+  const [savedProgress, setSavedProgress] = useState<SavedAssessmentState | null>(null);
+  const { loadSavedProgress, resumeAssessment, clearSavedProgress } = useAssessmentStore();
+  const { profile, loadProfile } = useProfileStore();
+
+  // 저장된 진행 상태 확인 (화면 포커스 시마다)
+  useFocusEffect(
+    React.useCallback(() => {
+      const checkSavedProgress = async () => {
+        const saved = await loadSavedProgress();
+        setSavedProgress(saved);
+      };
+      checkSavedProgress();
+      loadProfile();
+    }, [])
+  );
+
+  const handleStartAssessment = (level: string) => {
+    router.push(`/assessment/${level}`);
+  };
+
+  // 이어하기
+  const handleResumeAssessment = async () => {
+    if (savedProgress) {
+      resumeAssessment(savedProgress);
+      router.push(`/assessment/${getLevelRoute(savedProgress.level)}`);
+    }
+  };
+
+  // 저장된 진행 삭제
+  const handleClearProgress = async () => {
+    if (Platform.OS === 'web') {
+      if (window.confirm('저장된 검사를 삭제하시겠습니까?')) {
+        await clearSavedProgress();
+        setSavedProgress(null);
+      }
+    } else {
+      const { Alert } = require('react-native');
+      Alert.alert(
+        '저장된 검사 삭제',
+        '저장된 검사를 삭제하시겠습니까?',
+        [
+          { text: '취소', style: 'cancel' },
+          {
+            text: '삭제',
+            style: 'destructive',
+            onPress: async () => {
+              await clearSavedProgress();
+              setSavedProgress(null);
+            },
+          },
+        ]
+      );
+    }
+  };
+
+  return (
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* 헤더 */}
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
+            <Text style={styles.greeting}>안녕하세요!</Text>
+            <Text style={styles.userName}>{profile?.nickname || '탐험가'}님</Text>
+          </View>
+          <Pressable
+            onPress={() => router.push('/(tabs)/profile')}
+            style={({ pressed }) => pressed && { opacity: 0.7 }}
+          >
+            <SmallCharacter />
+          </Pressable>
+        </View>
+
+        {/* 이어서 하기 카드 (저장된 진행 상태가 있을 때) */}
+        {savedProgress && (
+          <Pressable
+            style={({ pressed }) => [
+              styles.resumeCard,
+              pressed && styles.resumeCardPressed,
+            ]}
+            onPress={handleResumeAssessment}
+          >
+            <LinearGradient
+              colors={['#FF9500', '#FF6B00'] as const}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.resumeCardGradient}
+            >
+              <View style={styles.resumeCardContent}>
+                <View style={styles.resumeCardIcon}>
+                  <Text style={styles.resumeCardEmoji}>▶️</Text>
+                </View>
+                <View style={styles.resumeCardText}>
+                  <Text style={styles.resumeCardTitle}>이어서 하기</Text>
+                  <Text style={styles.resumeCardSubtitle}>
+                    {getLevelLabel(savedProgress.level)} · {savedProgress.currentQuestionIndex + 1}번 문항
+                  </Text>
+                </View>
+              </View>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.resumeDeleteButton,
+                  pressed && styles.resumeDeleteButtonPressed,
+                ]}
+                onPress={(e) => {
+                  e.stopPropagation();
+                  handleClearProgress();
+                }}
+              >
+                <Text style={styles.resumeDeleteText}>×</Text>
+              </Pressable>
+            </LinearGradient>
+          </Pressable>
+        )}
+
+        {/* 메인 CTA 카드 */}
+        <Pressable
+          style={({ pressed }) => [
+            styles.mainCard,
+            pressed && styles.mainCardPressed,
+          ]}
+          onPress={() => router.push('/(tabs)/assessment')}
+        >
+          <LinearGradient
+            colors={Colors.primary.gradient}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.mainCardGradient}
+          >
+            <View style={styles.mainCardContent}>
+              <View style={styles.mainCardText}>
+                <Text style={styles.mainCardTitle}>진로 탐험 시작하기</Text>
+                <Text style={styles.mainCardSubtitle}>
+                  나에게 맞는 미래를 발견해요
+                </Text>
+              </View>
+              <View style={styles.mainCardIcon}>
+                <Text style={styles.mainCardEmoji}>🚀</Text>
+              </View>
+            </View>
+            <View style={styles.mainCardBadge}>
+              <Text style={styles.mainCardBadgeText}>약 15분 소요</Text>
+            </View>
+          </LinearGradient>
+        </Pressable>
+
+        {/* 검사 기반 이론 안내 - 반짝반짝 효과 */}
+        <TheoryBadge />
+
+        {/* 학년별 검사 */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>학년별 검사</Text>
+          <View style={styles.gradeLevelCards}>
+            <GradeLevelCard
+              title="초등학생"
+              subtitle="3-6학년 · 게임 모드"
+              emoji="🎮"
+              colors={['#4ECDC4', '#44A08D'] as const}
+              onPress={() => handleStartAssessment('elementary')}
+            />
+            <GradeLevelCard
+              title="중학생"
+              subtitle="1-3학년 · 퀘스트 모드"
+              emoji="🧭"
+              colors={['#667eea', '#764ba2'] as const}
+              onPress={() => handleStartAssessment('middle')}
+            />
+            <GradeLevelCard
+              title="고등학생"
+              subtitle="1-3학년 · 분석 모드"
+              emoji="📊"
+              colors={['#f857a6', '#ff5858'] as const}
+              onPress={() => handleStartAssessment('high')}
+            />
+          </View>
+        </View>
+
+        {/* 퀵 액션 */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>빠른 메뉴</Text>
+          <View style={styles.quickActions}>
+            <QuickAction
+              icon="📋"
+              label="지난 결과"
+              onPress={() => router.push('/(tabs)/history')}
+            />
+            <QuickAction
+              icon="👨‍👩‍👧"
+              label="가족 연동"
+              onPress={() => {}}
+            />
+            <QuickAction
+              icon="📈"
+              label="통계 분석"
+              onPress={() => router.push('/stats')}
+            />
+            <QuickAction
+              icon="❓"
+              label="도움말"
+              onPress={() => router.push('/help')}
+            />
+          </View>
+        </View>
+
+        {/* 6대 계열 소개 */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>6대 진로 계열</Text>
+          <Text style={styles.sectionSubtitle}>탭하여 자세히 알아보세요</Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.careerFieldsScroll}
+          >
+            {[
+              { emoji: '📚', name: '인문', field: 'humanities', color: Colors.career.humanities.main },
+              { emoji: '🌍', name: '사회', field: 'social', color: Colors.career.social.main },
+              { emoji: '🔬', name: '자연', field: 'natural', color: Colors.career.natural.main },
+              { emoji: '🤖', name: '공학', field: 'engineering', color: Colors.career.engineering.main },
+              { emoji: '🏥', name: '의학', field: 'medicine', color: Colors.career.medicine.main },
+              { emoji: '🎨', name: '예체능', field: 'arts', color: Colors.career.arts.main },
+            ].map((item) => (
+              <Pressable
+                key={item.name}
+                style={({ pressed }) => [
+                  styles.careerFieldChip,
+                  { backgroundColor: item.color + '20' },
+                  pressed && styles.careerFieldChipPressed,
+                ]}
+                onPress={() => router.push(`/career/${item.field}`)}
+              >
+                <Text style={styles.careerFieldEmoji}>{item.emoji}</Text>
+                <Text style={[styles.careerFieldName, { color: item.color }]}>
+                  {item.name}
+                </Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background.secondary,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: Spacing.md,
+    paddingBottom: Spacing.xxl,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: Spacing.lg,
+  },
+  headerLeft: {
+    gap: 2,
+  },
+  greeting: {
+    ...TextStyle.subhead,
+    color: Colors.text.secondary,
+  },
+  userName: {
+    ...TextStyle.title2,
+    color: Colors.text.primary,
+  },
+  mainCard: {
+    borderRadius: BorderRadius.xl,
+    overflow: 'hidden',
+    marginBottom: Spacing.lg,
+    ...Shadow.lg,
+  },
+  mainCardPressed: {
+    opacity: 0.95,
+    transform: [{ scale: 0.98 }],
+  },
+  mainCardGradient: {
+    padding: Spacing.lg,
+  },
+  mainCardContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  mainCardText: {
+    flex: 1,
+  },
+  mainCardTitle: {
+    ...TextStyle.title2,
+    color: Colors.text.inverse,
+    marginBottom: Spacing.xs,
+  },
+  mainCardSubtitle: {
+    ...TextStyle.callout,
+    color: Colors.text.inverse,
+    opacity: 0.9,
+  },
+  mainCardIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  mainCardEmoji: {
+    fontSize: 28,
+  },
+  mainCardBadge: {
+    marginTop: Spacing.md,
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.full,
+  },
+  mainCardBadgeText: {
+    ...TextStyle.caption1,
+    color: Colors.text.inverse,
+  },
+  theoryBadge: {
+    marginBottom: Spacing.lg,
+    borderRadius: BorderRadius.lg,
+    overflow: 'hidden',
+    backgroundColor: 'transparent',
+  },
+  theoryBadgeGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.md,
+    gap: Spacing.sm,
+  },
+  theoryBadgeIcon: {
+    fontSize: 28,
+  },
+  theoryBadgeTextContainer: {
+    flex: 1,
+  },
+  theoryBadgeTitle: {
+    ...TextStyle.subhead,
+    fontWeight: '600',
+    color: Colors.primary.main,
+    marginBottom: 2,
+  },
+  theoryBadgeSubtitle: {
+    ...TextStyle.caption1,
+    color: Colors.text.secondary,
+  },
+  section: {
+    marginBottom: Spacing.lg,
+  },
+  sectionTitle: {
+    ...TextStyle.headline,
+    color: Colors.text.primary,
+    marginBottom: Spacing.xs,
+  },
+  sectionSubtitle: {
+    ...TextStyle.caption1,
+    color: Colors.text.secondary,
+    marginBottom: Spacing.md,
+  },
+  gradeLevelCards: {
+    gap: Spacing.sm,
+  },
+  gradeLevelCard: {
+    borderRadius: BorderRadius.lg,
+    overflow: 'hidden',
+    ...Shadow.md,
+  },
+  gradeLevelCardPressed: {
+    opacity: 0.9,
+    transform: [{ scale: 0.98 }],
+  },
+  gradeLevelCardGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: Spacing.md,
+    gap: Spacing.md,
+  },
+  gradeLevelEmoji: {
+    fontSize: 32,
+  },
+  gradeLevelTitle: {
+    ...TextStyle.headline,
+    color: Colors.text.inverse,
+  },
+  gradeLevelSubtitle: {
+    ...TextStyle.caption1,
+    color: Colors.text.inverse,
+    opacity: 0.8,
+  },
+  quickActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  quickAction: {
+    alignItems: 'center',
+    gap: Spacing.xs,
+  },
+  quickActionPressed: {
+    opacity: 0.7,
+  },
+  quickActionIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: BorderRadius.lg,
+    backgroundColor: Colors.background.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Shadow.sm,
+  },
+  quickActionEmoji: {
+    fontSize: 24,
+  },
+  quickActionLabel: {
+    ...TextStyle.caption1,
+    color: Colors.text.secondary,
+  },
+  careerFieldsScroll: {
+    gap: Spacing.sm,
+    paddingRight: Spacing.md,
+  },
+  careerFieldChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.full,
+    gap: Spacing.xs,
+  },
+  careerFieldChipPressed: {
+    opacity: 0.7,
+    transform: [{ scale: 0.95 }],
+  },
+  careerFieldEmoji: {
+    fontSize: 16,
+  },
+  careerFieldName: {
+    ...TextStyle.footnote,
+    fontWeight: '600',
+  },
+  // 이어서 하기 카드
+  resumeCard: {
+    borderRadius: BorderRadius.lg,
+    overflow: 'hidden',
+    marginBottom: Spacing.md,
+    ...Shadow.md,
+  },
+  resumeCardPressed: {
+    opacity: 0.95,
+    transform: [{ scale: 0.98 }],
+  },
+  resumeCardGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: Spacing.md,
+  },
+  resumeCardContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+    flex: 1,
+  },
+  resumeCardIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  resumeCardEmoji: {
+    fontSize: 20,
+  },
+  resumeCardText: {
+    flex: 1,
+  },
+  resumeCardTitle: {
+    ...TextStyle.headline,
+    color: Colors.text.inverse,
+    marginBottom: 2,
+  },
+  resumeCardSubtitle: {
+    ...TextStyle.caption1,
+    color: Colors.text.inverse,
+    opacity: 0.9,
+  },
+  resumeDeleteButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  resumeDeleteButtonPressed: {
+    backgroundColor: 'rgba(255,255,255,0.3)',
+  },
+  resumeDeleteText: {
+    fontSize: 20,
+    color: Colors.text.inverse,
+    fontWeight: '300',
+    lineHeight: 22,
+  },
+});
