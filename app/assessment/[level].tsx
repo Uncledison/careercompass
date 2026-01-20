@@ -46,18 +46,18 @@ const MODEL_PATHS: Record<string, Record<number, { path: string; animations: str
     5: { path: '/models/sheep.glb', animations: ['Idle', 'Walk'], cameraDistance: '6.0m' },
   },
   middle: {
-    1: { path: '/models/Wizard.glb', animations: ['Idle', 'Idle_Eating', 'Walk', 'Walk.004', 'Run', 'attack'], cameraDistance: '6.0m' },
-    2: { path: '/models/Yeti_Middle.glb', animations: ['Walk.004', 'Jump', 'attack', 'HitRecieve'], cameraDistance: '6.5m' },
-    3: { path: '/models/Goblin.glb', animations: ['Idle.005', 'Walk.004', 'Jump', 'attack', 'HitRecieve', 'Headbutt'], cameraDistance: '6.0m' },
-    4: { path: '/models/Giant.glb', animations: ['Idle.004', 'Walk.004', 'Jump', 'attack', 'HitRecieve', 'Headbutt'], cameraDistance: '7.5m' },
-    5: { path: '/models/Zombie.glb', animations: ['Idle.004', 'Walk.004', 'Run.004', 'Jump', 'attack', 'HitRecieve', 'Headbutt'], cameraDistance: '6.5m' },
+    1: { path: '/models/Wizard.glb', animations: ['Walk.004'], cameraDistance: '8.0m' },
+    2: { path: '/models/Yeti_Middle.glb', animations: ['Walk.004'], cameraDistance: '8.5m' },
+    3: { path: '/models/Goblin.glb', animations: ['Walk.004'], cameraDistance: '6.0m' },
+    4: { path: '/models/Giant.glb', animations: ['Walk.004'], cameraDistance: '9.0m' },
+    5: { path: '/models/Zombie.glb', animations: ['Walk.004'], cameraDistance: '6.5m' },
   },
   high: {
-    1: { path: '/models/Ninja.glb', animations: ['Walk', 'Run', 'Wave', 'Yes', 'No', 'Punch', 'Headbutt'], cameraDistance: '6.0m' },
-    2: { path: '/models/Orc.glb', animations: ['Walk', 'Run.004', 'Wave', 'Yes', 'No', 'Duck', 'Punch', 'Headbutt', 'Jump'], cameraDistance: '6.5m' },
-    3: { path: '/models/Bunny.glb', animations: ['Idle.010', 'Walk', 'Run.004', 'Wave', 'Yes', 'No', 'Duck', 'Punch', 'Headbutt', 'Jump'], cameraDistance: '6.5m' },
-    4: { path: '/models/Yeti_High.glb', animations: ['Jump_Idle', 'Walk.010', 'Run.004', 'Wave', 'Yes', 'No', 'Attack', 'Duck', 'Punch', 'Headbutt'], cameraDistance: '7.0m' },
-    5: { path: '/models/Demon.glb', animations: ['Jump_Idle', 'Walk.010', 'Run.004', 'Wave', 'Yes', 'No', 'Attack', 'Duck', 'Punch', 'Headbutt'], cameraDistance: '7.0m' },
+    1: { path: '/models/Ninja.glb', animations: ['Walk.009'], cameraDistance: '6.0m' },
+    2: { path: '/models/Orc.glb', animations: ['Walk.009'], cameraDistance: '6.5m' },
+    3: { path: '/models/Bunny.glb', animations: ['Walk.009'], cameraDistance: '6.5m' },
+    4: { path: '/models/Yeti_High.glb', animations: ['Walk.009'], cameraDistance: '7.0m' },
+    5: { path: '/models/Demon.glb', animations: ['Walk.009'], cameraDistance: '7.0m' },
   },
 };
 import { getStagesByLevel } from '../../src/data/questions';
@@ -432,8 +432,8 @@ export default function AssessmentScreen() {
                   modelPath={MODEL_PATHS[level || 'elementary'][currentStage].path}
                   animations={MODEL_PATHS[level || 'elementary'][currentStage].animations}
                   cameraDistance={MODEL_PATHS[level || 'elementary'][currentStage].cameraDistance}
-                  width={200}
-                  height={180}
+                  width={300}
+                  height={280}
                   autoRotate={true}
                   borderRadius={16}
                 />
@@ -617,7 +617,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   characterSection: {
-    height: 160,
+    height: 280,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing.md,
