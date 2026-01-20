@@ -37,9 +37,13 @@ import { ModelViewer3D } from '../../src/components/character/ModelViewer3D';
 import { EmotionSlider } from '../../src/components/assessment/EmotionSlider';
 
 // GLB 모델 경로 (웹 배포용)
-const MODEL_PATHS = {
+const MODEL_PATHS: Record<string, Record<number, { path: string; animations: string[] }>> = {
   elementary: {
-    1: '/models/chick.glb',
+    1: { path: '/models/chick.glb', animations: ['Idle_Peck', 'Run'] },
+    2: { path: '/models/cat.glb', animations: ['Idle', 'Walk'] },
+    3: { path: '/models/dog.glb', animations: ['Idle', 'Walk'] },
+    4: { path: '/models/pig.glb', animations: ['Idle', 'Walk'] },
+    5: { path: '/models/sheep.glb', animations: ['Idle', 'Walk'] },
   },
 };
 import { getStagesByLevel } from '../../src/data/questions';
@@ -408,12 +412,12 @@ export default function AssessmentScreen() {
               entering={FadeIn.duration(300)}
               style={styles.characterContainer}
             >
-              {/* 초등 1단계는 3D GLB 모델 사용 */}
-              {level === 'elementary' && currentStage === 1 ? (
+              {/* 초등학교는 3D GLB 모델 사용 */}
+              {level === 'elementary' && MODEL_PATHS.elementary[currentStage] ? (
                 <ModelViewer3D
-                  modelPath={MODEL_PATHS.elementary[1]}
-                  animations={['Idle_Peck', 'Run']}
-                  width={220}
+                  modelPath={MODEL_PATHS.elementary[currentStage].path}
+                  animations={MODEL_PATHS.elementary[currentStage].animations}
+                  width={200}
                   height={180}
                   autoRotate={true}
                   borderRadius={16}
