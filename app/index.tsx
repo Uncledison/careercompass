@@ -9,74 +9,53 @@ import {
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, {
-  Circle,
-  Path,
-  Ellipse,
-  Defs,
-  LinearGradient as SvgLinearGradient,
-  Stop,
-  G,
-} from 'react-native-svg';
+import { ModelViewer3D } from '../src/components/character/ModelViewer3D';
 import { Colors, Spacing, BorderRadius, Shadow, TextStyle } from '../src/constants';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-// 메인 캐릭터 컴포넌트
-const MainCharacter = () => (
-  <Svg width={200} height={200} viewBox="0 0 200 200">
-    <Defs>
-      <SvgLinearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <Stop offset="0%" stopColor={Colors.primary.main} />
-        <Stop offset="100%" stopColor={Colors.secondary.main} />
-      </SvgLinearGradient>
-      <SvgLinearGradient id="faceGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-        <Stop offset="0%" stopColor={Colors.character.skin.light} />
-        <Stop offset="100%" stopColor={Colors.character.skin.medium} />
-      </SvgLinearGradient>
-    </Defs>
+// 3D 캐릭터 듀오 컴포넌트
+const RandomPairCharacter = () => {
+  const [pairIndex, setPairIndex] = React.useState(0);
 
-    {/* 배경 원 */}
-    <Circle cx={100} cy={100} r={95} fill="url(#bgGrad)" />
+  React.useEffect(() => {
+    // 0 또는 1 랜덤 선택 (0: Set 1, 1: Set 2)
+    setPairIndex(Math.floor(Math.random() * 2));
+  }, []);
 
-    {/* 얼굴 */}
-    <Circle cx={100} cy={105} r={60} fill="url(#faceGrad)" />
+  const characters = pairIndex === 0
+    ? ['Male_1', 'Female_1']
+    : ['Male_2', 'Female_2'];
 
-    {/* 머리카락 */}
-    <Ellipse cx={100} cy={60} rx={50} ry={30} fill={Colors.character.hair.brown} />
-    <Ellipse cx={65} cy={75} rx={15} ry={20} fill={Colors.character.hair.brown} />
-    <Ellipse cx={135} cy={75} rx={15} ry={20} fill={Colors.character.hair.brown} />
-
-    {/* 눈 */}
-    <G>
-      <Ellipse cx={75} cy={100} rx={12} ry={14} fill="white" />
-      <Ellipse cx={125} cy={100} rx={12} ry={14} fill="white" />
-      <Circle cx={77} cy={102} r={7} fill={Colors.character.hair.black} />
-      <Circle cx={127} cy={102} r={7} fill={Colors.character.hair.black} />
-      <Circle cx={80} cy={98} r={3} fill="white" />
-      <Circle cx={130} cy={98} r={3} fill="white" />
-    </G>
-
-    {/* 볼터치 */}
-    <Ellipse cx={55} cy={120} rx={10} ry={6} fill={Colors.character.blush} opacity={0.6} />
-    <Ellipse cx={145} cy={120} rx={10} ry={6} fill={Colors.character.blush} opacity={0.6} />
-
-    {/* 입 (미소) */}
-    <Path
-      d="M 85 130 Q 100 145 115 130"
-      stroke={Colors.character.mouth}
-      strokeWidth={3}
-      fill="none"
-      strokeLinecap="round"
-    />
-
-    {/* 별 장식 */}
-    <Path
-      d="M170,30 L173,40 L183,40 L175,47 L178,57 L170,50 L162,57 L165,47 L157,40 L167,40 Z"
-      fill="#FFD700"
-    />
-  </Svg>
-);
+  return (
+    <View style={styles.characterDuoContainer}>
+      <View style={styles.characterWrapper}>
+        <ModelViewer3D
+          modelPath={`/models/characters/${characters[0]}.gltf`}
+          animations={['Wave']}
+          width={140}
+          height={180}
+          autoRotate={false}
+          cameraDistance="6.0m"
+          cameraTarget="0m 0.8m 0m"
+          disableControls={true}
+        />
+      </View>
+      <View style={styles.characterWrapper}>
+        <ModelViewer3D
+          modelPath={`/models/characters/${characters[1]}.gltf`}
+          animations={['Wave']}
+          width={140}
+          height={180}
+          autoRotate={false}
+          cameraDistance="6.0m"
+          cameraTarget="0m 0.8m 0m"
+          disableControls={true}
+        />
+      </View>
+    </View>
+  );
+};
 
 export default function WelcomeScreen() {
   const router = useRouter();
@@ -100,7 +79,7 @@ export default function WelcomeScreen() {
 
           {/* 캐릭터 */}
           <View style={styles.characterSection}>
-            <MainCharacter />
+            <RandomPairCharacter />
           </View>
 
           {/* 설명 텍스트 */}
@@ -186,7 +165,16 @@ const styles = StyleSheet.create({
   },
   characterSection: {
     marginBottom: Spacing.xl,
-    ...Shadow.xl,
+    height: 180,
+  },
+  characterDuoContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: -20, // 캐릭터들이 약간 겹치게
+  },
+  characterWrapper: {
+    width: 140,
+    height: 180,
   },
   textSection: {
     alignItems: 'center',

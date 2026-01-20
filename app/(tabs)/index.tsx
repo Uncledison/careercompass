@@ -17,21 +17,12 @@ import LottieView from 'lottie-react-native';
 import { Colors, Spacing, BorderRadius, Shadow, TextStyle } from '../../src/constants';
 import { useAssessmentStore, SavedAssessmentState } from '../../src/stores/assessmentStore';
 import { useProfileStore } from '../../src/stores/profileStore';
+import { ModelViewer3D } from '../../src/components/character/ModelViewer3D';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_WIDTH = SCREEN_WIDTH - Spacing.lg * 2;
 
-// 작은 캐릭터 아바타 (Lottie)
-const SmallCharacter = () => (
-  <View style={styles.smallCharacterContainer}>
-    <LottieView
-      source={require('../../assets/girl-waving.json')}
-      autoPlay
-      loop
-      style={styles.smallCharacterLottie}
-    />
-  </View>
-);
+
 
 // 학년 선택 카드
 interface GradeLevelCardProps {
@@ -261,7 +252,20 @@ export default function HomeScreen() {
             onPress={() => router.push('/(tabs)/profile')}
             style={({ pressed }) => pressed && { opacity: 0.7 }}
           >
-            <SmallCharacter />
+            <View style={styles.smallCharacterContainer}>
+              <ModelViewer3D
+                modelPath={`/models/characters/${profile?.character || 'Female_1'}.gltf`}
+                animations={['Wave']}
+                width={56}
+                height={56}
+                autoRotate={false}
+                cameraDistance="8.0m"
+                cameraTarget="0m 0.8m 0m"
+                disableControls={true}
+                backgroundColor={Colors.primary.main + '15'}
+                borderRadius={28}
+              />
+            </View>
           </Pressable>
         </View>
 
@@ -329,11 +333,17 @@ export default function HomeScreen() {
                 </Text>
               </View>
               <View style={styles.mainCharacterContainer}>
-                <LottieView
-                  source={require('../../assets/girl-waving.json')}
-                  autoPlay
-                  loop
-                  style={styles.mainCharacterLottie}
+                <ModelViewer3D
+                  modelPath={`/models/characters/${profile?.character || 'Female_1'}.gltf`}
+                  animations={['Run']}
+                  width={100}
+                  height={100}
+                  autoRotate={false}
+                  cameraDistance="6.0m"
+                  cameraTarget="0m 0.5m 0m"
+                  disableControls={true}
+                  backgroundColor="rgba(255,255,255,0.2)"
+                  borderRadius={50}
                 />
               </View>
             </View>
@@ -386,7 +396,7 @@ export default function HomeScreen() {
             <QuickAction
               icon="👨‍👩‍👧"
               label="가족 연동"
-              onPress={() => {}}
+              onPress={() => { }}
             />
             <QuickAction
               icon="📈"
