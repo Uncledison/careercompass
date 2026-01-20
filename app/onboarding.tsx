@@ -11,8 +11,9 @@ import {
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { Circle, Path, Rect, Polygon, G, Defs, LinearGradient as SvgGradient, Stop } from 'react-native-svg';
 import { Colors, Spacing, BorderRadius, Shadow, TextStyle } from '../src/constants';
+
+import { ModelViewer3D } from '../src/components/character/ModelViewer3D';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -23,112 +24,57 @@ interface OnboardingSlide {
   illustration: React.ReactNode;
 }
 
-// 슬라이드별 일러스트레이션
-const ExploreIllustration = () => (
-  <Svg width={240} height={240} viewBox="0 0 240 240">
-    <Defs>
-      <SvgGradient id="planetGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
-        <Stop offset="0%" stopColor="#667eea" />
-        <Stop offset="100%" stopColor="#764ba2" />
-      </SvgGradient>
-    </Defs>
-    {/* 우주 배경 */}
-    <Circle cx={40} cy={40} r={2} fill="white" opacity={0.6} />
-    <Circle cx={200} cy={60} r={1.5} fill="white" opacity={0.8} />
-    <Circle cx={180} cy={180} r={2} fill="white" opacity={0.5} />
-    <Circle cx={60} cy={200} r={1} fill="white" opacity={0.7} />
-    {/* 행성들 */}
-    <Circle cx={120} cy={120} r={70} fill="url(#planetGrad1)" />
-    <Circle cx={120} cy={120} r={55} fill="none" stroke="white" strokeWidth={1} opacity={0.3} />
-    {/* 로켓 */}
-    <G transform="translate(150, 70) rotate(45)">
-      <Path d="M0,30 L10,0 L20,30 L10,25 Z" fill="#FF6B6B" />
-      <Rect x={5} y={30} width={10} height={15} fill="#4ECDC4" />
-      <Circle cx={10} cy={15} r={4} fill="white" />
-    </G>
-    {/* 별 */}
-    <Polygon points="50,100 53,108 62,108 55,113 58,122 50,117 42,122 45,113 38,108 47,108" fill="#FFD700" />
-  </Svg>
-);
-
-const GameIllustration = () => (
-  <Svg width={240} height={240} viewBox="0 0 240 240">
-    <Defs>
-      <SvgGradient id="gameGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <Stop offset="0%" stopColor="#4ECDC4" />
-        <Stop offset="100%" stopColor="#44A08D" />
-      </SvgGradient>
-    </Defs>
-    {/* 게임 컨트롤러 모양 */}
-    <Rect x={40} y={80} width={160} height={100} rx={50} fill="url(#gameGrad)" />
-    {/* 버튼들 */}
-    <Circle cx={80} cy={120} r={15} fill="#FF6B6B" />
-    <Circle cx={160} cy={120} r={15} fill="#FFE66D" />
-    <Circle cx={160} cy={150} r={10} fill="#95E1D3" />
-    <Circle cx={80} cy={150} r={10} fill="#DDA0DD" />
-    {/* 캐릭터 표정 */}
-    <Circle cx={120} cy={60} r={35} fill="#FFE5D9" />
-    <Circle cx={110} cy={55} r={5} fill="#333" />
-    <Circle cx={130} cy={55} r={5} fill="#333" />
-    <Path d="M 108 70 Q 120 80 132 70" stroke="#E07A5F" strokeWidth={3} fill="none" />
-    {/* 별 이펙트 */}
-    <Polygon points="180,40 182,46 188,46 183,50 185,56 180,52 175,56 177,50 172,46 178,46" fill="#FFD700" />
-    <Polygon points="50,60 52,66 58,66 53,70 55,76 50,72 45,76 47,70 42,66 48,66" fill="#FFD700" opacity={0.7} />
-  </Svg>
-);
-
-const ResultIllustration = () => (
-  <Svg width={240} height={240} viewBox="0 0 240 240">
-    <Defs>
-      <SvgGradient id="chartGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-        <Stop offset="0%" stopColor="#667eea" stopOpacity={0.8} />
-        <Stop offset="100%" stopColor="#764ba2" stopOpacity={0.4} />
-      </SvgGradient>
-    </Defs>
-    {/* 레이더 차트 배경 */}
-    <Polygon points="120,40 180,80 180,160 120,200 60,160 60,80" fill="none" stroke={Colors.gray[200]} strokeWidth={1} />
-    <Polygon points="120,60 165,90 165,150 120,180 75,150 75,90" fill="none" stroke={Colors.gray[200]} strokeWidth={1} />
-    <Polygon points="120,80 150,100 150,140 120,160 90,140 90,100" fill="none" stroke={Colors.gray[200]} strokeWidth={1} />
-    {/* 데이터 영역 */}
-    <Polygon points="120,50 175,85 170,155 120,190 70,145 75,85" fill="url(#chartGrad)" />
-    <Polygon points="120,50 175,85 170,155 120,190 70,145 75,85" fill="none" stroke="#667eea" strokeWidth={2} />
-    {/* 포인트 */}
-    <Circle cx={120} cy={50} r={6} fill="#9B59B6" />
-    <Circle cx={175} cy={85} r={6} fill="#3498DB" />
-    <Circle cx={170} cy={155} r={6} fill="#27AE60" />
-    <Circle cx={120} cy={190} r={6} fill="#1ABC9C" />
-    <Circle cx={70} cy={145} r={6} fill="#E74C3C" />
-    <Circle cx={75} cy={85} r={6} fill="#F39C12" />
-    {/* 라벨 */}
-    <G>
-      <Circle cx={120} cy={25} r={12} fill="#9B59B6" />
-      <Circle cx={195} cy={80} r={12} fill="#3498DB" />
-      <Circle cx={190} cy={165} r={12} fill="#27AE60" />
-      <Circle cx={120} cy={215} r={12} fill="#1ABC9C" />
-      <Circle cx={50} cy={165} r={12} fill="#E74C3C" />
-      <Circle cx={55} cy={80} r={12} fill="#F39C12" />
-    </G>
-  </Svg>
-);
-
 const slides: OnboardingSlide[] = [
   {
     id: '1',
-    title: '미래 행성을 탐험해요',
-    subtitle: '6개의 진로 행성을 여행하며\n나에게 맞는 길을 발견해요',
-    illustration: <ExploreIllustration />,
+    title: '게임처럼 즐겨요',
+    subtitle: '재미있는 질문에 답하고\n멋진 배지를 모아보세요',
+    illustration: (
+      <ModelViewer3D
+        modelPath="/models/chick.glb"
+        animations={['Idle_Peck']}
+        width={200}
+        height={200}
+        autoRotate={true}
+        cameraDistance="3.0m"
+        disableControls={true}
+        backgroundColor="transparent"
+      />
+    ),
   },
   {
     id: '2',
-    title: '게임처럼 즐겨요',
-    subtitle: '재미있는 질문에 답하고\n멋진 배지를 모아보세요',
-    illustration: <GameIllustration />,
+    title: '진로 퀘스트를 떠나요',
+    subtitle: '6개의 진로 행성을 여행하며\n나만의 길을 찾아보세요',
+    illustration: (
+      <ModelViewer3D
+        modelPath="/models/Ninja.glb"
+        animations={['Run']}
+        width={200}
+        height={200}
+        autoRotate={true}
+        cameraDistance="4.0m"
+        disableControls={true}
+        backgroundColor="transparent"
+      />
+    ),
   },
   {
     id: '3',
-    title: '나만의 결과를 받아요',
+    title: '나의 미래를 분석해요',
     subtitle: '과학적 분석을 통해\n딱 맞는 진로를 추천받아요',
-    illustration: <ResultIllustration />,
+    illustration: (
+      <ModelViewer3D
+        modelPath="/models/Wizard.glb"
+        animations={['Idle']}
+        width={200}
+        height={200}
+        autoRotate={true}
+        cameraDistance="4.0m"
+        disableControls={true}
+        backgroundColor="transparent"
+      />
+    ),
   },
 ];
 
