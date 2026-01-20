@@ -1,0 +1,153 @@
+/**
+ * 3D 모델 뷰어 컴포넌트
+ * Google model-viewer를 사용하여 GLB 파일 렌더링
+ * 애니메이션 순차 재생 및 자동 회전 지원
+ */
+
+import React from 'react';
+import { View, StyleSheet, Platform } from 'react-native';
+import { WebView } from 'react-native-webview';
+
+interface ModelViewer3DProps {
+  modelPath: string;
+  animations?: string[];
+  size?: number;
+  autoRotate?: boolean;
+  backgroundColor?: string;
+}
+
+export const ModelViewer3D: React.FC<ModelViewer3DProps> = ({
+  modelPath,
+  animations = ['Idle_Peck', 'Run'],
+  size = 150,
+  autoRotate = true,
+  backgroundColor = 'transparent',
+}) => {
+  // 애니메이션 순차 재생을 위한 HTML
+  const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; }
+    body {
+      background: ${backgroundColor};
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+    model-viewer {
+      width: 100%;
+      height: 100%;
+      --poster-color: transparent;
+    }
+  </style>
+</head>
+<body>
+  <model-viewer
+    id="viewer"
+    src="${modelPath}"
+    ${autoRotate ? 'auto-rotate' : ''}
+    auto-rotate-delay="0"
+    rotation-per-second="30deg"
+    camera-controls
+    camera-orbit="0deg 75deg 2.5m"
+    min-camera-orbit="auto auto auto"
+    max-camera-orbit="auto auto auto"
+    interaction-prompt="none"
+    autoplay
+    shadow-intensity="0"
+    environment-image="neutral"
+  ></model-viewer>
+
+  <script>
+    const viewer = document.getElementById('viewer');
+    const animations = ${JSON.stringify(animations)};
+    let currentIndex = 0;
+
+    viewer.addEventListener('load', () => {
+      // 사용 가능한 애니메이션 목록 확인
+      const availableAnimations = viewer.availableAnimations;
+      console.log('Available animations:', availableAnimations);
+
+      // 첫 번째 애니메이션 재생
+      if (animations.length > 0 && availableAnimations.includes(animations[0])) {
+        viewer.animationName = animations[0];
+        viewer.play();
+      } else if (availableAnimations.length > 0) {
+        // 지정된 애니메이션이 없으면 첫 번째 애니메이션 재생
+        viewer.animationName = availableAnimations[0];
+        viewer.play();
+      }
+    });
+
+    // 애니메이션 종료 시 다음 애니메이션으로 전환
+    viewer.addEventListener('finished', () => {
+      const availableAnimations = viewer.availableAnimations;
+      currentIndex = (currentIndex + 1) % animations.length;
+
+      const nextAnimation = animations[currentIndex];
+      if (availableAnimations.includes(nextAnimation)) {
+        viewer.animationName = nextAnimation;
+        viewer.play();
+      }
+    });
+  </script>
+</body>
+</html>
+  `;
+
+  if (Platform.OS === 'web') {
+    // 웹에서는 iframe 사용
+    return (
+      <View style={[styles.container, { width: size, height: size }]}>
+        <iframe
+          srcDoc={htmlContent}
+          style={{
+            width: '100%',
+            height: '100%',
+            border: 'none',
+            borderRadius: size / 2,
+            overflow: 'hidden',
+          }}
+          title="3D Model Viewer"
+        />
+      </View>
+    );
+  }
+
+  // 네이티브에서는 WebView 사용
+  return (
+    <View style={[styles.container, { width: size, height: size }]}>
+      <WebView
+        source={{ html: htmlContent }}
+        style={styles.webview}
+        scrollEnabled={false}
+        javaScriptEnabled={true}
+        domStorageEnabled={true}
+        allowsInlineMediaPlayback={true}
+        mediaPlaybackRequiresUserAction={false}
+        originWhitelist={['*']}
+      />
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    borderRadius: 75,
+    overflow: 'hidden',
+    backgroundColor: 'transparent',
+  },
+  webview: {
+    flex: 1,
+    backgroundColor: 'transparent',
+  },
+});
+
+export default ModelViewer3D;

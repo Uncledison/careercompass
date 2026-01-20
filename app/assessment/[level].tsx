@@ -33,7 +33,15 @@ import { GradeLevel, ResponseValue } from '../../src/types';
 import { useAssessmentStore, useStageInfo } from '../../src/stores/assessmentStore';
 import { ExpressionCharacter } from '../../src/components/character/ExpressionCharacter';
 import { Character3D } from '../../src/components/character/Character3D';
+import { ModelViewer3D } from '../../src/components/character/ModelViewer3D';
 import { EmotionSlider } from '../../src/components/assessment/EmotionSlider';
+
+// GLB 모델 경로 (웹 배포용)
+const MODEL_PATHS = {
+  elementary: {
+    1: '/models/chick.glb',
+  },
+};
 import { getStagesByLevel } from '../../src/data/questions';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -400,11 +408,21 @@ export default function AssessmentScreen() {
               entering={FadeIn.duration(300)}
               style={styles.characterContainer}
             >
-              <Character3D
-                stage={currentStage}
-                level={level as 'elementary' | 'middle' | 'high'}
-                size={150}
-              />
+              {/* 초등 1단계는 3D GLB 모델 사용 */}
+              {level === 'elementary' && currentStage === 1 ? (
+                <ModelViewer3D
+                  modelPath={MODEL_PATHS.elementary[1]}
+                  animations={['Idle_Peck', 'Run']}
+                  size={150}
+                  autoRotate={true}
+                />
+              ) : (
+                <Character3D
+                  stage={currentStage}
+                  level={level as 'elementary' | 'middle' | 'high'}
+                  size={150}
+                />
+              )}
             </Animated.View>
           </View>
 
