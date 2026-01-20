@@ -101,7 +101,13 @@ export const ModelViewer3D: React.FC<ModelViewer3DProps> = ({
     // 애니메이션 종료 시 다음 애니메이션으로 전환
     viewer.addEventListener('finished', () => {
       const availableAnimations = viewer.availableAnimations;
-      currentIndex = (currentIndex + 1) % animations.length;
+      // Randomly select next animation
+      let nextIndex;
+      do {
+        nextIndex = Math.floor(Math.random() * animations.length);
+      } while (animations.length > 1 && nextIndex === currentIndex); // Avoid repeating same animation if possible
+      
+      currentIndex = nextIndex;
 
       const nextAnimation = animations[currentIndex];
       if (availableAnimations.includes(nextAnimation)) {
