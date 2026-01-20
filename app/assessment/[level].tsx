@@ -54,8 +54,8 @@ const MODEL_PATHS: Record<string, Record<number, { path: string; animations: str
   },
   high: {
     1: { path: '/models/Ninja.glb', animations: ['Walk.009'], cameraDistance: '6.0m' },
-    2: { path: '/models/Orc.glb', animations: ['Walk.009'], cameraDistance: '6.5m' },
-    3: { path: '/models/Bunny.glb', animations: ['Walk.009'], cameraDistance: '6.5m' },
+    2: { path: '/models/Orc.glb', animations: ['Walk.009'], cameraDistance: '8.0m' },
+    3: { path: '/models/Bunny.glb', animations: ['Walk.009'], cameraDistance: '8.0m' },
     4: { path: '/models/Yeti_High.glb', animations: ['Walk.009'], cameraDistance: '7.0m' },
     5: { path: '/models/Demon.glb', animations: ['Walk.009'], cameraDistance: '7.0m' },
   },
