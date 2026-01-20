@@ -103,8 +103,8 @@ const ProfileAvatar = ({ character }: { character: string }) => (
       width={100}
       height={100}
       autoRotate={false}
-      cameraDistance="15.0m"
-      cameraTarget="1m 1m 0m"
+      cameraDistance="13.5m"
+      cameraTarget="0.5m 1m 0m"
       borderRadius={50}
     />
   </View>
