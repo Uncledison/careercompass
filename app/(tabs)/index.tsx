@@ -244,10 +244,13 @@ export default function HomeScreen() {
       >
         {/* 헤더 */}
         <View style={styles.header}>
-          <View style={styles.headerLeft}>
+          <Pressable
+            style={styles.headerLeft}
+            onPress={() => router.push('/(tabs)/profile')}
+          >
             <Text style={styles.greeting}>안녕하세요!</Text>
             <Text style={styles.userName}>{profile?.nickname || '탐험가'}님</Text>
-          </View>
+          </Pressable>
           <Pressable
             onPress={() => router.push('/(tabs)/profile')}
             style={({ pressed }) => pressed && { opacity: 0.7 }}
@@ -260,7 +263,7 @@ export default function HomeScreen() {
                 height={56}
                 autoRotate={false}
                 cameraDistance="8.0m"
-                cameraTarget="0m 0.8m 0m"
+                cameraTarget="0m 1.2m 0m"
                 disableControls={true}
                 backgroundColor={Colors.primary.main + '15'}
                 borderRadius={28}
@@ -340,7 +343,7 @@ export default function HomeScreen() {
                   height={100}
                   autoRotate={false}
                   cameraDistance="6.0m"
-                  cameraTarget="0m 0.5m 0m"
+                  cameraTarget="0m 1.0m 0m"
                   disableControls={true}
                   backgroundColor="rgba(255,255,255,0.2)"
                   borderRadius={50}

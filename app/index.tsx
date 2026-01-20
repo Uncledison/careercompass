@@ -36,8 +36,8 @@ const RandomPairCharacter = () => {
           width={140}
           height={180}
           autoRotate={false}
-          cameraDistance="6.0m"
-          cameraTarget="0m 0.8m 0m"
+          cameraDistance="9.0m"
+          cameraTarget="0m 1.0m 0m"
           disableControls={true}
         />
       </View>
@@ -48,8 +48,8 @@ const RandomPairCharacter = () => {
           width={140}
           height={180}
           autoRotate={false}
-          cameraDistance="6.0m"
-          cameraTarget="0m 0.8m 0m"
+          cameraDistance="9.0m"
+          cameraTarget="0m 1.0m 0m"
           disableControls={true}
         />
       </View>
