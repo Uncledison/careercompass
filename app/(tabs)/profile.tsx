@@ -27,6 +27,14 @@ import {
   getFullGradeLabel,
 } from '../../src/stores/profileStore';
 import { useHistoryStore, formatDate } from '../../src/stores/historyStore';
+import { ModelViewer3D } from '../../src/components/character/ModelViewer3D';
+
+const CHARACTER_OPTIONS = [
+  { id: 'Female_1', name: '캐릭터 1' },
+  { id: 'Female_2', name: '캐릭터 2' },
+  { id: 'Male_1', name: '캐릭터 3' },
+  { id: 'Male_2', name: '캐릭터 4' },
+];
 
 const THEME_STORAGE_KEY = 'careercompass_theme';
 
@@ -87,13 +95,16 @@ Career Compass 개인정보처리방침
 시행일: 2026년 1월 1일
 `;
 
-const ProfileAvatar = () => (
+const ProfileAvatar = ({ character }: { character: string }) => (
   <View style={profileAvatarStyles.container}>
-    <LottieView
-      source={require('../../assets/girl-waving.json')}
-      autoPlay
-      loop
-      style={profileAvatarStyles.lottie}
+    <ModelViewer3D
+      modelPath={`/models/characters/${character}.gltf`}
+      animations={['Walk', 'Wave', 'No', 'Yes']}
+      width={100}
+      height={100}
+      autoRotate={true}
+      cameraDistance="2.0m"
+      borderRadius={50}
     />
   </View>
 );
@@ -202,6 +213,7 @@ export default function ProfileScreen() {
   const [editNickname, setEditNickname] = useState('');
   const [editSchoolType, setEditSchoolType] = useState<SchoolType>('elementary');
   const [editGrade, setEditGrade] = useState<GradeNumber>(5);
+  const [editCharacter, setEditCharacter] = useState('Female_1');
 
   // 데이터 로드
   useEffect(() => {
@@ -238,6 +250,7 @@ export default function ProfileScreen() {
       setEditNickname(profile.nickname);
       setEditSchoolType(profile.schoolType);
       setEditGrade(profile.grade);
+      setEditCharacter(profile.character || 'Female_1');
     }
     setShowEditModal(true);
   };
@@ -248,6 +261,7 @@ export default function ProfileScreen() {
       nickname: editNickname.trim() || '탐험가',
       schoolType: editSchoolType,
       grade: editGrade,
+      character: editCharacter,
     });
     setShowEditModal(false);
   };
@@ -300,7 +314,7 @@ export default function ProfileScreen() {
 
         {/* 프로필 카드 */}
         <View style={styles.profileCard}>
-          <ProfileAvatar />
+          <ProfileAvatar character={profile?.character || 'Female_1'} />
           <View style={styles.profileInfo}>
             <Text style={styles.profileName}>{profile?.nickname || '탐험가'}</Text>
             <Text style={styles.profileGrade}>
@@ -343,7 +357,7 @@ export default function ProfileScreen() {
             <MenuItem
               icon="🔔"
               label="알림 설정"
-              onPress={() => {}}
+              onPress={() => { }}
             />
           </View>
         </View>
@@ -366,7 +380,7 @@ export default function ProfileScreen() {
               icon="ℹ️"
               label="앱 버전"
               value="1.0.0"
-              onPress={() => {}}
+              onPress={() => { }}
             />
           </View>
         </View>
@@ -406,6 +420,40 @@ export default function ProfileScreen() {
                 placeholderTextColor={Colors.gray[400]}
                 maxLength={10}
               />
+            </View>
+
+            {/* 캐릭터 선택 */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>캐릭터</Text>
+              <View style={styles.characterRow}>
+                {CHARACTER_OPTIONS.map((option) => (
+                  <Pressable
+                    key={option.id}
+                    style={[
+                      styles.characterOption,
+                      editCharacter === option.id && styles.characterOptionSelected,
+                    ]}
+                    onPress={() => setEditCharacter(option.id)}
+                  >
+                    <View style={styles.characterPreview}>
+                      <ModelViewer3D
+                        modelPath={`/models/characters/${option.id}.gltf`}
+                        animations={['Idle']}
+                        width={60}
+                        height={60}
+                        autoRotate={false}
+                        cameraDistance="2.0m"
+                        borderRadius={30}
+                      />
+                    </View>
+                    {editCharacter === option.id && (
+                      <View style={styles.checkmark}>
+                        <Text style={styles.checkmarkText}>✓</Text>
+                      </View>
+                    )}
+                  </Pressable>
+                ))}
+              </View>
             </View>
 
             {/* 학교 선택 */}
@@ -569,7 +617,7 @@ export default function ProfileScreen() {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </SafeAreaView >
   );
 }
 
@@ -898,5 +946,48 @@ const styles = StyleSheet.create({
     ...TextStyle.body,
     color: Colors.text.secondary,
     lineHeight: 22,
+  },
+  // Character Selection Styles
+  characterRow: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    justifyContent: 'space-between',
+  },
+  characterOption: {
+    alignItems: 'center',
+    padding: Spacing.xs,
+    borderRadius: BorderRadius.md,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  characterOptionSelected: {
+    borderColor: Colors.primary.main,
+    backgroundColor: Colors.primary.main + '10',
+  },
+  characterPreview: {
+    width: 60,
+    height: 60,
+    backgroundColor: Colors.gray[100],
+    borderRadius: 30,
+    overflow: 'hidden',
+    marginBottom: Spacing.xs,
+  },
+  checkmark: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    backgroundColor: Colors.primary.main,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: Colors.background.primary,
+  },
+  checkmarkText: {
+    color: Colors.text.inverse,
+    fontSize: 12,
+    fontWeight: 'bold',
   },
 });

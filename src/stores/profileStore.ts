@@ -17,6 +17,7 @@ export interface UserProfile {
   nickname: string;
   schoolType: SchoolType;
   grade: GradeNumber;
+  character: string;
   createdAt: number;
   updatedAt: number;
 }
@@ -78,6 +79,7 @@ const defaultProfile: UserProfile = {
   nickname: '탐험가',
   schoolType: 'elementary',
   grade: 5,
+  character: 'Female_1',
   createdAt: Date.now(),
   updatedAt: Date.now(),
 };
