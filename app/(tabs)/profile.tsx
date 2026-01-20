@@ -17,7 +17,7 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { Circle, Path, Defs, LinearGradient, Stop } from 'react-native-svg';
+import LottieView from 'lottie-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors, Spacing, BorderRadius, Shadow, TextStyle } from '../../src/constants';
 import {
@@ -88,20 +88,29 @@ Career Compass 개인정보처리방침
 `;
 
 const ProfileAvatar = () => (
-  <Svg width={80} height={80} viewBox="0 0 80 80">
-    <Defs>
-      <LinearGradient id="avatarGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <Stop offset="0%" stopColor={Colors.primary.main} />
-        <Stop offset="100%" stopColor={Colors.secondary.main} />
-      </LinearGradient>
-    </Defs>
-    <Circle cx={40} cy={40} r={38} fill="url(#avatarGrad)" />
-    <Circle cx={40} cy={42} r={24} fill={Colors.character.skin.light} />
-    <Circle cx={33} cy={38} r={4} fill={Colors.character.hair.black} />
-    <Circle cx={47} cy={38} r={4} fill={Colors.character.hair.black} />
-    <Path d="M 33 50 Q 40 56 47 50" stroke={Colors.character.mouth} strokeWidth={3} fill="none" />
-  </Svg>
+  <View style={profileAvatarStyles.container}>
+    <LottieView
+      source={require('../../assets/girl-waving.json')}
+      autoPlay
+      loop
+      style={profileAvatarStyles.lottie}
+    />
+  </View>
 );
+
+const profileAvatarStyles = StyleSheet.create({
+  container: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    overflow: 'hidden',
+    backgroundColor: Colors.primary.main + '15',
+  },
+  lottie: {
+    width: 80,
+    height: 80,
+  },
+});
 
 interface MenuItemProps {
   icon: string;

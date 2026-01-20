@@ -328,8 +328,13 @@ export default function HomeScreen() {
                   나에게 맞는 미래를 발견해요
                 </Text>
               </View>
-              <View style={styles.mainCardIcon}>
-                <Text style={styles.mainCardEmoji}>🚀</Text>
+              <View style={styles.mainCharacterContainer}>
+                <LottieView
+                  source={require('../../assets/girl-waving.json')}
+                  autoPlay
+                  loop
+                  style={styles.mainCharacterLottie}
+                />
               </View>
             </View>
             <View style={styles.mainCardBadge}>
@@ -715,5 +720,16 @@ const styles = StyleSheet.create({
   smallCharacterLottie: {
     width: 56,
     height: 56,
+  },
+  mainCharacterContainer: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+  },
+  mainCharacterLottie: {
+    width: 100,
+    height: 100,
   },
 });
