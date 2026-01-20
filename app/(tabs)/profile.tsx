@@ -99,11 +99,11 @@ const ProfileAvatar = ({ character }: { character: string }) => (
   <View style={profileAvatarStyles.container}>
     <ModelViewer3D
       modelPath={`/models/characters/${character}.gltf`}
-      animations={['Walk', 'Wave', 'No', 'Yes']}
+      animations={['Wave', 'Yes']}
       width={100}
       height={100}
-      autoRotate={true}
-      cameraDistance="6.0m"
+      autoRotate={false}
+      cameraDistance="12.0m"
       borderRadius={50}
     />
   </View>
