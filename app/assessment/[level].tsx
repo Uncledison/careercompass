@@ -40,10 +40,10 @@ import { EmotionSlider } from '../../src/components/assessment/EmotionSlider';
 const MODEL_PATHS: Record<string, Record<number, { path: string; animations: string[]; cameraDistance?: string }>> = {
   elementary: {
     1: { path: '/models/chick.glb', animations: ['Idle_Peck', 'Run'], cameraDistance: '2.5m' },
-    2: { path: '/models/cat.glb', animations: ['Idle', 'Walk'], cameraDistance: '3.5m' },
-    3: { path: '/models/dog.glb', animations: ['Idle', 'Walk'], cameraDistance: '4.0m' },
-    4: { path: '/models/pig.glb', animations: ['Idle', 'Walk'], cameraDistance: '4.0m' },
-    5: { path: '/models/sheep.glb', animations: ['Idle', 'Walk'], cameraDistance: '4.0m' },
+    2: { path: '/models/cat.glb', animations: ['Idle', 'Walk'], cameraDistance: '5.0m' },
+    3: { path: '/models/dog.glb', animations: ['Idle', 'Walk'], cameraDistance: '6.0m' },
+    4: { path: '/models/pig.glb', animations: ['Idle', 'Walk'], cameraDistance: '6.0m' },
+    5: { path: '/models/sheep.glb', animations: ['Idle', 'Walk'], cameraDistance: '6.0m' },
   },
 };
 import { getStagesByLevel } from '../../src/data/questions';
