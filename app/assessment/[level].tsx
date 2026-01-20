@@ -37,13 +37,13 @@ import { ModelViewer3D } from '../../src/components/character/ModelViewer3D';
 import { EmotionSlider } from '../../src/components/assessment/EmotionSlider';
 
 // GLB 모델 경로 (웹 배포용)
-const MODEL_PATHS: Record<string, Record<number, { path: string; animations: string[] }>> = {
+const MODEL_PATHS: Record<string, Record<number, { path: string; animations: string[]; cameraDistance?: string }>> = {
   elementary: {
-    1: { path: '/models/chick.glb', animations: ['Idle_Peck', 'Run'] },
-    2: { path: '/models/cat.glb', animations: ['Idle', 'Walk'] },
-    3: { path: '/models/dog.glb', animations: ['Idle', 'Walk'] },
-    4: { path: '/models/pig.glb', animations: ['Idle', 'Walk'] },
-    5: { path: '/models/sheep.glb', animations: ['Idle', 'Walk'] },
+    1: { path: '/models/chick.glb', animations: ['Idle_Peck', 'Run'], cameraDistance: '2.5m' },
+    2: { path: '/models/cat.glb', animations: ['Idle', 'Walk'], cameraDistance: '3.5m' },
+    3: { path: '/models/dog.glb', animations: ['Idle', 'Walk'], cameraDistance: '4.0m' },
+    4: { path: '/models/pig.glb', animations: ['Idle', 'Walk'], cameraDistance: '4.0m' },
+    5: { path: '/models/sheep.glb', animations: ['Idle', 'Walk'], cameraDistance: '4.0m' },
   },
 };
 import { getStagesByLevel } from '../../src/data/questions';
@@ -417,6 +417,7 @@ export default function AssessmentScreen() {
                 <ModelViewer3D
                   modelPath={MODEL_PATHS.elementary[currentStage].path}
                   animations={MODEL_PATHS.elementary[currentStage].animations}
+                  cameraDistance={MODEL_PATHS.elementary[currentStage].cameraDistance}
                   width={200}
                   height={180}
                   autoRotate={true}
