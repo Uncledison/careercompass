@@ -18,6 +18,7 @@ interface ModelViewer3DProps {
   borderRadius?: number;
   cameraDistance?: string; // 카메라 거리 (예: "4m", "5m")
   disableControls?: boolean; // 컨트롤(회전/줌) 비활성화 여부
+  cameraTarget?: string; // 카메라 타겟 (예: "0m 1m 0m")
 }
 
 export const ModelViewer3D: React.FC<ModelViewer3DProps> = ({
@@ -30,6 +31,7 @@ export const ModelViewer3D: React.FC<ModelViewer3DProps> = ({
   borderRadius = 16,
   cameraDistance,
   disableControls = false,
+  cameraTarget,
 }) => {
   // 애니메이션 순차 재생을 위한 HTML
   const htmlContent = `
@@ -71,6 +73,7 @@ export const ModelViewer3D: React.FC<ModelViewer3DProps> = ({
     rotation-per-second="30deg"
     ${disableControls ? '' : 'camera-controls'}
     camera-orbit="0deg 75deg ${cameraDistance || '2.5m'}"
+    camera-target="${cameraTarget || 'auto auto auto'}"
     min-camera-orbit="auto auto auto"
     max-camera-orbit="auto auto auto"
     interaction-prompt="none"
