@@ -51,6 +51,12 @@ export const ModelViewer3D: React.FC<ModelViewer3DProps> = ({
       width: 100%;
       height: 100%;
       --poster-color: transparent;
+      --progress-bar-color: transparent;
+      --progress-bar-height: 0px;
+    }
+    model-viewer::part(default-progress-bar) {
+      display: none;
+      opacity: 0;
     }
   </style>
 </head>
