@@ -268,6 +268,8 @@ export default function HomeScreen() {
                 backgroundColor={Colors.primary.main + '15'}
                 borderRadius={28}
               />
+              {/* 터치 이벤트 가로채기용 오버레이 */}
+              <View style={StyleSheet.absoluteFill} />
             </View>
           </Pressable>
         </View>
