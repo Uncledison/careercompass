@@ -103,7 +103,7 @@ const ProfileAvatar = ({ character }: { character: string }) => (
       width={100}
       height={100}
       autoRotate={true}
-      cameraDistance="2.0m"
+      cameraDistance="6.0m"
       borderRadius={50}
     />
   </View>
@@ -442,9 +442,12 @@ export default function ProfileScreen() {
                         width={60}
                         height={60}
                         autoRotate={false}
-                        cameraDistance="2.0m"
+                        cameraDistance="6.0m"
                         borderRadius={30}
+                        disableControls={true}
                       />
+                      {/* WebView에서 터치를 가로채지 못하도록 절대 경계 오버레이 추가 */}
+                      <View style={StyleSheet.absoluteFill} />
                     </View>
                     {editCharacter === option.id && (
                       <View style={styles.checkmark}>
