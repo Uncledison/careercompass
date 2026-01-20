@@ -11,17 +11,21 @@ import { WebView } from 'react-native-webview';
 interface ModelViewer3DProps {
   modelPath: string;
   animations?: string[];
-  size?: number;
+  width?: number;
+  height?: number;
   autoRotate?: boolean;
   backgroundColor?: string;
+  borderRadius?: number;
 }
 
 export const ModelViewer3D: React.FC<ModelViewer3DProps> = ({
   modelPath,
   animations = ['Idle_Peck', 'Run'],
-  size = 150,
+  width = 200,
+  height = 180,
   autoRotate = true,
   backgroundColor = 'transparent',
+  borderRadius = 16,
 }) => {
   // 애니메이션 순차 재생을 위한 HTML
   const htmlContent = `
@@ -105,14 +109,14 @@ export const ModelViewer3D: React.FC<ModelViewer3DProps> = ({
   if (Platform.OS === 'web') {
     // 웹에서는 iframe 사용
     return (
-      <View style={[styles.container, { width: size, height: size }]}>
+      <View style={[styles.container, { width, height, borderRadius }]}>
         <iframe
           srcDoc={htmlContent}
           style={{
             width: '100%',
             height: '100%',
             border: 'none',
-            borderRadius: size / 2,
+            borderRadius,
             overflow: 'hidden',
           }}
           title="3D Model Viewer"
@@ -123,7 +127,7 @@ export const ModelViewer3D: React.FC<ModelViewer3DProps> = ({
 
   // 네이티브에서는 WebView 사용
   return (
-    <View style={[styles.container, { width: size, height: size }]}>
+    <View style={[styles.container, { width, height, borderRadius }]}>
       <WebView
         source={{ html: htmlContent }}
         style={styles.webview}
@@ -140,7 +144,6 @@ export const ModelViewer3D: React.FC<ModelViewer3DProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: 75,
     overflow: 'hidden',
     backgroundColor: 'transparent',
   },

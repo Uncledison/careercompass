@@ -413,8 +413,10 @@ export default function AssessmentScreen() {
                 <ModelViewer3D
                   modelPath={MODEL_PATHS.elementary[1]}
                   animations={['Idle_Peck', 'Run']}
-                  size={150}
+                  width={220}
+                  height={180}
                   autoRotate={true}
+                  borderRadius={16}
                 />
               ) : (
                 <Character3D
