@@ -26,7 +26,7 @@ const CARD_PAIRS = [
     { id: 'coding', image: require('../../assets/images/game/coding.png'), name: '코딩' },
 ];
 
-const CARD_BACK_IMAGE = require('../../assets/images/game/card_back.png');
+const CARD_BACK_IMAGE = require('../../assets/images/game/card_back_1.png');
 
 const LEVEL_CONFIG = {
     1: { pairs: 6, time: null, cols: 3, label: '초급' },
@@ -55,7 +55,7 @@ const CardItem = ({
     const rotation = useSharedValue(0);
 
     useEffect(() => {
-        rotation.value = withTiming(card.isFlipped || card.isMatched ? 180 : 0, { duration: 300 });
+        rotation.value = withTiming(card.isFlipped || card.isMatched ? 180 : 0, { duration: 200 });
     }, [card.isFlipped, card.isMatched]);
 
     const frontStyle = useAnimatedStyle(() => {
