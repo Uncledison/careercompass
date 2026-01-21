@@ -53,7 +53,7 @@ const slides: OnboardingSlide[] = [
         width={200}
         height={200}
         autoRotate={true}
-        cameraDistance="4.0m"
+        cameraDistance="6.0m"
         disableControls={true}
         backgroundColor="transparent"
       />
@@ -70,7 +70,7 @@ const slides: OnboardingSlide[] = [
         width={200}
         height={200}
         autoRotate={true}
-        cameraDistance="4.0m"
+        cameraDistance="7.0m"
         disableControls={true}
         backgroundColor="transparent"
       />

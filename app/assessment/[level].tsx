@@ -46,18 +46,18 @@ const MODEL_PATHS: Record<string, Record<number, { path: string; animations: str
     5: { path: '/models/sheep.glb', animations: ['Idle', 'Walk'], cameraDistance: '6.0m' },
   },
   middle: {
-    1: { path: '/models/Wizard.glb', animations: ['Walk.004'], cameraDistance: '10.0m' },
-    2: { path: '/models/Yeti_Middle.glb', animations: ['Walk.004'], cameraDistance: '8.5m' },
-    3: { path: '/models/Goblin.glb', animations: ['Walk.004'], cameraDistance: '6.0m' },
-    4: { path: '/models/Giant.glb', animations: ['Walk.004'], cameraDistance: '9.0m' },
-    5: { path: '/models/Zombie.glb', animations: ['Walk.004'], cameraDistance: '6.5m' },
-  },
-  high: {
     1: { path: '/models/Ninja.glb', animations: ['Walk.009'], cameraDistance: '8.5m' },
     2: { path: '/models/Orc.glb', animations: ['Walk.009'], cameraDistance: '8.0m' },
     3: { path: '/models/Bunny.glb', animations: ['Walk.009'], cameraDistance: '8.0m' },
     4: { path: '/models/Yeti_High.glb', animations: ['Walk.009'], cameraDistance: '7.0m' },
     5: { path: '/models/Demon.glb', animations: ['Walk.009'], cameraDistance: '7.0m' },
+  },
+  high: {
+    1: { path: '/models/Wizard.glb', animations: ['Walk.004'], cameraDistance: '10.0m' },
+    2: { path: '/models/Yeti_Middle.glb', animations: ['Walk.004'], cameraDistance: '8.5m' },
+    3: { path: '/models/Goblin.glb', animations: ['Walk.004'], cameraDistance: '6.0m' },
+    4: { path: '/models/Giant.glb', animations: ['Walk.004'], cameraDistance: '9.0m' },
+    5: { path: '/models/Zombie.glb', animations: ['Walk.004'], cameraDistance: '6.5m' },
   },
 };
 import { getStagesByLevel } from '../../src/data/questions';
