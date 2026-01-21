@@ -369,14 +369,14 @@ const styles = StyleSheet.create({
         ...Shadow.sm,
     },
     cardFront: {
-        // Background color set dynamically
+        backgroundColor: '#FFFFFF',
     },
     cardBack: {
         borderWidth: 2,
     },
     cardImage: {
-        width: '70%',
-        height: '70%',
+        width: '80%',
+        height: '80%',
     },
     footer: {
         padding: Spacing.lg,
