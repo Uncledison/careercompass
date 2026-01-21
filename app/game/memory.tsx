@@ -26,21 +26,11 @@ const CARD_PAIRS = [
     { id: 'coding', image: require('../../assets/images/game/coding.png'), name: '코딩' },
 ];
 
-const CARD_BACK_IMAGE = require('../../assets/images/game/card_back_1.png');
+const CARD_BACK_IMAGE = require('../../assets/images/game/card_back_final.png');
 
-const LEVEL_CONFIG = {
-    1: { pairs: 6, time: null, cols: 3, label: '초급' },
-    2: { pairs: 8, time: 60, cols: 4, label: '중급' },
-    3: { pairs: 10, time: 50, cols: 4, label: '고급' },
-};
+// ... (LEVEL_CONFIG remains same)
 
-interface Card {
-    id: string; // Unique ID for key
-    pairId: string; // ID to check match (e.g., 'science')
-    image: ImageSourcePropType;
-    isFlipped: boolean;
-    isMatched: boolean;
-}
+// ... (Card interface remains same)
 
 const CardItem = ({
     card,
@@ -75,242 +65,278 @@ const CardItem = ({
     });
 
     return (
-        <Pressable onPress={onPress} style={{ width: cardWidth, height: cardWidth * 1.2, margin: 5 }}>
-            {/* Front (Hidden state - Question Mark Image) */}
-            <Animated.View style={[styles.card, styles.cardFront, frontStyle, { backgroundColor: colors.primary.main }]}>
-                <Image source={CARD_BACK_IMAGE} style={styles.cardImage} resizeMode="contain" />
+        <Pressable onPress={onPress} style={{ width: cardWidth, height: cardWidth * 1.35, margin: 5 }}>
+            {/* Front (Hidden state - Question Mark / Card Back Image) */}
+            {/* Note: In Memory Game terminology, "Front" usually refers to the face-down state (Question Mark), and "Back" is the revealed content. */}
+            {/* However, the code naming here is reversed: */}
+            {/* cardFront = Question Mark (Initial State) -> This should be the FULL BLEED CARD BACK IMAGE */}
+            <Animated.View style={[styles.card, styles.cardFront, frontStyle]}>
+                <Image source={CARD_BACK_IMAGE} style={styles.cardBackImage} resizeMode="cover" />
             </Animated.View>
 
-            {/* Back (Revealed state - Item Image) */}
-            <Animated.View style={[styles.card, styles.cardBack, backStyle, { backgroundColor: colors.background.primary, borderColor: colors.primary.main }]}>
-                <Image source={card.image} style={styles.cardImage} resizeMode="contain" />
+            {/* Back (Revealed state - Item Image) -> This is the face-up state */}
+            <Animated.View style={[styles.card, styles.cardBack, backStyle, { backgroundColor: '#FFFFFF', borderColor: colors.primary.main, borderWidth: 2 }]}>
+                <Image source={card.image} style={styles.cardFrontImage} resizeMode="contain" />
             </Animated.View>
         </Pressable>
     );
 };
 
-export default function MemoryGameScreen() {
-    const router = useRouter();
-    const { colors } = useTheme();
+// ... (MemoryGameScreen main component remains same)
 
-    const [level, setLevel] = useState<1 | 2 | 3>(1);
-    const [cards, setCards] = useState<Card[]>([]);
-    const [flippedIndices, setFlippedIndices] = useState<number[]>([]);
-    const [matches, setMatches] = useState(0);
-    const [attempts, setAttempts] = useState(0);
-    const [isLocked, setIsLocked] = useState(false);
-    const [timeLeft, setTimeLeft] = useState<number | null>(null);
-    const [gameState, setGameState] = useState<'playing' | 'level_complete' | 'game_over' | 'all_complete'>('playing');
+const styles = StyleSheet.create({
+    // ... (other styles)
+    card: {
+        position: 'absolute',
+        width: '100%',
+        height: '100%',
+        borderRadius: BorderRadius.lg,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backfaceVisibility: 'hidden',
+        ...Shadow.sm,
+        overflow: 'hidden', // Added to clip the border radius
+    },
+    cardFront: {
+        backgroundColor: 'transparent', // Transparent so the image is the card
+        ...Shadow.none, // Remove shadow from container if image has it, but let's keep it clean
+    },
+    cardBack: {
+        // This is the face-up side (content)
+        // Keep border/bg here
+    },
+    cardBackImage: {
+        width: '100%',
+        height: '100%',
+    },
+    cardFrontImage: { // The icon
+        width: '80%',
+        height: '80%',
+    },
+    // ...
 
-    // Initialize Game
-    useEffect(() => {
-        startNewGame(1);
-    }, []);
+    export default function MemoryGameScreen() {
+        const router = useRouter();
+        const { colors } = useTheme();
 
-    // Timer Logic
-    useEffect(() => {
-        let interval: any;
+        const [level, setLevel] = useState<1 | 2 | 3>(1);
+        const [cards, setCards] = useState<Card[]>([]);
+        const [flippedIndices, setFlippedIndices] = useState<number[]>([]);
+        const [matches, setMatches] = useState(0);
+        const [attempts, setAttempts] = useState(0);
+        const [isLocked, setIsLocked] = useState(false);
+        const [timeLeft, setTimeLeft] = useState<number | null>(null);
+        const [gameState, setGameState] = useState<'playing' | 'level_complete' | 'game_over' | 'all_complete'>('playing');
 
-        if (gameState === 'playing' && timeLeft !== null && timeLeft > 0) {
-            interval = setInterval(() => {
-                setTimeLeft((prev) => {
-                    if (prev === 1) {
-                        clearInterval(interval);
-                        handleGameOver();
-                        return 0;
-                    }
-                    return prev! - 1;
-                });
-            }, 1000);
-        }
+        // Initialize Game
+        useEffect(() => {
+    startNewGame(1);
+}, []);
 
-        return () => clearInterval(interval);
-    }, [gameState, timeLeft]);
+// Timer Logic
+useEffect(() => {
+    let interval: any;
 
-    const startNewGame = (targetLevel: 1 | 2 | 3 = 1) => {
-        setLevel(targetLevel);
-        setGameState('playing');
-        const config = LEVEL_CONFIG[targetLevel];
-        const selectedPairs = CARD_PAIRS.slice(0, config.pairs);
-
-        const duplicatedPairs = [...selectedPairs, ...selectedPairs].map((item, index) => ({
-            ...item,
-            id: `card-${index}`,
-            pairId: item.id,
-            isFlipped: false,
-            isMatched: false,
-        }));
-
-        // Shuffle
-        const shuffled = duplicatedPairs.sort(() => Math.random() - 0.5);
-        setCards(shuffled);
-        setFlippedIndices([]);
-        setMatches(0);
-        setAttempts(0);
-        setIsLocked(false);
-        setTimeLeft(config.time);
-    };
-
-    const handleGameOver = () => {
-        setGameState('game_over');
-        setIsLocked(true);
-    };
-
-    const handleLevelComplete = () => {
-        if (level < 3) {
-            setGameState('level_complete');
-        } else {
-            setGameState('all_complete');
-        }
-    };
-
-    const handleCardPress = (index: number) => {
-        if (isLocked || cards[index].isFlipped || cards[index].isMatched || gameState !== 'playing') return;
-
-        const newCards = [...cards];
-        newCards[index].isFlipped = true;
-        setCards(newCards);
-
-        const newFlippedIndices = [...flippedIndices, index];
-        setFlippedIndices(newFlippedIndices);
-
-        if (newFlippedIndices.length === 2) {
-            setIsLocked(true);
-            setAttempts(prev => prev + 1);
-            checkForMatch(newFlippedIndices, newCards);
-        }
-    };
-
-    const checkForMatch = (indices: number[], currentCards: Card[]) => {
-        const [index1, index2] = indices;
-        const card1 = currentCards[index1];
-        const card2 = currentCards[index2];
-
-        if (card1.pairId === card2.pairId) {
-            // Match!
-            setTimeout(() => {
-                const newCards = [...currentCards];
-                newCards[index1].isMatched = true;
-                newCards[index2].isMatched = true;
-                setCards(newCards);
-                setFlippedIndices([]);
-                setIsLocked(false);
-
-                const newMatches = matches + 1;
-                setMatches(newMatches);
-
-                if (newMatches === LEVEL_CONFIG[level].pairs) {
-                    handleLevelComplete();
+    if (gameState === 'playing' && timeLeft !== null && timeLeft > 0) {
+        interval = setInterval(() => {
+            setTimeLeft((prev) => {
+                if (prev === 1) {
+                    clearInterval(interval);
+                    handleGameOver();
+                    return 0;
                 }
-            }, 500);
-        } else {
-            // No Match
-            setTimeout(() => {
-                const newCards = [...currentCards];
-                newCards[index1].isFlipped = false;
-                newCards[index2].isFlipped = false;
-                setCards(newCards);
-                setFlippedIndices([]);
-                setIsLocked(false);
-            }, 1000);
-        }
-    };
+                return prev! - 1;
+            });
+        }, 1000);
+    }
 
-    const screenWidth = Dimensions.get('window').width;
-    const config = LEVEL_CONFIG[level];
-    const cardWidth = (screenWidth - (Spacing.md * 2) - (config.cols * 10)) / config.cols;
+    return () => clearInterval(interval);
+}, [gameState, timeLeft]);
 
-    // Game Result Modal Content
-    const renderGameResult = () => {
-        if (gameState === 'playing') return null;
+const startNewGame = (targetLevel: 1 | 2 | 3 = 1) => {
+    setLevel(targetLevel);
+    setGameState('playing');
+    const config = LEVEL_CONFIG[targetLevel];
+    const selectedPairs = CARD_PAIRS.slice(0, config.pairs);
 
-        let title = '';
-        let message = '';
-        let buttonText = '';
-        let onButtonPress = () => { };
-        let secondaryButtonText = '그만하기';
+    const duplicatedPairs = [...selectedPairs, ...selectedPairs].map((item, index) => ({
+        ...item,
+        id: `card-${index}`,
+        pairId: item.id,
+        isFlipped: false,
+        isMatched: false,
+    }));
 
-        switch (gameState) {
-            case 'level_complete':
-                title = '레벨 클리어! 🎉';
-                message = `${LEVEL_CONFIG[level].label} 난이도를 통과하셨습니다!\n다음 단계로 넘어갈까요?`;
-                buttonText = '다음 레벨 도전';
-                onButtonPress = () => startNewGame((level + 1) as 1 | 2 | 3);
-                break;
-            case 'all_complete':
-                title = '모든 레벨 정복! 🏆';
-                message = '대단해요! 진정한 기억력 마스터시네요!';
-                buttonText = '처음부터 다시';
-                onButtonPress = () => startNewGame(1);
-                break;
-            case 'game_over':
-                title = '시간 초과 ⏰';
-                message = '아쉽네요! 다시 도전해보세요.';
-                buttonText = '다시 시도';
-                onButtonPress = () => startNewGame(level);
-                break;
-        }
+    // Shuffle
+    const shuffled = duplicatedPairs.sort(() => Math.random() - 0.5);
+    setCards(shuffled);
+    setFlippedIndices([]);
+    setMatches(0);
+    setAttempts(0);
+    setIsLocked(false);
+    setTimeLeft(config.time);
+};
 
-        return (
-            <View style={[styles.resultOverlay, { backgroundColor: 'rgba(0,0,0,0.8)' }]}>
-                <View style={[styles.resultCard, { backgroundColor: colors.background.primary }]}>
-                    <Text style={[styles.resultTitle, { color: colors.text.primary }]}>{title}</Text>
-                    <Text style={[styles.resultMessage, { color: colors.text.secondary }]}>{message}</Text>
+const handleGameOver = () => {
+    setGameState('game_over');
+    setIsLocked(true);
+};
 
-                    <Pressable style={[styles.primaryButton, { backgroundColor: colors.primary.main }]} onPress={onButtonPress}>
-                        <Text style={styles.primaryButtonText}>{buttonText}</Text>
-                    </Pressable>
+const handleLevelComplete = () => {
+    if (level < 3) {
+        setGameState('level_complete');
+    } else {
+        setGameState('all_complete');
+    }
+};
 
-                    <Pressable style={styles.secondaryButton} onPress={() => router.back()}>
-                        <Text style={[styles.secondaryButtonText, { color: colors.text.secondary }]}>{secondaryButtonText}</Text>
-                    </Pressable>
-                </View>
-            </View>
-        );
-    };
+const handleCardPress = (index: number) => {
+    if (isLocked || cards[index].isFlipped || cards[index].isMatched || gameState !== 'playing') return;
+
+    const newCards = [...cards];
+    newCards[index].isFlipped = true;
+    setCards(newCards);
+
+    const newFlippedIndices = [...flippedIndices, index];
+    setFlippedIndices(newFlippedIndices);
+
+    if (newFlippedIndices.length === 2) {
+        setIsLocked(true);
+        setAttempts(prev => prev + 1);
+        checkForMatch(newFlippedIndices, newCards);
+    }
+};
+
+const checkForMatch = (indices: number[], currentCards: Card[]) => {
+    const [index1, index2] = indices;
+    const card1 = currentCards[index1];
+    const card2 = currentCards[index2];
+
+    if (card1.pairId === card2.pairId) {
+        // Match!
+        setTimeout(() => {
+            const newCards = [...currentCards];
+            newCards[index1].isMatched = true;
+            newCards[index2].isMatched = true;
+            setCards(newCards);
+            setFlippedIndices([]);
+            setIsLocked(false);
+
+            const newMatches = matches + 1;
+            setMatches(newMatches);
+
+            if (newMatches === LEVEL_CONFIG[level].pairs) {
+                handleLevelComplete();
+            }
+        }, 500);
+    } else {
+        // No Match
+        setTimeout(() => {
+            const newCards = [...currentCards];
+            newCards[index1].isFlipped = false;
+            newCards[index2].isFlipped = false;
+            setCards(newCards);
+            setFlippedIndices([]);
+            setIsLocked(false);
+        }, 1000);
+    }
+};
+
+const screenWidth = Dimensions.get('window').width;
+const config = LEVEL_CONFIG[level];
+const cardWidth = (screenWidth - (Spacing.md * 2) - (config.cols * 10)) / config.cols;
+
+// Game Result Modal Content
+const renderGameResult = () => {
+    if (gameState === 'playing') return null;
+
+    let title = '';
+    let message = '';
+    let buttonText = '';
+    let onButtonPress = () => { };
+    let secondaryButtonText = '그만하기';
+
+    switch (gameState) {
+        case 'level_complete':
+            title = '레벨 클리어! 🎉';
+            message = `${LEVEL_CONFIG[level].label} 난이도를 통과하셨습니다!\n다음 단계로 넘어갈까요?`;
+            buttonText = '다음 레벨 도전';
+            onButtonPress = () => startNewGame((level + 1) as 1 | 2 | 3);
+            break;
+        case 'all_complete':
+            title = '모든 레벨 정복! 🏆';
+            message = '대단해요! 진정한 기억력 마스터시네요!';
+            buttonText = '처음부터 다시';
+            onButtonPress = () => startNewGame(1);
+            break;
+        case 'game_over':
+            title = '시간 초과 ⏰';
+            message = '아쉽네요! 다시 도전해보세요.';
+            buttonText = '다시 시도';
+            onButtonPress = () => startNewGame(level);
+            break;
+    }
 
     return (
-        <SafeAreaView style={[styles.container, { backgroundColor: colors.background.secondary }]}>
-            <Stack.Screen options={{ headerShown: false }} />
+        <View style={[styles.resultOverlay, { backgroundColor: 'rgba(0,0,0,0.8)' }]}>
+            <View style={[styles.resultCard, { backgroundColor: colors.background.primary }]}>
+                <Text style={[styles.resultTitle, { color: colors.text.primary }]}>{title}</Text>
+                <Text style={[styles.resultMessage, { color: colors.text.secondary }]}>{message}</Text>
 
-            <View style={styles.header}>
-                <Pressable onPress={() => router.back()} style={styles.closeButton}>
-                    <Text style={[styles.closeButtonText, { color: colors.text.secondary }]}>✕</Text>
+                <Pressable style={[styles.primaryButton, { backgroundColor: colors.primary.main }]} onPress={onButtonPress}>
+                    <Text style={styles.primaryButtonText}>{buttonText}</Text>
                 </Pressable>
-                <View style={styles.titleContainer}>
-                    <Text style={[styles.title, { color: colors.text.primary }]}>미니 게임</Text>
-                    <Text style={[styles.subtitle, { color: colors.primary.main }]}>{config.label} (Lv.{level})</Text>
-                </View>
-                <View style={styles.scoreContainer}>
-                    {timeLeft !== null && (
-                        <Text style={[styles.timerText, { color: timeLeft <= 10 ? Colors.semantic.error : colors.text.primary }]}>
-                            ⏳ {timeLeft}초
-                        </Text>
-                    )}
-                </View>
-            </View>
 
-            <View style={styles.gridContainer}>
-                {cards.map((card, index) => (
-                    <CardItem
-                        key={card.id}
-                        card={card}
-                        onPress={() => handleCardPress(index)}
-                        cardWidth={cardWidth}
-                    />
-                ))}
-            </View>
-
-            <View style={styles.footer}>
-                <Text style={[styles.attemptText, { color: colors.text.secondary }]}>시도 횟수: {attempts}</Text>
-                <Pressable style={[styles.resetButton, { backgroundColor: colors.gray[200] }]} onPress={() => startNewGame(level)}>
-                    <Text style={[styles.resetButtonText, { color: colors.text.primary }]}>현재 레벨 재시작</Text>
+                <Pressable style={styles.secondaryButton} onPress={() => router.back()}>
+                    <Text style={[styles.secondaryButtonText, { color: colors.text.secondary }]}>{secondaryButtonText}</Text>
                 </Pressable>
             </View>
-
-            {renderGameResult()}
-        </SafeAreaView>
+        </View>
     );
+};
+
+return (
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background.secondary }]}>
+        <Stack.Screen options={{ headerShown: false }} />
+
+        <View style={styles.header}>
+            <Pressable onPress={() => router.back()} style={styles.closeButton}>
+                <Text style={[styles.closeButtonText, { color: colors.text.secondary }]}>✕</Text>
+            </Pressable>
+            <View style={styles.titleContainer}>
+                <Text style={[styles.title, { color: colors.text.primary }]}>미니 게임</Text>
+                <Text style={[styles.subtitle, { color: colors.primary.main }]}>{config.label} (Lv.{level})</Text>
+            </View>
+            <View style={styles.scoreContainer}>
+                {timeLeft !== null && (
+                    <Text style={[styles.timerText, { color: timeLeft <= 10 ? Colors.semantic.error : colors.text.primary }]}>
+                        ⏳ {timeLeft}초
+                    </Text>
+                )}
+            </View>
+        </View>
+
+        <View style={styles.gridContainer}>
+            {cards.map((card, index) => (
+                <CardItem
+                    key={card.id}
+                    card={card}
+                    onPress={() => handleCardPress(index)}
+                    cardWidth={cardWidth}
+                />
+            ))}
+        </View>
+
+        <View style={styles.footer}>
+            <Text style={[styles.attemptText, { color: colors.text.secondary }]}>시도 횟수: {attempts}</Text>
+            <Pressable style={[styles.resetButton, { backgroundColor: colors.gray[200] }]} onPress={() => startNewGame(level)}>
+                <Text style={[styles.resetButtonText, { color: colors.text.primary }]}>현재 레벨 재시작</Text>
+            </Pressable>
+        </View>
+
+        {renderGameResult()}
+    </SafeAreaView>
+);
 }
 
 const styles = StyleSheet.create({
