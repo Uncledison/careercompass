@@ -20,7 +20,17 @@ const CARD_PAIRS = [
     { id: 'medical', icon: '🩺', name: '의료' },
     { id: 'engineering', icon: '🤖', name: '공학' },
     { id: 'sports', icon: '⚽', name: '운동' },
+    { id: 'music', icon: '🎵', name: '음악' },
+    { id: 'cooking', icon: '🍳', name: '요리' },
+    { id: 'space', icon: '🚀', name: '우주' },
+    { id: 'coding', icon: '💻', name: '코딩' },
 ];
+
+const LEVEL_CONFIG = {
+    1: { pairs: 6, time: null, cols: 3, label: '초급' },
+    2: { pairs: 8, time: 60, cols: 4, label: '중급' },
+    3: { pairs: 10, time: 50, cols: 4, label: '고급' },
+};
 
 interface Card {
     id: string; // Unique ID for key
@@ -80,19 +90,48 @@ const CardItem = ({
 export default function MemoryGameScreen() {
     const router = useRouter();
     const { colors } = useTheme();
+
+    const [level, setLevel] = useState<1 | 2 | 3>(1);
     const [cards, setCards] = useState<Card[]>([]);
     const [flippedIndices, setFlippedIndices] = useState<number[]>([]);
     const [matches, setMatches] = useState(0);
     const [attempts, setAttempts] = useState(0);
     const [isLocked, setIsLocked] = useState(false);
+    const [timeLeft, setTimeLeft] = useState<number | null>(null);
+    const [gameState, setGameState] = useState<'playing' | 'level_complete' | 'game_over' | 'all_complete'>('playing');
 
     // Initialize Game
     useEffect(() => {
-        startNewGame();
+        startNewGame(1);
     }, []);
 
-    const startNewGame = () => {
-        const duplicatedPairs = [...CARD_PAIRS, ...CARD_PAIRS].map((item, index) => ({
+    // Timer Logic
+    useEffect(() => {
+        let interval: any;
+
+        if (gameState === 'playing' && timeLeft !== null && timeLeft > 0) {
+            interval = setInterval(() => {
+                setTimeLeft((prev) => {
+                    if (prev === 1) {
+                        clearInterval(interval);
+                        handleGameOver();
+                        return 0;
+                    }
+                    return prev! - 1;
+                });
+            }, 1000);
+        }
+
+        return () => clearInterval(interval);
+    }, [gameState, timeLeft]);
+
+    const startNewGame = (targetLevel: 1 | 2 | 3 = 1) => {
+        setLevel(targetLevel);
+        setGameState('playing');
+        const config = LEVEL_CONFIG[targetLevel];
+        const selectedPairs = CARD_PAIRS.slice(0, config.pairs);
+
+        const duplicatedPairs = [...selectedPairs, ...selectedPairs].map((item, index) => ({
             ...item,
             id: `card-${index}`,
             pairId: item.id,
@@ -107,10 +146,24 @@ export default function MemoryGameScreen() {
         setMatches(0);
         setAttempts(0);
         setIsLocked(false);
+        setTimeLeft(config.time);
+    };
+
+    const handleGameOver = () => {
+        setGameState('game_over');
+        setIsLocked(true);
+    };
+
+    const handleLevelComplete = () => {
+        if (level < 3) {
+            setGameState('level_complete');
+        } else {
+            setGameState('all_complete');
+        }
     };
 
     const handleCardPress = (index: number) => {
-        if (isLocked || cards[index].isFlipped || cards[index].isMatched) return;
+        if (isLocked || cards[index].isFlipped || cards[index].isMatched || gameState !== 'playing') return;
 
         const newCards = [...cards];
         newCards[index].isFlipped = true;
@@ -140,13 +193,12 @@ export default function MemoryGameScreen() {
                 setCards(newCards);
                 setFlippedIndices([]);
                 setIsLocked(false);
-                setMatches(prev => prev + 1);
 
-                if (matches + 1 === CARD_PAIRS.length) {
-                    Alert.alert("축하합니다!", `모든 카드를 찾으셨습니다!\n시도 횟수: ${attempts + 1}`, [
-                        { text: "다시 하기", onPress: startNewGame },
-                        { text: "나가기", onPress: () => router.back() }
-                    ]);
+                const newMatches = matches + 1;
+                setMatches(newMatches);
+
+                if (newMatches === LEVEL_CONFIG[level].pairs) {
+                    handleLevelComplete();
                 }
             }, 500);
         } else {
@@ -163,7 +215,57 @@ export default function MemoryGameScreen() {
     };
 
     const screenWidth = Dimensions.get('window').width;
-    const cardWidth = (screenWidth - (Spacing.md * 2) - 40) / 4; // 4 columns with padding
+    const config = LEVEL_CONFIG[level];
+    const cardWidth = (screenWidth - (Spacing.md * 2) - (config.cols * 10)) / config.cols;
+
+    // Game Result Modal Content
+    const renderGameResult = () => {
+        if (gameState === 'playing') return null;
+
+        let title = '';
+        let message = '';
+        let buttonText = '';
+        let onButtonPress = () => { };
+        let secondaryButtonText = '그만하기';
+
+        switch (gameState) {
+            case 'level_complete':
+                title = '레벨 클리어! 🎉';
+                message = `${LEVEL_CONFIG[level].label} 난이도를 통과하셨습니다!\n다음 단계로 넘어갈까요?`;
+                buttonText = '다음 레벨 도전';
+                onButtonPress = () => startNewGame((level + 1) as 1 | 2 | 3);
+                break;
+            case 'all_complete':
+                title = '모든 레벨 정복! 🏆';
+                message = '대단해요! 진정한 기억력 마스터시네요!';
+                buttonText = '처음부터 다시';
+                onButtonPress = () => startNewGame(1);
+                break;
+            case 'game_over':
+                title = '시간 초과 ⏰';
+                message = '아쉽네요! 다시 도전해보세요.';
+                buttonText = '다시 시도';
+                onButtonPress = () => startNewGame(level);
+                break;
+        }
+
+        return (
+            <View style={[styles.resultOverlay, { backgroundColor: 'rgba(0,0,0,0.8)' }]}>
+                <View style={[styles.resultCard, { backgroundColor: colors.background.primary }]}>
+                    <Text style={[styles.resultTitle, { color: colors.text.primary }]}>{title}</Text>
+                    <Text style={[styles.resultMessage, { color: colors.text.secondary }]}>{message}</Text>
+
+                    <Pressable style={[styles.primaryButton, { backgroundColor: colors.primary.main }]} onPress={onButtonPress}>
+                        <Text style={styles.primaryButtonText}>{buttonText}</Text>
+                    </Pressable>
+
+                    <Pressable style={styles.secondaryButton} onPress={() => router.back()}>
+                        <Text style={[styles.secondaryButtonText, { color: colors.text.secondary }]}>{secondaryButtonText}</Text>
+                    </Pressable>
+                </View>
+            </View>
+        );
+    };
 
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: colors.background.secondary }]}>
@@ -173,9 +275,16 @@ export default function MemoryGameScreen() {
                 <Pressable onPress={() => router.back()} style={styles.closeButton}>
                     <Text style={[styles.closeButtonText, { color: colors.text.secondary }]}>✕</Text>
                 </Pressable>
-                <Text style={[styles.title, { color: colors.text.primary }]}>미니 게임</Text>
+                <View style={styles.titleContainer}>
+                    <Text style={[styles.title, { color: colors.text.primary }]}>미니 게임</Text>
+                    <Text style={[styles.subtitle, { color: colors.primary.main }]}>{config.label} (Lv.{level})</Text>
+                </View>
                 <View style={styles.scoreContainer}>
-                    <Text style={[styles.scoreLabel, { color: colors.text.secondary }]}>시도: {attempts}</Text>
+                    {timeLeft !== null && (
+                        <Text style={[styles.timerText, { color: timeLeft <= 10 ? Colors.semantic.error : colors.text.primary }]}>
+                            ⏳ {timeLeft}초
+                        </Text>
+                    )}
                 </View>
             </View>
 
@@ -190,9 +299,14 @@ export default function MemoryGameScreen() {
                 ))}
             </View>
 
-            <Pressable style={[styles.resetButton, { backgroundColor: colors.primary.main }]} onPress={startNewGame}>
-                <Text style={styles.resetButtonText}>다시 시작</Text>
-            </Pressable>
+            <View style={styles.footer}>
+                <Text style={[styles.attemptText, { color: colors.text.secondary }]}>시도 횟수: {attempts}</Text>
+                <Pressable style={[styles.resetButton, { backgroundColor: colors.gray[200] }]} onPress={() => startNewGame(level)}>
+                    <Text style={[styles.resetButtonText, { color: colors.text.primary }]}>현재 레벨 재시작</Text>
+                </Pressable>
+            </View>
+
+            {renderGameResult()}
         </SafeAreaView>
     );
 }
@@ -215,23 +329,32 @@ const styles = StyleSheet.create({
         fontSize: 24,
         fontWeight: 'bold',
     },
+    titleContainer: {
+        alignItems: 'center',
+    },
     title: {
         ...TextStyle.title3,
         fontWeight: 'bold',
     },
+    subtitle: {
+        ...TextStyle.caption1,
+        fontWeight: '600',
+    },
     scoreContainer: {
         padding: Spacing.sm,
+        width: 80,
+        alignItems: 'flex-end',
     },
-    scoreLabel: {
+    timerText: {
         ...TextStyle.body,
-        fontWeight: '600',
+        fontWeight: 'bold',
     },
     gridContainer: {
         flexDirection: 'row',
         flexWrap: 'wrap',
         justifyContent: 'center',
         padding: Spacing.sm,
-        marginTop: Spacing.xl,
+        marginTop: Spacing.lg,
     },
     card: {
         position: 'absolute',
@@ -257,17 +380,69 @@ const styles = StyleSheet.create({
     cardIcon: {
         fontSize: 32,
     },
+    footer: {
+        padding: Spacing.lg,
+        alignItems: 'center',
+        gap: Spacing.md,
+        marginTop: 'auto', // Push to bottom
+    },
+    attemptText: {
+        ...TextStyle.body,
+    },
     resetButton: {
-        marginHorizontal: Spacing.xl,
-        marginTop: Spacing.xxl,
+        paddingHorizontal: Spacing.xl,
         paddingVertical: Spacing.md,
         borderRadius: BorderRadius.full,
         alignItems: 'center',
-        ...Shadow.md,
     },
     resetButtonText: {
+        ...TextStyle.callout,
+        fontWeight: '600',
+    },
+    // Result Modal Styles
+    resultOverlay: {
+        ...StyleSheet.absoluteFillObject,
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 100,
+    },
+    resultCard: {
+        width: '85%',
+        padding: Spacing.xl,
+        borderRadius: BorderRadius.xl,
+        alignItems: 'center',
+        ...Shadow.lg,
+    },
+    resultTitle: {
+        ...TextStyle.title2,
+        fontWeight: 'bold',
+        marginBottom: Spacing.md,
+        textAlign: 'center',
+    },
+    resultMessage: {
+        ...TextStyle.body,
+        textAlign: 'center',
+        marginBottom: Spacing.xl,
+        lineHeight: 24,
+    },
+    primaryButton: {
+        width: '100%',
+        paddingVertical: Spacing.md,
+        borderRadius: BorderRadius.full,
+        alignItems: 'center',
+        marginBottom: Spacing.md,
+    },
+    primaryButtonText: {
         ...TextStyle.callout,
         color: 'white',
         fontWeight: 'bold',
     },
+    secondaryButton: {
+        paddingVertical: Spacing.sm,
+    },
+    secondaryButtonText: {
+        ...TextStyle.body,
+        textDecorationLine: 'underline',
+    },
 });
+

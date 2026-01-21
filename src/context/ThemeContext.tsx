@@ -52,41 +52,17 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     const [isLoaded, setIsLoaded] = useState(false);
 
     useEffect(() => {
-        const loadTheme = async () => {
-            try {
-                const savedTheme = await AsyncStorage.getItem(THEME_STORAGE_KEY);
-                if (savedTheme) {
-                    setIsDarkMode(savedTheme === 'dark');
-                } else {
-                    setIsDarkMode(systemScheme === 'dark');
-                }
-            } catch (error) {
-                console.log('Failed to load theme:', error);
-            } finally {
-                setIsLoaded(true);
-            }
-        };
-        loadTheme();
+        // 테마 기능을 삭제했으므로 항상 라이트 모드로 고정합니다.
+        setIsDarkMode(false);
+        setIsLoaded(true);
     }, []);
 
-    const toggleTheme = async () => {
-        const newMode = !isDarkMode;
-        setIsDarkMode(newMode);
-        try {
-            await AsyncStorage.setItem(THEME_STORAGE_KEY, newMode ? 'dark' : 'light');
-        } catch (error) {
-            console.log('Failed to save theme:', error);
-        }
+    const toggleTheme = () => {
+        // 기능 삭제됨
     };
 
-    const setTheme = async (mode: 'light' | 'dark') => {
-        const isDark = mode === 'dark';
-        setIsDarkMode(isDark);
-        try {
-            await AsyncStorage.setItem(THEME_STORAGE_KEY, mode);
-        } catch (error) {
-            console.log('Failed to save theme:', error);
-        }
+    const setTheme = (mode: 'light' | 'dark') => {
+        // 기능 삭제됨
     };
 
     const themeValues: ThemeContextType = {
