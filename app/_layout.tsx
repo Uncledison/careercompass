@@ -4,34 +4,38 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StyleSheet } from 'react-native';
 import { Colors } from '../src/constants';
 
+import { ThemeProvider } from '../src/context/ThemeContext';
+
 export default function RootLayout() {
   return (
-    <GestureHandlerRootView style={styles.container}>
-      <StatusBar style="dark" />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: Colors.background.primary },
-          animation: 'slide_from_right',
-        }}
-      >
-        <Stack.Screen name="index" />
-        <Stack.Screen name="onboarding" />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="help" />
-        <Stack.Screen name="stats" />
-        <Stack.Screen name="career/[field]" />
-        <Stack.Screen name="history/[id]" />
-        <Stack.Screen
-          name="assessment/[level]"
-          options={{
-            gestureEnabled: false,
-            animation: 'fade',
+    <ThemeProvider>
+      <GestureHandlerRootView style={styles.container}>
+        <StatusBar style="auto" />
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: Colors.background.primary },
+            animation: 'slide_from_right',
           }}
-        />
-        <Stack.Screen name="result/[id]" />
-      </Stack>
-    </GestureHandlerRootView>
+        >
+          <Stack.Screen name="index" />
+          <Stack.Screen name="onboarding" />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="help" />
+          <Stack.Screen name="stats" />
+          <Stack.Screen name="career/[field]" />
+          <Stack.Screen name="history/[id]" />
+          <Stack.Screen
+            name="assessment/[level]"
+            options={{
+              gestureEnabled: false,
+              animation: 'fade',
+            }}
+          />
+          <Stack.Screen name="result/[id]" />
+        </Stack>
+      </GestureHandlerRootView>
+    </ThemeProvider>
   );
 }
 
