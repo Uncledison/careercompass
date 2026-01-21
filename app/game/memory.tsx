@@ -12,6 +12,28 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Colors, Spacing, BorderRadius, Shadow, TextStyle } from '../../src/constants';
 import { useTheme } from '../../src/context/ThemeContext';
+import { Audio } from 'expo-av';
+
+const playSound = async (type: 'flip' | 'match' | 'mismatch' | 'success' | 'gameover') => {
+    try {
+        const soundObject = new Audio.Sound();
+        let source;
+        switch (type) {
+            case 'flip': source = require('../../assets/sounds/flip.mp3'); break;
+            case 'match': source = require('../../assets/sounds/match.mp3'); break;
+            case 'mismatch': source = require('../../assets/sounds/mismatch.mp3'); break;
+            case 'success': source = require('../../assets/sounds/success.mp3'); break;
+            case 'gameover': source = require('../../assets/sounds/gameover.mp3'); break;
+        }
+        // Check if file exists in logic is hard with require, assuming user provides files.
+        // If file is missing, require might fail at runtime or build time. 
+        // For robustness, we wrap in try-catch.
+        await soundObject.loadAsync(source);
+        await soundObject.playAsync();
+    } catch (error) {
+        // console.log('Sound playback failed', error); // Silent fail if asset missing
+    }
+};
 
 const CARD_PAIRS = [
     { id: 'science', image: require('../../assets/images/game/science.png'), name: '과학' },
@@ -28,10 +50,20 @@ const CARD_PAIRS = [
 
 const CARD_BACK_IMAGE = require('../../assets/images/game/card_back_final.png');
 
-const LEVEL_CONFIG = {
-    1: { pairs: 6, time: null, cols: 3, label: '초급' },
-    2: { pairs: 8, time: 60, cols: 4, label: '중급' },
-    3: { pairs: 10, time: 50, cols: 4, label: '고급' },
+const getLevelConfig = (level: number) => {
+    if (level === 1) return { pairs: 6, time: null, cols: 3, label: '초급' };
+    if (level === 2) return { pairs: 8, time: 60, cols: 4, label: '중급' };
+    if (level === 3) return { pairs: 10, time: 50, cols: 4, label: '고급' };
+
+    // Infinite Mode (Level 4+)
+    const infiniteLevel = level - 3;
+    const timeLimit = Math.max(15, 50 - (infiniteLevel * 5)); // Decrease 5s per level, min 15s
+    return {
+        pairs: 10,
+        time: timeLimit,
+        cols: 4,
+        label: `무한 도전 Lv.${infiniteLevel}`
+    };
 };
 
 interface Card {
@@ -40,6 +72,7 @@ interface Card {
     image: ImageSourcePropType;
     isFlipped: boolean;
     isMatched: boolean;
+    isMismatching?: boolean; // New state for shake animation
 }
 
 const CardItem = ({
@@ -53,15 +86,31 @@ const CardItem = ({
 }) => {
     const { colors } = useTheme();
     const rotation = useSharedValue(0);
+    const shake = useSharedValue(0);
 
     useEffect(() => {
         rotation.value = withTiming(card.isFlipped || card.isMatched ? 180 : 0, { duration: 200 });
     }, [card.isFlipped, card.isMatched]);
 
+    // Shake Effect Trigger
+    useEffect(() => {
+        if (card.isMismatching) {
+            shake.value = withSequence(
+                withTiming(10, { duration: 50 }),
+                withTiming(-10, { duration: 50 }),
+                withTiming(10, { duration: 50 }),
+                withTiming(0, { duration: 50 })
+            );
+        }
+    }, [card.isMismatching]);
+
     const frontStyle = useAnimatedStyle(() => {
         const rotateValue = interpolate(rotation.value, [0, 180], [0, 180]);
         return {
-            transform: [{ rotateY: `${rotateValue}deg` }],
+            transform: [
+                { rotateY: `${rotateValue}deg` },
+                { translateX: shake.value }
+            ],
             zIndex: rotation.value < 90 ? 1 : 0,
         };
     });
@@ -69,7 +118,10 @@ const CardItem = ({
     const backStyle = useAnimatedStyle(() => {
         const rotateValue = interpolate(rotation.value, [0, 180], [180, 360]);
         return {
-            transform: [{ rotateY: `${rotateValue}deg` }],
+            transform: [
+                { rotateY: `${rotateValue}deg` },
+                { translateX: shake.value }
+            ],
             zIndex: rotation.value > 90 ? 1 : 0,
         };
     });
@@ -98,14 +150,14 @@ export default function MemoryGameScreen() {
     const router = useRouter();
     const { colors } = useTheme();
 
-    const [level, setLevel] = useState<1 | 2 | 3>(1);
+    const [level, setLevel] = useState<number>(1);
     const [cards, setCards] = useState<Card[]>([]);
     const [flippedIndices, setFlippedIndices] = useState<number[]>([]);
     const [matches, setMatches] = useState(0);
     const [attempts, setAttempts] = useState(0);
     const [isLocked, setIsLocked] = useState(false);
     const [timeLeft, setTimeLeft] = useState<number | null>(null);
-    const [gameState, setGameState] = useState<'playing' | 'level_complete' | 'game_over' | 'all_complete'>('playing');
+    const [gameState, setGameState] = useState<'playing' | 'level_complete' | 'game_over'>('playing');
 
     // Initialize Game
     useEffect(() => {
@@ -132,10 +184,10 @@ export default function MemoryGameScreen() {
         return () => clearInterval(interval);
     }, [gameState, timeLeft]);
 
-    const startNewGame = (targetLevel: 1 | 2 | 3 = 1) => {
+    const startNewGame = (targetLevel: number = 1) => {
         setLevel(targetLevel);
         setGameState('playing');
-        const config = LEVEL_CONFIG[targetLevel];
+        const config = getLevelConfig(targetLevel);
         const selectedPairs = CARD_PAIRS.slice(0, config.pairs);
 
         const duplicatedPairs = [...selectedPairs, ...selectedPairs].map((item, index) => ({
@@ -157,16 +209,14 @@ export default function MemoryGameScreen() {
     };
 
     const handleGameOver = () => {
+        playSound('gameover');
         setGameState('game_over');
         setIsLocked(true);
     };
 
     const handleLevelComplete = () => {
-        if (level < 3) {
-            setGameState('level_complete');
-        } else {
-            setGameState('all_complete');
-        }
+        playSound('success');
+        setGameState('level_complete');
     };
 
     const handleCardPress = (index: number) => {
@@ -175,6 +225,7 @@ export default function MemoryGameScreen() {
         const newCards = [...cards];
         newCards[index].isFlipped = true;
         setCards(newCards);
+        playSound('flip');
 
         const newFlippedIndices = [...flippedIndices, index];
         setFlippedIndices(newFlippedIndices);
@@ -193,6 +244,7 @@ export default function MemoryGameScreen() {
 
         if (card1.pairId === card2.pairId) {
             // Match!
+            playSound('match');
             setTimeout(() => {
                 const newCards = [...currentCards];
                 newCards[index1].isMatched = true;
@@ -204,16 +256,25 @@ export default function MemoryGameScreen() {
                 const newMatches = matches + 1;
                 setMatches(newMatches);
 
-                if (newMatches === LEVEL_CONFIG[level].pairs) {
+                if (newMatches === getLevelConfig(level).pairs) {
                     handleLevelComplete();
                 }
             }, 500);
         } else {
             // No Match
+            playSound('mismatch');
+            // Trigger Shake
+            const shakeCards = [...currentCards];
+            shakeCards[index1].isMismatching = true;
+            shakeCards[index2].isMismatching = true;
+            setCards(shakeCards);
+
             setTimeout(() => {
-                const newCards = [...currentCards];
+                const newCards = [...shakeCards];
                 newCards[index1].isFlipped = false;
                 newCards[index2].isFlipped = false;
+                newCards[index1].isMismatching = false; // Reset shake
+                newCards[index2].isMismatching = false;
                 setCards(newCards);
                 setFlippedIndices([]);
                 setIsLocked(false);
@@ -222,7 +283,7 @@ export default function MemoryGameScreen() {
     };
 
     const screenWidth = Dimensions.get('window').width;
-    const config = LEVEL_CONFIG[level];
+    const config = getLevelConfig(level);
     const cardWidth = (screenWidth - (Spacing.md * 2) - (config.cols * 10)) / config.cols;
 
     // Game Result Modal Content
@@ -238,15 +299,11 @@ export default function MemoryGameScreen() {
         switch (gameState) {
             case 'level_complete':
                 title = '레벨 클리어! 🎉';
-                message = `${LEVEL_CONFIG[level].label} 난이도를 통과하셨습니다!\n다음 단계로 넘어갈까요?`;
+                const nextLevel = level + 1;
+                const nextConfig = getLevelConfig(nextLevel);
+                message = `${config.label} 통과!\n다음은 '${nextConfig.label}' 입니다.\n(제한시간: ${nextConfig.time ? nextConfig.time + '초' : '없음'})`;
                 buttonText = '다음 레벨 도전';
-                onButtonPress = () => startNewGame((level + 1) as 1 | 2 | 3);
-                break;
-            case 'all_complete':
-                title = '모든 레벨 정복! 🏆';
-                message = '대단해요! 진정한 기억력 마스터시네요!';
-                buttonText = '처음부터 다시';
-                onButtonPress = () => startNewGame(1);
+                onButtonPress = () => startNewGame(nextLevel);
                 break;
             case 'game_over':
                 title = '시간 초과 ⏰';
