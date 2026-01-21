@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, Pressable, Dimensions, Alert } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Dimensions, Alert, Image, ImageSourcePropType } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Animated, {
@@ -14,17 +14,19 @@ import { Colors, Spacing, BorderRadius, Shadow, TextStyle } from '../../src/cons
 import { useTheme } from '../../src/context/ThemeContext';
 
 const CARD_PAIRS = [
-    { id: 'science', icon: '🔬', name: '과학' },
-    { id: 'art', icon: '🎨', name: '예술' },
-    { id: 'law', icon: '⚖️', name: '법률' },
-    { id: 'medical', icon: '🩺', name: '의료' },
-    { id: 'engineering', icon: '🤖', name: '공학' },
-    { id: 'sports', icon: '⚽', name: '운동' },
-    { id: 'music', icon: '🎵', name: '음악' },
-    { id: 'cooking', icon: '🍳', name: '요리' },
-    { id: 'space', icon: '🚀', name: '우주' },
-    { id: 'coding', icon: '💻', name: '코딩' },
+    { id: 'science', image: require('../../assets/images/game/science.png'), name: '과학' },
+    { id: 'art', image: require('../../assets/images/game/art.png'), name: '예술' },
+    { id: 'law', image: require('../../assets/images/game/law.png'), name: '법률' },
+    { id: 'medical', image: require('../../assets/images/game/medical.png'), name: '의료' },
+    { id: 'engineering', image: require('../../assets/images/game/engineering.png'), name: '공학' },
+    { id: 'sports', image: require('../../assets/images/game/sports.png'), name: '운동' },
+    { id: 'music', image: require('../../assets/images/game/music.png'), name: '음악' },
+    { id: 'cooking', image: require('../../assets/images/game/cooking.png'), name: '요리' },
+    { id: 'space', image: require('../../assets/images/game/space.png'), name: '우주' },
+    { id: 'coding', image: require('../../assets/images/game/coding.png'), name: '코딩' },
 ];
+
+const CARD_BACK_IMAGE = require('../../assets/images/game/card_back.png');
 
 const LEVEL_CONFIG = {
     1: { pairs: 6, time: null, cols: 3, label: '초급' },
@@ -35,7 +37,7 @@ const LEVEL_CONFIG = {
 interface Card {
     id: string; // Unique ID for key
     pairId: string; // ID to check match (e.g., 'science')
-    icon: string;
+    image: ImageSourcePropType;
     isFlipped: boolean;
     isMatched: boolean;
 }
@@ -74,14 +76,14 @@ const CardItem = ({
 
     return (
         <Pressable onPress={onPress} style={{ width: cardWidth, height: cardWidth * 1.2, margin: 5 }}>
-            {/* Front (Hidden state - Question Mark) */}
+            {/* Front (Hidden state - Question Mark Image) */}
             <Animated.View style={[styles.card, styles.cardFront, frontStyle, { backgroundColor: colors.primary.main }]}>
-                <Text style={styles.cardQuestion}>?</Text>
+                <Image source={CARD_BACK_IMAGE} style={styles.cardImage} resizeMode="contain" />
             </Animated.View>
 
-            {/* Back (Revealed state - Icon) */}
+            {/* Back (Revealed state - Item Image) */}
             <Animated.View style={[styles.card, styles.cardBack, backStyle, { backgroundColor: colors.background.primary, borderColor: colors.primary.main }]}>
-                <Text style={styles.cardIcon}>{card.icon}</Text>
+                <Image source={card.image} style={styles.cardImage} resizeMode="contain" />
             </Animated.View>
         </Pressable>
     );
@@ -372,13 +374,9 @@ const styles = StyleSheet.create({
     cardBack: {
         borderWidth: 2,
     },
-    cardQuestion: {
-        fontSize: 32,
-        color: 'white',
-        fontWeight: 'bold',
-    },
-    cardIcon: {
-        fontSize: 32,
+    cardImage: {
+        width: '70%',
+        height: '70%',
     },
     footer: {
         padding: Spacing.lg,
