@@ -418,6 +418,26 @@ export default function HomeScreen() {
           </View>
         </View>
 
+        {/* 미니 게임 카드 */}
+        <Pressable
+          style={({ pressed }) => [
+            styles.gameCard,
+            pressed && styles.cardPressed
+          ]}
+          onPress={() => router.push('/game/memory')}
+        >
+          <View style={styles.gameCardContent}>
+            <View style={styles.gameIconContainer}>
+              <Text style={styles.gameIcon}>🎮</Text>
+            </View>
+            <View style={styles.gameTextContainer}>
+              <Text style={styles.gameTitle}>미니 게임</Text>
+              <Text style={styles.gameDescription}>획득한 배지로 즐기는 카드 뒤집기!</Text>
+            </View>
+            <Text style={styles.arrowIcon}>›</Text>
+          </View>
+        </Pressable>
+
         {/* 6대 계열 소개 */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>6대 진로 계열</Text>
@@ -611,6 +631,56 @@ const styles = StyleSheet.create({
     ...TextStyle.caption1,
     color: Colors.text.inverse,
     opacity: 0.8,
+  },
+  historyScore: {
+    ...TextStyle.footnote,
+    color: Colors.primary.main,
+    fontWeight: '600',
+  },
+  // Game Card Styles
+  gameCard: {
+    backgroundColor: Colors.background.primary,
+    borderRadius: BorderRadius.xl,
+    padding: Spacing.md,
+    marginTop: Spacing.md,
+    marginHorizontal: Spacing.md,
+    ...Shadow.sm,
+  },
+  gameCardContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  gameIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: BorderRadius.lg,
+    backgroundColor: Colors.secondary.light + '20',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: Spacing.md,
+  },
+  gameIcon: {
+    fontSize: 24,
+  },
+  gameTextContainer: {
+    flex: 1,
+  },
+  gameTitle: {
+    ...TextStyle.title3,
+    color: Colors.text.primary,
+    marginBottom: 2,
+  },
+  gameDescription: {
+    ...TextStyle.caption1,
+    color: Colors.text.secondary,
+  },
+  arrowIcon: {
+    ...TextStyle.title2,
+    color: Colors.gray[400],
+  },
+  cardPressed: {
+    transform: [{ scale: 0.98 }],
+    opacity: 0.9,
   },
   quickActions: {
     flexDirection: 'row',

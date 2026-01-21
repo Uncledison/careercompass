@@ -213,10 +213,9 @@ const GradeButton = ({
 export default function ProfileScreen() {
   const { profile, loadProfile, updateProfile, clearProfile } = useProfileStore();
   const { results, loadHistory } = useHistoryStore();
-  const { colors, isDarkMode, setTheme } = useTheme();
+  const { colors, isDarkMode } = useTheme();
 
   const [showEditModal, setShowEditModal] = useState(false);
-  const [showThemeModal, setShowThemeModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
 
@@ -230,12 +229,6 @@ export default function ProfileScreen() {
     loadProfile();
     loadHistory();
   }, [loadProfile, loadHistory]);
-
-  // 테마 변경 핸들러
-  const handleThemeChange = useCallback((dark: boolean) => {
-    setTheme(dark ? 'dark' : 'light');
-    setShowThemeModal(false);
-  }, [setTheme]);
 
   // 편집 모달 열기
   const openEditModal = () => {
@@ -337,25 +330,7 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        {/* 메뉴 그룹 1 */}
-        <View style={styles.menuGroup}>
-          <Text style={[styles.menuGroupTitle, { color: colors.text.secondary }]}>설정</Text>
-          <View style={[styles.menuCard, { backgroundColor: colors.background.primary }]}>
-            <MenuItem
-              icon="🎨"
-              label="테마"
-              value={isDarkMode ? '다크' : '라이트'}
-              onPress={() => setShowThemeModal(true)}
-              colors={colors}
-            />
-            <MenuItem
-              icon="🔔"
-              label="알림 설정"
-              onPress={() => { }}
-              colors={colors}
-            />
-          </View>
-        </View>
+
 
         {/* 메뉴 그룹 2 */}
         <View style={styles.menuGroup}>
@@ -397,66 +372,7 @@ export default function ProfileScreen() {
         </View>
       </ScrollView>
 
-      {/* 테마 설정 모달 */}
-      <Modal
-        visible={showThemeModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowThemeModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { backgroundColor: colors.background.primary }]}>
-            <Text style={[styles.modalTitle, { color: colors.text.primary }]}>테마 설정</Text>
 
-            <Pressable
-              style={[
-                styles.themeOption,
-                !isDarkMode && styles.themeOptionSelected,
-                { borderColor: !isDarkMode ? colors.primary.main : colors.gray[200] }
-              ]}
-              onPress={() => handleThemeChange(false)}
-            >
-              <View style={styles.themeOptionLeft}>
-                <Text style={styles.themeOptionIcon}>☀️</Text>
-                <Text style={[styles.themeOptionLabel, { color: colors.text.primary }]}>라이트 모드</Text>
-              </View>
-              <View style={[
-                styles.themeRadio,
-                !isDarkMode && { borderColor: colors.primary.main },
-              ]}>
-                {!isDarkMode && <View style={[styles.themeRadioInner, { backgroundColor: colors.primary.main }]} />}
-              </View>
-            </Pressable>
-
-            <Pressable
-              style={[
-                styles.themeOption,
-                isDarkMode && styles.themeOptionSelected,
-                { borderColor: isDarkMode ? colors.primary.main : colors.gray[200] }
-              ]}
-              onPress={() => handleThemeChange(true)}
-            >
-              <View style={styles.themeOptionLeft}>
-                <Text style={styles.themeOptionIcon}>🌙</Text>
-                <Text style={[styles.themeOptionLabel, { color: colors.text.primary }]}>다크 모드</Text>
-              </View>
-              <View style={[
-                styles.themeRadio,
-                isDarkMode && { borderColor: colors.primary.main },
-              ]}>
-                {isDarkMode && <View style={[styles.themeRadioInner, { backgroundColor: colors.primary.main }]} />}
-              </View>
-            </Pressable>
-
-            <Pressable
-              style={styles.closeButton}
-              onPress={() => setShowThemeModal(false)}
-            >
-              <Text style={styles.closeButtonText}>닫기</Text>
-            </Pressable>
-          </View>
-        </View>
-      </Modal>
 
       {/* 기타 모달들은 생략 없이 원본 유지하되 배경/텍스트 색상만 override 해야함... 
           하지만 복잡도를 줄이기 위해 편집 모달 등은 일단 둡니다. */}

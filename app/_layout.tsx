@@ -33,6 +33,14 @@ export default function RootLayout() {
             }}
           />
           <Stack.Screen name="result/[id]" />
+          <Stack.Screen
+            name="game/memory"
+            options={{
+              headerShown: false,
+              presentation: 'fullScreenModal',
+              animation: 'fade_from_bottom'
+            }}
+          />
         </Stack>
       </GestureHandlerRootView>
     </ThemeProvider>
