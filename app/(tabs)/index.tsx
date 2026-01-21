@@ -181,7 +181,7 @@ const getLevelRoute = (level: string): string => {
 export default function HomeScreen() {
   const router = useRouter();
   const [savedProgress, setSavedProgress] = useState<SavedAssessmentState | null>(null);
-  const { loadSavedProgress, resumeAssessment, clearSavedProgress } = useAssessmentStore();
+  const { loadSavedProgress, resumeAssessment, clearSavedProgress, resetAssessment } = useAssessmentStore();
   const { profile, loadProfile } = useProfileStore();
 
   // 저장된 진행 상태 확인 (화면 포커스 시마다)
@@ -213,6 +213,7 @@ export default function HomeScreen() {
     if (Platform.OS === 'web') {
       if (window.confirm('저장된 검사를 삭제하시겠습니까?')) {
         await clearSavedProgress();
+        resetAssessment(); // 메모리 상의 진행 상태도 초기화
         setSavedProgress(null);
       }
     } else {
@@ -227,6 +228,7 @@ export default function HomeScreen() {
             style: 'destructive',
             onPress: async () => {
               await clearSavedProgress();
+              resetAssessment(); // 메모리 상의 진행 상태도 초기화
               setSavedProgress(null);
             },
           },
