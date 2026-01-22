@@ -1,9 +1,11 @@
 /**
  * 검사 결과 화면
- * 레이더 차트와 추천 직업 표시
+ * Summary First, Depth On Demand UX 구조
+ * - 상단: 3초 안에 결과 요약 파악
+ * - 하단: 상세 분석 리포트
  */
 
-import React, { useMemo, useEffect, useRef } from 'react';
+import React, { useMemo, useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -12,6 +14,8 @@ import {
   Pressable,
   Dimensions,
   Share,
+  Platform,
+  Alert,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -27,21 +31,43 @@ import Svg, {
   Stop,
   Path,
 } from 'react-native-svg';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeInDown, FadeInUp } from 'react-native-reanimated';
+import LottieView from 'lottie-react-native';
 import { Colors, Spacing, BorderRadius, Shadow, TextStyle } from '../../src/constants';
 import { useAssessmentStore } from '../../src/stores/assessmentStore';
 import { useHistoryStore } from '../../src/stores/historyStore';
 import { useProfileStore, getShortGradeLabel } from '../../src/stores/profileStore';
 import { CareerField, CareerScores } from '../../src/types';
 import { exportToPDF } from '../../src/utils/pdfExport';
+import * as Linking from 'expo-linking';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 // 차트 크기를 적절하게 제한 (최대 280px)
 const CHART_SIZE = Math.min(SCREEN_WIDTH - 80, 280);
 const CHART_PADDING = 35; // 라벨을 위한 여백
 const SVG_SIZE = CHART_SIZE + CHART_PADDING * 2;
 const CENTER = SVG_SIZE / 2;
 const RADIUS = CHART_SIZE / 2 - 20;
+
+// 유형명 매핑 (계열 → 캐릭터형 이름)
+const typeNames: Record<CareerField, string> = {
+  humanities: '인문 탐구자',
+  social: '사회 리더',
+  natural: '자연 과학자',
+  engineering: '창의 발명가',
+  medicine: '생명 지킴이',
+  arts: '예술 창작자',
+};
+
+// 유형별 핵심 키워드
+const typeKeywords: Record<CareerField, string[]> = {
+  humanities: ['공감', '언어감각', '비판적사고'],
+  social: ['리더십', '설득력', '소통'],
+  natural: ['탐구심', '분석력', '논리'],
+  engineering: ['창의력', '문제해결', '도전정신'],
+  medicine: ['봉사정신', '책임감', '집중력'],
+  arts: ['창의성', '표현력', '감성'],
+};
 
 // 계열별 상세 정보
 interface CareerFieldDetail {
@@ -131,6 +157,158 @@ const careerFieldInfo: Record<CareerField, CareerFieldDetail> = {
     futureJobs: ['UX/UI 디자이너', '버추얼 아티스트', 'e스포츠 선수', '콘텐츠 크리에이터'],
   },
 };
+
+// 요약 헤더 컴포넌트 (3초 안에 파악)
+const SummaryHeader = ({
+  topField,
+  score,
+  nickname,
+  onScrollToDetail,
+}: {
+  topField: CareerField;
+  score: number;
+  nickname?: string;
+  onScrollToDetail: () => void;
+}) => {
+  const info = careerFieldInfo[topField];
+  const typeName = typeNames[topField];
+  const keywords = typeKeywords[topField];
+
+  return (
+    <Animated.View entering={FadeIn.duration(600)} style={styles.summaryHeaderContainer}>
+      <LinearGradient
+        colors={[info.color + 'F0', info.color + 'CC'] as const}
+        style={styles.summaryHeaderGradient}
+      >
+        {/* 아바타 및 인사 */}
+        <View style={styles.avatarSection}>
+          <View style={styles.avatarContainer}>
+            <LottieView
+              source={require('../../assets/girl-waving.json')}
+              autoPlay
+              loop
+              style={styles.avatarLottie}
+            />
+          </View>
+          <Text style={styles.greetingText}>
+            {nickname ? `${nickname}님은` : '당신은'}
+          </Text>
+        </View>
+
+        {/* 유형명 & 점수 */}
+        <View style={styles.typeSection}>
+          <View style={styles.typeIconBadge}>
+            <Text style={styles.typeIcon}>{info.icon}</Text>
+          </View>
+          <Text style={styles.typeName}>{typeName}</Text>
+          <View style={styles.scoreContainer}>
+            <Text style={styles.scoreValue}>{score}</Text>
+            <Text style={styles.scoreUnit}>점</Text>
+          </View>
+        </View>
+
+        {/* 강점 키워드 */}
+        <View style={styles.keywordsSection}>
+          {keywords.map((keyword, idx) => (
+            <View key={idx} style={styles.keywordChip}>
+              <Text style={styles.keywordText}>#{keyword}</Text>
+            </View>
+          ))}
+        </View>
+
+        {/* 자세히 보기 버튼 */}
+        <Pressable
+          style={({ pressed }) => [
+            styles.scrollDownButton,
+            pressed && styles.scrollDownButtonPressed,
+          ]}
+          onPress={onScrollToDetail}
+        >
+          <Text style={styles.scrollDownText}>자세히 보기</Text>
+          <Text style={styles.scrollDownArrow}>↓</Text>
+        </Pressable>
+      </LinearGradient>
+    </Animated.View>
+  );
+};
+
+// 신뢰 배지 컴포넌트
+const TrustBadge = () => (
+  <Animated.View entering={FadeInDown.delay(200).duration(400)} style={styles.trustBadgeContainer}>
+    <View style={styles.trustBadgeInner}>
+      <View style={styles.trustIconContainer}>
+        <Text style={styles.trustIcon}>🔬</Text>
+      </View>
+      <View style={styles.trustTextContainer}>
+        <Text style={styles.trustTitle}>과학적 검사 방법론 기반</Text>
+        <Text style={styles.trustMethods}>HOLLAND 이론 • 다중지능 이론 • 진로발달 이론</Text>
+      </View>
+    </View>
+  </Animated.View>
+);
+
+// 공유 버튼 섹션
+const ShareButtons = ({
+  onKakaoShare,
+  onPngSave,
+  onPdfSave,
+  onGeneralShare,
+}: {
+  onKakaoShare: () => void;
+  onPngSave: () => void;
+  onPdfSave: () => void;
+  onGeneralShare: () => void;
+}) => (
+  <Animated.View entering={FadeInDown.delay(300).duration(400)} style={styles.shareButtonsContainer}>
+    <Pressable
+      style={({ pressed }) => [
+        styles.shareBtn,
+        styles.kakaoBtn,
+        pressed && styles.shareBtnPressed,
+      ]}
+      onPress={onKakaoShare}
+    >
+      <Text style={styles.kakaoBtnIcon}>💬</Text>
+      <Text style={styles.kakaoBtnText}>카카오톡</Text>
+    </Pressable>
+
+    <Pressable
+      style={({ pressed }) => [
+        styles.shareBtn,
+        styles.pngBtn,
+        pressed && styles.shareBtnPressed,
+      ]}
+      onPress={onPngSave}
+    >
+      <Text style={styles.pngBtnIcon}>🖼️</Text>
+      <Text style={styles.pngBtnText}>PNG 저장</Text>
+    </Pressable>
+
+    <Pressable
+      style={({ pressed }) => [
+        styles.shareBtn,
+        styles.pdfBtn,
+        pressed && styles.shareBtnPressed,
+      ]}
+      onPress={onPdfSave}
+    >
+      <Text style={styles.pdfBtnIcon}>📄</Text>
+      <Text style={styles.pdfBtnText}>PDF 저장</Text>
+    </Pressable>
+
+    <Pressable
+      style={({ pressed }) => [
+        styles.shareBtn,
+        styles.moreBtn,
+        pressed && styles.shareBtnPressed,
+      ]}
+      onPress={onGeneralShare}
+    >
+      <Text style={styles.moreBtnIcon}>📤</Text>
+      <Text style={styles.moreBtnText}>더보기</Text>
+    </Pressable>
+  </Animated.View>
+);
 
 // 레이더 차트 컴포넌트
 const RadarChart = ({ scores }: { scores: CareerScores }) => {
@@ -287,7 +465,7 @@ const RecommendationCard = ({
         </View>
         <Text style={styles.recommendIcon}>{info.icon}</Text>
         <View style={styles.recommendInfo}>
-          <Text style={styles.recommendLabel}>{info.label} 계열</Text>
+          <Text style={styles.recommendLabel}>{typeNames[field]}</Text>
           <Text style={styles.recommendScore}>{score}점</Text>
         </View>
         <View style={[styles.recommendBadge, { backgroundColor: info.color + '20' }]}>
@@ -380,7 +558,7 @@ const StrengthWeaknessCard = ({
           <Text style={styles.strengthTitle}>성장 포인트</Text>
         </View>
         <Text style={styles.growthDescription}>
-          {bottomInfo.label} 계열 역량을 키워보면 더 다양한 가능성이 열려요!
+          {typeNames[bottomField]} 역량을 키워보면 더 다양한 가능성이 열려요!
         </Text>
         <View style={styles.growthTips}>
           {bottomInfo.activities.slice(0, 2).map((activity, idx) => (
@@ -457,7 +635,7 @@ const FutureJobsSection = ({ topCareers }: { topCareers: { field: CareerField; s
             <View style={styles.futureJobHeader}>
               <Text style={styles.futureJobIcon}>{info.icon}</Text>
               <Text style={[styles.futureJobLabel, { color: info.color }]}>
-                {info.label} 계열
+                {typeNames[career.field]}
               </Text>
             </View>
             <View style={styles.futureJobList}>
@@ -486,10 +664,11 @@ const SummaryComment = ({
   const info = careerFieldInfo[topField];
 
   const getComment = () => {
+    const typeName = typeNames[topField];
     if (score >= 85) {
-      return `${info.label} 계열에 대한 적성이 매우 높아요! 이 분야에서 뛰어난 성과를 낼 가능성이 커요.`;
+      return `${typeName} 유형에 대한 적성이 매우 높아요! 이 분야에서 뛰어난 성과를 낼 가능성이 커요.`;
     } else if (score >= 70) {
-      return `${info.label} 계열에 좋은 적성을 보여주고 있어요. 꾸준히 관심을 가지면 더 성장할 수 있어요.`;
+      return `${typeName} 유형에 좋은 적성을 보여주고 있어요. 꾸준히 관심을 가지면 더 성장할 수 있어요.`;
     } else {
       return `여러 분야에 고르게 관심이 있네요! 다양한 경험을 통해 나만의 강점을 찾아보세요.`;
     }
@@ -523,6 +702,8 @@ export default function ResultScreen() {
   const { saveResult } = useHistoryStore();
   const { profile } = useProfileStore();
   const savedRef = useRef(false);
+  const scrollViewRef = useRef<ScrollView>(null);
+  const detailSectionY = useRef(0);
 
   // 테스트용 기본 점수 (실제로는 스토어에서 가져옴)
   const displayScores = scores || {
@@ -576,7 +757,7 @@ export default function ResultScreen() {
   const handleShare = async () => {
     try {
       await Share.share({
-        message: `Career Compass 검사 결과\n\n나의 1순위 진로: ${topInfo.icon} ${topInfo.label} 계열 (${topCareer.score}점)\n\n추천 직업: ${topInfo.jobs.join(', ')}\n\n#CareerCompass #진로탐색`,
+        message: `Career Compass 진로검사 결과\n\n나의 진로 유형: ${topInfo.icon} ${typeNames[topCareer.field]} (${topCareer.score}점)\n\n추천 직업: ${topInfo.jobs.join(', ')}\n\n#CareerCompass #진로탐색 #${typeNames[topCareer.field]}`,
       });
     } catch (error) {
       console.log(error);
@@ -614,40 +795,87 @@ export default function ResultScreen() {
     }
   };
 
+  // 자세히 보기 스크롤
+  const handleScrollToDetail = () => {
+    scrollViewRef.current?.scrollTo({
+      y: detailSectionY.current,
+      animated: true,
+    });
+  };
+
+  // 카카오톡 공유
+  const handleKakaoShare = async () => {
+    const shareText = `Career Compass 진로검사 결과\n\n나의 진로 유형: ${topInfo.icon} ${typeNames[topCareer.field]}\n적성 점수: ${topCareer.score}점\n\n#CareerCompass #진로탐색 #${typeNames[topCareer.field]}`;
+
+    // 카카오톡 앱이 있는지 확인하고 공유
+    if (Platform.OS !== 'web') {
+      try {
+        await Share.share({
+          message: shareText,
+        });
+      } catch (error) {
+        console.log('Share error:', error);
+      }
+    } else {
+      // 웹에서는 클립보드 복사
+      try {
+        await navigator.clipboard.writeText(shareText);
+        Alert.alert('복사 완료', '결과가 클립보드에 복사되었습니다.');
+      } catch {
+        Alert.alert('알림', '공유 기능은 앱에서 사용 가능합니다.');
+      }
+    }
+  };
+
+  // PNG 저장 (웹에서는 캡처 기능 제한)
+  const handlePngSave = async () => {
+    Alert.alert(
+      'PNG 저장',
+      'PNG 이미지 저장 기능은 준비 중입니다.\nPDF 저장을 이용해 주세요.',
+      [{ text: '확인' }]
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView
+        ref={scrollViewRef}
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* 헤더 */}
-        <Animated.View entering={FadeIn.duration(500)} style={styles.header}>
-          <Text style={styles.headerTitle}>검사 완료!</Text>
-          <Text style={styles.headerSubtitle}>
-            나의 진로 적성 분석 결과예요
-          </Text>
-        </Animated.View>
+        {/* ===== 상단: 요약 레이어 (3초 안에 파악) ===== */}
 
-        {/* 1위 결과 하이라이트 */}
-        <Animated.View
-          entering={FadeInDown.delay(200).duration(500)}
-          style={styles.highlightCard}
+        {/* 요약 헤더: 아바타 + 유형명 + 점수 + 키워드 */}
+        <SummaryHeader
+          topField={topCareer.field}
+          score={topCareer.score}
+          nickname={profile?.nickname}
+          onScrollToDetail={handleScrollToDetail}
+        />
+
+        {/* 신뢰 배지 */}
+        <TrustBadge />
+
+        {/* 공유 버튼들 */}
+        <ShareButtons
+          onKakaoShare={handleKakaoShare}
+          onPngSave={handlePngSave}
+          onPdfSave={handleExportPDF}
+          onGeneralShare={handleShare}
+        />
+
+        {/* ===== 하단: 상세 분석 레이어 ===== */}
+        <View
+          style={styles.detailDivider}
+          onLayout={(event) => {
+            detailSectionY.current = event.nativeEvent.layout.y;
+          }}
         >
-          <LinearGradient
-            colors={[topInfo.color, topInfo.color + 'DD'] as const}
-            style={styles.highlightGradient}
-          >
-            <View style={styles.highlightContent}>
-              <Text style={styles.highlightLabel}>나의 1순위 진로</Text>
-              <View style={styles.highlightMain}>
-                <Text style={styles.highlightIcon}>{topInfo.icon}</Text>
-                <Text style={styles.highlightTitle}>{topInfo.label} 계열</Text>
-              </View>
-              <Text style={styles.highlightScore}>{topCareer.score}점</Text>
-            </View>
-          </LinearGradient>
-        </Animated.View>
+          <View style={styles.detailDividerLine} />
+          <Text style={styles.detailDividerText}>상세 분석 리포트</Text>
+          <View style={styles.detailDividerLine} />
+        </View>
 
         {/* 레이더 차트 */}
         <Animated.View
@@ -695,31 +923,8 @@ export default function ResultScreen() {
           <SummaryComment topField={topCareer.field} score={topCareer.score} />
         </View>
 
-        {/* 버튼 영역 */}
+        {/* 하단 버튼 영역 */}
         <View style={styles.buttonSection}>
-          <View style={styles.buttonRow}>
-            <Pressable
-              style={({ pressed }) => [
-                styles.shareButton,
-                { flex: 1 },
-                pressed && styles.buttonPressed,
-              ]}
-              onPress={handleShare}
-            >
-              <Text style={styles.shareButtonText}>📤 공유하기</Text>
-            </Pressable>
-
-            <Pressable
-              style={({ pressed }) => [
-                styles.pdfButton,
-                pressed && styles.buttonPressed,
-              ]}
-              onPress={handleExportPDF}
-            >
-              <Text style={styles.pdfButtonText}>📄 PDF 저장</Text>
-            </Pressable>
-          </View>
-
           <View style={styles.buttonRow}>
             <Pressable
               style={({ pressed }) => [
@@ -761,59 +966,255 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: Spacing.md,
     paddingBottom: Spacing.xxl,
   },
-  header: {
+
+  // ===== 요약 헤더 스타일 =====
+  summaryHeaderContainer: {
+    marginBottom: Spacing.md,
+  },
+  summaryHeaderGradient: {
+    paddingTop: Spacing.xl,
+    paddingBottom: Spacing.lg,
+    paddingHorizontal: Spacing.lg,
     alignItems: 'center',
-    paddingVertical: Spacing.xl,
+    borderBottomLeftRadius: BorderRadius.xxl,
+    borderBottomRightRadius: BorderRadius.xxl,
   },
-  headerTitle: {
-    ...TextStyle.largeTitle,
-    color: Colors.text.primary,
-  },
-  headerSubtitle: {
-    ...TextStyle.body,
-    color: Colors.text.secondary,
-    marginTop: Spacing.xs,
-  },
-  highlightCard: {
-    borderRadius: BorderRadius.xl,
-    overflow: 'hidden',
-    marginBottom: Spacing.lg,
-    ...Shadow.lg,
-  },
-  highlightGradient: {
-    padding: Spacing.xl,
-  },
-  highlightContent: {
+  avatarSection: {
     alignItems: 'center',
-  },
-  highlightLabel: {
-    ...TextStyle.caption1,
-    color: 'rgba(255,255,255,0.8)',
     marginBottom: Spacing.sm,
   },
-  highlightMain: {
+  avatarContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    overflow: 'hidden',
+    marginBottom: Spacing.xs,
+  },
+  avatarLottie: {
+    width: 80,
+    height: 80,
+  },
+  greetingText: {
+    ...TextStyle.body,
+    color: 'rgba(255,255,255,0.9)',
+  },
+  typeSection: {
+    alignItems: 'center',
+    marginBottom: Spacing.md,
+  },
+  typeIconBadge: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.xs,
+  },
+  typeIcon: {
+    fontSize: 32,
+  },
+  typeName: {
+    fontSize: 28,
+    fontWeight: '800',
+    color: Colors.text.inverse,
+    marginBottom: Spacing.xs,
+  },
+  scoreContainer: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+  },
+  scoreValue: {
+    fontSize: 48,
+    fontWeight: '900',
+    color: Colors.text.inverse,
+  },
+  scoreUnit: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.8)',
+    marginLeft: 2,
+  },
+  keywordsSection: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: Spacing.xs,
+    marginBottom: Spacing.md,
+  },
+  keywordChip: {
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.full,
+  },
+  keywordText: {
+    ...TextStyle.caption1,
+    color: Colors.text.inverse,
+    fontWeight: '600',
+  },
+  scrollDownButton: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: BorderRadius.full,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
+  },
+  scrollDownButtonPressed: {
+    backgroundColor: 'rgba(255,255,255,0.3)',
+  },
+  scrollDownText: {
+    ...TextStyle.caption1,
+    color: Colors.text.inverse,
+    fontWeight: '600',
+  },
+  scrollDownArrow: {
+    fontSize: 14,
+    color: Colors.text.inverse,
+  },
+
+  // ===== 신뢰 배지 스타일 =====
+  trustBadgeContainer: {
+    marginHorizontal: Spacing.md,
+    marginBottom: Spacing.md,
+  },
+  trustBadgeInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.background.primary,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.gray[200],
+    ...Shadow.sm,
+  },
+  trustIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.secondary.light,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: Spacing.sm,
+  },
+  trustIcon: {
+    fontSize: 20,
+  },
+  trustTextContainer: {
+    flex: 1,
+  },
+  trustTitle: {
+    ...TextStyle.caption1,
+    fontWeight: '700',
+    color: Colors.text.primary,
+    marginBottom: 2,
+  },
+  trustMethods: {
+    ...TextStyle.caption2,
+    color: Colors.text.tertiary,
+  },
+
+  // ===== 공유 버튼 스타일 =====
+  shareButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
     gap: Spacing.sm,
-    marginBottom: Spacing.sm,
+    marginHorizontal: Spacing.md,
+    marginBottom: Spacing.lg,
   },
-  highlightIcon: {
-    fontSize: 40,
+  shareBtn: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.xs,
+    borderRadius: BorderRadius.md,
+    ...Shadow.sm,
   },
-  highlightTitle: {
-    ...TextStyle.title1,
+  shareBtnPressed: {
+    opacity: 0.8,
+    transform: [{ scale: 0.97 }],
+  },
+  kakaoBtn: {
+    backgroundColor: '#FEE500',
+  },
+  kakaoBtnIcon: {
+    fontSize: 18,
+    marginBottom: 2,
+  },
+  kakaoBtnText: {
+    ...TextStyle.caption2,
+    fontWeight: '600',
+    color: '#3C1E1E',
+  },
+  pngBtn: {
+    backgroundColor: Colors.background.primary,
+    borderWidth: 1,
+    borderColor: Colors.gray[200],
+  },
+  pngBtnIcon: {
+    fontSize: 18,
+    marginBottom: 2,
+  },
+  pngBtnText: {
+    ...TextStyle.caption2,
+    fontWeight: '600',
+    color: Colors.text.secondary,
+  },
+  pdfBtn: {
+    backgroundColor: Colors.secondary.main,
+  },
+  pdfBtnIcon: {
+    fontSize: 18,
+    marginBottom: 2,
+  },
+  pdfBtnText: {
+    ...TextStyle.caption2,
+    fontWeight: '600',
     color: Colors.text.inverse,
   },
-  highlightScore: {
-    ...TextStyle.largeTitle,
-    color: Colors.text.inverse,
-    fontWeight: '800',
+  moreBtn: {
+    backgroundColor: Colors.primary.main,
   },
+  moreBtnIcon: {
+    fontSize: 18,
+    marginBottom: 2,
+  },
+  moreBtnText: {
+    ...TextStyle.caption2,
+    fontWeight: '600',
+    color: Colors.text.inverse,
+  },
+
+  // ===== 상세 분석 구분선 =====
+  detailDivider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginHorizontal: Spacing.md,
+    marginVertical: Spacing.lg,
+  },
+  detailDividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: Colors.gray[200],
+  },
+  detailDividerText: {
+    ...TextStyle.caption1,
+    fontWeight: '600',
+    color: Colors.text.tertiary,
+    paddingHorizontal: Spacing.md,
+  },
+
+  // ===== 기존 스타일 (수정) =====
   chartContainer: {
     marginBottom: Spacing.lg,
+    marginHorizontal: Spacing.md,
   },
   sectionTitle: {
     ...TextStyle.headline,
@@ -831,6 +1232,7 @@ const styles = StyleSheet.create({
   },
   recommendSection: {
     marginBottom: Spacing.lg,
+    marginHorizontal: Spacing.md,
   },
   recommendCard: {
     backgroundColor: Colors.background.primary,
@@ -928,6 +1330,7 @@ const styles = StyleSheet.create({
   },
   buttonSection: {
     marginTop: Spacing.md,
+    marginHorizontal: Spacing.md,
     gap: Spacing.md,
   },
   shareButton: {
@@ -990,6 +1393,7 @@ const styles = StyleSheet.create({
   // 상세 분석 섹션
   detailSection: {
     marginBottom: Spacing.lg,
+    marginHorizontal: Spacing.md,
   },
   analysisCard: {
     backgroundColor: Colors.background.primary,
