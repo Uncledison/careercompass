@@ -40,6 +40,7 @@ import { CareerField, CareerScores } from '../../src/types';
 import { exportToPDF } from '../../src/utils/pdfExport';
 import { ModelViewer3D } from '../../src/components/character/ModelViewer3D';
 import * as Linking from 'expo-linking';
+import { captureRef } from 'react-native-view-shot';
 
 // 학년별 문항 수
 const QUESTION_COUNTS: Record<string, number> = {
@@ -176,6 +177,7 @@ const SummaryCard = ({
   onPngSave,
   onToggleDetail,
   isDetailOpen,
+  captureRef,
 }: {
   topField: CareerField;
   score: number;
@@ -186,6 +188,7 @@ const SummaryCard = ({
   onPngSave: () => void;
   onToggleDetail: () => void;
   isDetailOpen: boolean;
+  captureRef?: React.RefObject<View | null>;
 }) => {
   const info = careerFieldInfo[topField];
   const typeName = typeNames[topField];
@@ -194,185 +197,121 @@ const SummaryCard = ({
 
   return (
     <Animated.View entering={FadeIn.duration(600)} style={styles.summaryCardContainer}>
-      <LinearGradient
-        colors={[info.color + 'F0', info.color + 'CC'] as const}
-        style={styles.summaryCardGradient}
-      >
-        {/* 사용자 캐릭터 (가장 크게, 중앙 정렬) */}
-        <View style={styles.characterSection}>
-          <View style={styles.characterContainer}>
-            <ModelViewer3D
-              modelPath={`/models/characters/${character}.gltf`}
-              animations={['Wave', 'Yes']}
-              width={160}
-              height={160}
-              autoRotate={false}
-              cameraDistance="12m"
-              cameraTarget="0m 1m 0m"
-              borderRadius={80}
-              backgroundColor="rgba(255,255,255,0.25)"
-            />
+      <View ref={captureRef} collapsable={false} style={{ backgroundColor: 'transparent' }}>
+        <LinearGradient
+          colors={[info.color + 'F0', info.color + 'CC'] as const}
+          style={styles.summaryCardGradient}
+        >
+          {/* 상단: 요약 카드 영역 (전체 화면 높이의 약 70-80% 차지) */}
+          <View style={styles.topSpacer} />
+
+          {/* 사용자 캐릭터 (화면 상단에서 적당한 거리를 두고 배치) */}
+          <View style={styles.characterSection}>
+            <View style={styles.characterCircle}>
+              <ModelViewer3D
+                modelPath={`/models/characters/${character}.gltf`}
+                animations={['Wave', 'Yes']}
+                width={160}
+                height={160}
+                autoRotate={false}
+                cameraDistance="14m"
+                cameraTarget="0m 0.5m 0m"
+                borderRadius={80}
+                backgroundColor="transparent"
+              />
+            </View>
           </View>
+
+          {/* 인사말 */}
           <Text style={styles.greetingText}>
             {nickname ? `${nickname}님의 진로 유형` : '나의 진로 유형'}
           </Text>
-        </View>
 
-        {/* 유형명 & 점수 (간격 축소) */}
-        <View style={styles.typeSection}>
-          <View style={styles.typeIconBadge}>
-            <Text style={styles.typeIcon}>{info.icon}</Text>
-          </View>
-          <Text style={styles.typeName}>{typeName}</Text>
-          <View style={styles.scoreContainer}>
-            <Text style={styles.scoreValue}>{score}</Text>
-            <Text style={styles.scoreUnit}>점</Text>
-          </View>
-        </View>
-
-        {/* 강점 키워드 */}
-        <View style={styles.keywordsSection}>
-          {keywords.map((keyword, idx) => (
-            <View key={idx} style={styles.keywordChip}>
-              <Text style={styles.keywordText}>#{keyword}</Text>
+          {/* 유형명 & 점수 (시각적 중심) */}
+          <View style={styles.typeSection}>
+            {/* 아이콘 */}
+            <View style={styles.iconCircle}>
+              <Text style={styles.typeIcon}>{info.icon}</Text>
             </View>
-          ))}
-        </View>
+            <Text style={styles.typeName}>{typeName}</Text>
+            <View style={styles.scoreContainer}>
+              <Text style={styles.scoreValue}>{score}</Text>
+              <Text style={styles.scoreUnit}>점</Text>
+            </View>
+          </View>
 
-        {/* 공유 버튼 (카톡=메인, 이미지=보조) */}
-        <View style={styles.summaryShareButtons}>
+          {/* 강점 키워드 */}
+          <View style={styles.keywordsSection}>
+            {keywords.map((keyword, idx) => (
+              <View key={idx} style={styles.keywordChip}>
+                <Text style={styles.keywordText}>#{keyword}</Text>
+              </View>
+            ))}
+          </View>
+
+          {/* 공유 버튼 (높이 48px, 동일 크기, 색상 강조) */}
+          <View style={styles.shareButtonsRow}>
+            <Pressable
+              style={({ pressed }) => [
+                styles.shareBtn,
+                styles.kakaoBtn, // 노란색 배경
+                pressed && styles.shareBtnPressed,
+              ]}
+              onPress={onKakaoShare}
+            >
+              <Text style={styles.shareBtnIcon}>💬</Text>
+              <Text style={styles.kakaoBtnText}>카톡 공유</Text>
+            </Pressable>
+
+            <Pressable
+              style={({ pressed }) => [
+                styles.shareBtn,
+                styles.imageBtn, // 투명 배경 + 테두리
+                pressed && styles.shareBtnPressed,
+              ]}
+              onPress={onPngSave}
+            >
+              <Text style={styles.shareBtnIcon}>🖼️</Text>
+              <Text style={styles.imageBtnText}>이미지 저장</Text>
+            </Pressable>
+          </View>
+
+          {/* 신뢰 배지 */}
+          <View style={styles.trustBadgeInCard}>
+            <Text style={styles.trustBadgeText}>
+              🎓 과학적 검사 기반 · {questionCount}문항 분석
+            </Text>
+          </View>
+
+          {/* 상세 분석 보기 (작은 텍스트 링크) */}
           <Pressable
             style={({ pressed }) => [
-              styles.kakaoMainBtn,
-              pressed && styles.shareBtnPressed,
+              styles.detailToggleLink,
+              pressed && styles.detailToggleLinkPressed,
             ]}
-            onPress={onKakaoShare}
+            onPress={onToggleDetail}
           >
-            <Text style={styles.kakaoMainIcon}>💬</Text>
-            <Text style={styles.kakaoMainText}>카톡 공유</Text>
+            {/* 상세 분석 보기 (작은 텍스트 링크, 시각적 우선순위 낮춤) */}
+            <Pressable
+              style={({ pressed }) => [
+                styles.detailToggleLink,
+                pressed && styles.detailToggleLinkPressed,
+              ]}
+              onPress={onToggleDetail}
+            >
+              <Text style={styles.detailToggleLinkText}>
+                {isDetailOpen ? '📊 상세 분석 접기' : '📊 상세 분석 보기 ▼'}
+              </Text>
+            </Pressable>
           </Pressable>
-
-          <Pressable
-            style={({ pressed }) => [
-              styles.imageSubBtn,
-              pressed && styles.shareBtnPressed,
-            ]}
-            onPress={onPngSave}
-          >
-            <Text style={styles.imageSubIcon}>🖼️</Text>
-            <Text style={styles.imageSubText}>이미지 저장</Text>
-          </Pressable>
-        </View>
-
-        {/* 신뢰 배지 (보라색 영역 내부) */}
-        <View style={styles.trustBadgeInCard}>
-          <Text style={styles.trustBadgeIcon}>🎓</Text>
-          <Text style={styles.trustBadgeText}>
-            과학적 검사 기반 · {questionCount}문항 분석
-          </Text>
-        </View>
-
-        {/* 상세 분석 보기 (작은 텍스트 링크) */}
-        <Pressable
-          style={({ pressed }) => [
-            styles.detailToggleLink,
-            pressed && styles.detailToggleLinkPressed,
-          ]}
-          onPress={onToggleDetail}
-        >
-          <Text style={styles.detailToggleLinkText}>
-            {isDetailOpen ? '상세 분석 접기 ▲' : '상세 분석 보기 ▼'}
-          </Text>
-        </Pressable>
-      </LinearGradient>
-    </Animated.View>
-  );
-};
-
-// 신뢰 배지 컴포넌트 (더 이상 사용하지 않음 - SummaryCard 내부로 이동)
-const TrustBadge = ({ level }: { level: string }) => {
-  const questionCount = QUESTION_COUNTS[level] || 35;
-
-  return (
-    <Animated.View entering={FadeInDown.delay(200).duration(400)} style={styles.trustBadgeContainer}>
-      <View style={styles.trustBadgeInner}>
-        <View style={styles.trustIconContainer}>
-          <Text style={styles.trustIcon}>🎓</Text>
-        </View>
-        <View style={styles.trustTextContainer}>
-          <Text style={styles.trustTitle}>과학적 검사 기반</Text>
-          <Text style={styles.trustMethods}>
-            HOLLAND 직업흥미이론 · 다중지능 · 진로발달이론
-          </Text>
-          <Text style={styles.trustQuestionCount}>{questionCount}문항 분석 결과</Text>
-        </View>
+        </LinearGradient>
       </View>
     </Animated.View>
   );
 };
 
-// 공유 버튼 섹션 (하단용 - 기존 유지)
-const ShareButtons = ({
-  onKakaoShare,
-  onPngSave,
-  onPdfSave,
-  onGeneralShare,
-}: {
-  onKakaoShare: () => void;
-  onPngSave: () => void;
-  onPdfSave: () => void;
-  onGeneralShare: () => void;
-}) => (
-  <Animated.View entering={FadeInDown.delay(300).duration(400)} style={styles.shareButtonsContainer}>
-    <Pressable
-      style={({ pressed }) => [
-        styles.shareBtn,
-        styles.kakaoBtn,
-        pressed && styles.shareBtnPressed,
-      ]}
-      onPress={onKakaoShare}
-    >
-      <Text style={styles.kakaoBtnIcon}>💬</Text>
-      <Text style={styles.kakaoBtnText}>카카오톡</Text>
-    </Pressable>
+// 신뢰 배지 컴포넌트 (더 이상 사용하지 않음 - SummaryCard 내부로 이동)
 
-    <Pressable
-      style={({ pressed }) => [
-        styles.shareBtn,
-        styles.pngBtn,
-        pressed && styles.shareBtnPressed,
-      ]}
-      onPress={onPngSave}
-    >
-      <Text style={styles.pngBtnIcon}>🖼️</Text>
-      <Text style={styles.pngBtnText}>PNG 저장</Text>
-    </Pressable>
-
-    <Pressable
-      style={({ pressed }) => [
-        styles.shareBtn,
-        styles.pdfBtn,
-        pressed && styles.shareBtnPressed,
-      ]}
-      onPress={onPdfSave}
-    >
-      <Text style={styles.pdfBtnIcon}>📄</Text>
-      <Text style={styles.pdfBtnText}>PDF 저장</Text>
-    </Pressable>
-
-    <Pressable
-      style={({ pressed }) => [
-        styles.shareBtn,
-        styles.moreBtn,
-        pressed && styles.shareBtnPressed,
-      ]}
-      onPress={onGeneralShare}
-    >
-      <Text style={styles.moreBtnIcon}>📤</Text>
-      <Text style={styles.moreBtnText}>더보기</Text>
-    </Pressable>
-  </Animated.View>
-);
 
 // 레이더 차트 컴포넌트
 const RadarChart = ({ scores }: { scores: CareerScores }) => {
@@ -768,19 +707,36 @@ export default function ResultScreen() {
   const savedRef = useRef(false);
   const scrollViewRef = useRef<ScrollView>(null);
   const detailSectionY = useRef(0);
-
-  // 상세 분석 접힘/펼침 상태 (기본: 접힘)
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
-  // 테스트용 기본 점수 (실제로는 스토어에서 가져옴)
-  const displayScores = scores || {
-    humanities: 65,
-    social: 72,
-    natural: 78,
-    engineering: 92,
-    medicine: 71,
-    arts: 58,
-  };
+  // 히스토리 모드 확인
+  const { getResultById } = useHistoryStore();
+  const historyResult = useMemo(() => {
+    if (id && id !== 'new') {
+      return getResultById(id);
+    }
+    return null;
+  }, [id, getResultById]);
+
+  // 표시할 점수 데이터 결정
+  const displayScores = useMemo(() => {
+    if (historyResult) return historyResult.scores;
+    if (scores) return scores;
+    return {
+      humanities: 65,
+      social: 72,
+      natural: 78,
+      engineering: 92,
+      medicine: 71,
+      arts: 58,
+    };
+  }, [historyResult, scores]);
+
+  const displayLevel = historyResult ? historyResult.level : (level || 'elementary');
+  const displayNickname = historyResult ? historyResult.nickname : profile?.nickname;
+
+  // 캡처용 Ref
+  const captureViewRef = useRef<View>(null);
 
   // 전체 계열 순위
   const allCareers = useMemo(() => {
@@ -846,16 +802,16 @@ export default function ResultScreen() {
   // PDF 내보내기
   const handleExportPDF = async () => {
     try {
-      // 학년을 "초등2", "중2", "고2" 형식으로
       const gradeLabel = profile?.schoolType && profile?.grade
         ? getShortGradeLabel(profile.schoolType, profile.grade)
         : undefined;
+
       await exportToPDF(
         displayScores,
-        level || 'elementary',
-        Date.now(),
-        profile?.nickname,
-        gradeLabel
+        displayLevel,
+        historyResult ? historyResult.timestamp : Date.now(),
+        displayNickname,
+        historyResult ? historyResult.grade : gradeLabel
       );
     } catch (error) {
       console.log('PDF export error:', error);
@@ -903,12 +859,31 @@ export default function ResultScreen() {
   };
 
   // PNG 저장 (웹에서는 캡처 기능 제한)
+  // PNG 저장 (captureRef 사용)
   const handlePngSave = async () => {
-    Alert.alert(
-      'PNG 저장',
-      'PNG 이미지 저장 기능은 준비 중입니다.\nPDF 저장을 이용해 주세요.',
-      [{ text: '확인' }]
-    );
+    try {
+      if (captureViewRef.current) {
+        const uri = await captureRef(captureViewRef.current, {
+          format: 'png',
+          quality: 1,
+          result: 'tmpfile'
+        });
+
+        if (Platform.OS !== 'web') {
+          const Sharing = require('expo-sharing');
+          if (await Sharing.isAvailableAsync()) {
+            await Sharing.shareAsync(uri);
+          } else {
+            Alert.alert('오류', '공유 기능을 사용할 수 없습니다.');
+          }
+        } else {
+          Alert.alert('알림', '웹에서는 이미지 다운로드가 제한됩니다.');
+        }
+      }
+    } catch (error) {
+      console.log('Capture error:', error);
+      Alert.alert('오류', '이미지 저장 중 문제가 발생했습니다.');
+    }
   };
 
   return (
@@ -920,16 +895,18 @@ export default function ResultScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* ===== 상단: 요약 카드 영역 ===== */}
+        {/* ===== 상단: 요약 카드 영역 ===== */}
         <SummaryCard
           topField={topCareer.field}
           score={topCareer.score}
-          nickname={profile?.nickname}
+          nickname={displayNickname}
           character={profile?.character || 'Female_1'}
-          level={level || 'elementary'}
+          level={displayLevel}
           onKakaoShare={handleKakaoShare}
           onPngSave={handlePngSave}
           onToggleDetail={handleToggleDetail}
           isDetailOpen={isDetailOpen}
+          captureRef={captureViewRef}
         />
 
         {/* ===== 하단: 상세 분석 레이어 (접힘/펼침) ===== */}
@@ -1053,239 +1030,198 @@ const styles = StyleSheet.create({
   },
 
   // ===== 요약 카드 스타일 =====
+  // ===== 요약 카드 스타일 =====
   summaryCardContainer: {
     marginBottom: Spacing.sm,
+    overflow: 'hidden', // 캡처 시 깔끔하게
   },
   summaryCardGradient: {
-    paddingTop: Spacing.xl,
-    paddingBottom: Spacing.lg,
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.xl,
     paddingHorizontal: Spacing.lg,
     alignItems: 'center',
     borderBottomLeftRadius: BorderRadius.xxl,
     borderBottomRightRadius: BorderRadius.xxl,
+    minHeight: SCREEN_HEIGHT * 0.75, // 화면의 75% 정도 차지
+    justifyContent: 'center', // 세로 중앙 정렬 유도
   },
+  // 상단 여백 (40px 정도)
+  topSpacer: {
+    height: 48,
+  },
+  // 캐릭터 섹션
   characterSection: {
     alignItems: 'center',
-    marginBottom: Spacing.sm,
+    justifyContent: 'center',
+    marginBottom: Spacing.lg,
+    marginTop: Spacing.md,
   },
-  characterContainer: {
+  characterCircle: {
     width: 160,
     height: 160,
     borderRadius: 80,
-    overflow: 'hidden',
-    marginBottom: Spacing.sm,
+    backgroundColor: 'rgba(255,255,255,0.25)', // 은은한 원형 배경
     alignItems: 'center',
     justifyContent: 'center',
+    ...Shadow.sm,
   },
+
+  // 인사말
   greetingText: {
-    ...TextStyle.callout,
-    color: 'rgba(255,255,255,0.9)',
-    fontWeight: '500',
+    ...TextStyle.body,
+    color: 'rgba(255,255,255,0.95)',
+    fontWeight: '600',
+    marginBottom: Spacing.xs,
+    marginTop: Spacing.md,
   },
+  // 유형 섹션
   typeSection: {
     alignItems: 'center',
-    marginBottom: Spacing.xs,
+    marginBottom: Spacing.lg,
   },
-  typeIconBadge: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.25)',
+  iconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255,255,255,0.2)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 2,
+    marginBottom: Spacing.xs,
   },
   typeIcon: {
     fontSize: 24,
   },
+  typeNameRow: {
+    // 삭제됨 (iconCircle로 대체)
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   typeName: {
-    fontSize: 24,
-    fontWeight: '800',
+    fontSize: 28,
+    fontWeight: '800', // Fat font
     color: Colors.text.inverse,
-    marginBottom: 0,
+    marginBottom: 4,
+    textShadowColor: 'rgba(0,0,0,0.1)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   scoreContainer: {
     flexDirection: 'row',
     alignItems: 'baseline',
-    marginTop: -2,
   },
   scoreValue: {
-    fontSize: 40,
+    fontSize: 48, // 점수 강조
     fontWeight: '900',
     color: Colors.text.inverse,
   },
   scoreUnit: {
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: '600',
-    color: 'rgba(255,255,255,0.8)',
-    marginLeft: 2,
+    color: 'rgba(255,255,255,0.85)',
+    marginLeft: 4,
   },
+
+  // 키워드 섹션 (태그 스타일)
   keywordsSection: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
-    gap: Spacing.xs,
-    marginTop: Spacing.sm,
-    marginBottom: Spacing.md,
+    gap: 8,
+    marginBottom: Spacing.xl,
   },
   keywordChip: {
     backgroundColor: 'rgba(255,255,255,0.25)',
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: BorderRadius.full,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.4)',
   },
   keywordText: {
     ...TextStyle.caption1,
     color: Colors.text.inverse,
-    fontWeight: '600',
+    fontWeight: '700',
   },
-  // 공유 버튼 (카톡=메인, 이미지=보조)
-  summaryShareButtons: {
+
+  // 공유 버튼 (동일 크기, 48px 높이)
+  shareButtonsRow: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: Spacing.sm,
-    marginBottom: Spacing.md,
+    gap: 12, // 간격
+    marginBottom: Spacing.lg,
     width: '100%',
-    paddingHorizontal: Spacing.md,
+    paddingHorizontal: Spacing.xl,
   },
-  kakaoMainBtn: {
-    flex: 2,
+  shareBtn: {
+    flex: 1, // 1:1 비율
+    maxWidth: 160, // 너무 넓어지지 않게
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.md,
-    backgroundColor: '#FEE500',
-    gap: 6,
+    height: 48,
+    borderRadius: 12, // 모바일 표준 둥글기
+    gap: 8,
+    ...Shadow.sm,
   },
-  kakaoMainIcon: {
+  shareBtnIcon: {
     fontSize: 18,
   },
-  kakaoMainText: {
+  shareBtnPressed: {
+    opacity: 0.9,
+    transform: [{ scale: 0.98 }],
+  },
+  // 카카오 버튼 (노랑)
+  kakaoBtn: {
+    backgroundColor: '#FEE500',
+  },
+  kakaoBtnText: {
     ...TextStyle.callout,
     fontWeight: '700',
-    color: '#3C1E1E',
+    color: '#3C1E1E', // 카카오 가이드라인 준수
   },
-  imageSubBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.md,
-    backgroundColor: 'rgba(255,255,255,0.3)',
+  // 이미지 저장 버튼 (투명+테두리)
+  imageBtn: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.5)',
-    gap: 4,
+    borderColor: 'rgba(255,255,255,0.6)',
   },
-  imageSubIcon: {
-    fontSize: 14,
-  },
-  imageSubText: {
-    ...TextStyle.caption1,
-    fontWeight: '600',
+  imageBtnText: {
+    ...TextStyle.callout,
+    fontWeight: '700',
     color: Colors.text.inverse,
   },
-  // 신뢰 배지 (카드 내부)
+
+  // 신뢰 배지 (문구)
   trustBadgeInCard: {
-    flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
+    marginBottom: Spacing.md,
+    backgroundColor: 'rgba(0,0,0,0.1)', // 살짝 어둡게 해서 가독성 확보
+    paddingHorizontal: 16,
+    paddingVertical: 6,
     borderRadius: BorderRadius.full,
-    marginBottom: Spacing.sm,
-    gap: 6,
-  },
-  trustBadgeIcon: {
-    fontSize: 14,
   },
   trustBadgeText: {
-    ...TextStyle.caption2,
+    fontSize: 12,
     color: 'rgba(255,255,255,0.9)',
     fontWeight: '500',
   },
+
   // 상세 분석 보기 (텍스트 링크)
   detailToggleLink: {
-    paddingVertical: Spacing.xs,
-    paddingHorizontal: Spacing.md,
+    marginTop: Spacing.xs,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.lg,
   },
   detailToggleLinkPressed: {
     opacity: 0.7,
   },
   detailToggleLinkText: {
-    ...TextStyle.caption1,
-    color: 'rgba(255,255,255,0.8)',
-    fontWeight: '500',
-    textDecorationLine: 'underline',
-  },
-  // 이전 스타일 (사용 안함 - 호환성 유지)
-  summaryShareBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.md,
-    gap: 4,
-  },
-  kakaoShareBtn: {
-    backgroundColor: '#FEE500',
-  },
-  kakaoShareIcon: {
-    fontSize: 16,
-  },
-  kakaoShareText: {
-    ...TextStyle.caption1,
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.9)',
     fontWeight: '600',
-    color: '#3C1E1E',
+    textDecorationLine: 'underline', // 링크 느낌
   },
-  pngShareBtn: {
-    backgroundColor: 'rgba(255,255,255,0.9)',
-  },
-  pngShareIcon: {
-    fontSize: 16,
-  },
-  pngShareText: {
-    ...TextStyle.caption1,
-    fontWeight: '600',
-    color: Colors.text.primary,
-  },
-  pdfShareBtn: {
-    backgroundColor: Colors.secondary.main,
-  },
-  pdfShareIcon: {
-    fontSize: 16,
-  },
-  pdfShareText: {
-    ...TextStyle.caption1,
-    fontWeight: '600',
-    color: Colors.text.inverse,
-  },
-  // 상세 분석 보기 토글 버튼
-  detailToggleButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    borderRadius: BorderRadius.full,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.3)',
-  },
-  detailToggleButtonPressed: {
-    backgroundColor: 'rgba(255,255,255,0.3)',
-  },
-  detailToggleText: {
-    ...TextStyle.callout,
-    color: Colors.text.inverse,
-    fontWeight: '600',
-  },
-  detailToggleArrow: {
-    fontSize: 12,
-    color: Colors.text.inverse,
-  },
+
 
   // ===== 신뢰 배지 스타일 =====
   trustBadgeContainer: {
@@ -1335,51 +1271,7 @@ const styles = StyleSheet.create({
   },
 
   // ===== 공유 버튼 스타일 =====
-  shareButtonsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: Spacing.sm,
-    marginHorizontal: Spacing.md,
-    marginBottom: Spacing.lg,
-  },
-  shareBtn: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.xs,
-    borderRadius: BorderRadius.md,
-    ...Shadow.sm,
-  },
-  shareBtnPressed: {
-    opacity: 0.8,
-    transform: [{ scale: 0.97 }],
-  },
-  kakaoBtn: {
-    backgroundColor: '#FEE500',
-  },
-  kakaoBtnIcon: {
-    fontSize: 18,
-    marginBottom: 2,
-  },
-  kakaoBtnText: {
-    ...TextStyle.caption2,
-    fontWeight: '600',
-    color: '#3C1E1E',
-  },
-  pngBtn: {
-    backgroundColor: Colors.background.primary,
-    borderWidth: 1,
-    borderColor: Colors.gray[200],
-  },
-  pngBtnIcon: {
-    fontSize: 18,
-    marginBottom: 2,
-  },
-  pngBtnText: {
-    ...TextStyle.caption2,
-    fontWeight: '600',
-    color: Colors.text.secondary,
-  },
+
   pdfBtn: {
     backgroundColor: Colors.secondary.main,
   },

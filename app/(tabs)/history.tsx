@@ -14,7 +14,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import Svg, { Path } from 'react-native-svg';
 import { Colors, Spacing, BorderRadius, Shadow, TextStyle } from '../../src/constants';
@@ -184,10 +184,14 @@ export default function HistoryScreen() {
   const router = useRouter();
   const { results, isLoading, loadHistory, deleteResult, clearHistory } = useHistoryStore();
 
-  // 마운트 시 히스토리 로드
-  useEffect(() => {
-    loadHistory();
-  }, [loadHistory]);
+
+
+  // 마운트/포커스 시 히스토리 로드
+  useFocusEffect(
+    useCallback(() => {
+      loadHistory();
+    }, [loadHistory])
+  );
 
   // 새로고침
   const handleRefresh = useCallback(() => {
@@ -196,7 +200,7 @@ export default function HistoryScreen() {
 
   // 결과 상세 보기
   const handleViewResult = useCallback((item: SavedResult) => {
-    router.push(`/history/${item.id}`);
+    router.push(`/result/${item.id}`);
   }, [router]);
 
   // 삭제
