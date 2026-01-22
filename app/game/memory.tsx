@@ -171,6 +171,11 @@ export default function MemoryGameScreen() {
     const [isLocked, setIsLocked] = useState(false);
     const [timeLeft, setTimeLeft] = useState<number | null>(null);
     const [gameState, setGameState] = useState<'playing' | 'level_complete' | 'game_over'>('playing');
+    const [isSoundOn, setIsSoundOn] = useState(true);
+
+    const toggleSound = () => {
+        setIsSoundOn(!isSoundOn);
+    };
 
     // Initialize Game
     useEffect(() => {
@@ -356,12 +361,17 @@ export default function MemoryGameScreen() {
                     <Text style={[styles.title, { color: colors.text.primary }]}>미니 게임</Text>
                     <Text style={[styles.subtitle, { color: colors.primary.main }]}>{config.label} (Lv.{level})</Text>
                 </View>
-                <View style={styles.scoreContainer}>
-                    {timeLeft !== null && (
-                        <Text style={[styles.timerText, { color: timeLeft <= 10 ? Colors.semantic.error : colors.text.primary }]}>
-                            ⏳ {timeLeft}초
-                        </Text>
-                    )}
+                <View style={styles.headerRight}>
+                    <Pressable onPress={toggleSound} style={styles.soundButton}>
+                        <Text style={{ fontSize: 20 }}>{isSoundOn ? '🔊' : '🔇'}</Text>
+                    </Pressable>
+                    <View style={styles.scoreContainer}>
+                        {timeLeft !== null && (
+                            <Text style={[styles.timerText, { color: timeLeft <= 10 ? Colors.semantic.error : colors.text.primary }]}>
+                                ⏳ {timeLeft}초
+                            </Text>
+                        )}
+                    </View>
                 </View>
             </View>
 
@@ -416,6 +426,14 @@ const styles = StyleSheet.create({
     subtitle: {
         ...TextStyle.caption1,
         fontWeight: '600',
+    },
+    headerRight: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: Spacing.sm,
+    },
+    soundButton: {
+        padding: Spacing.sm,
     },
     scoreContainer: {
         padding: Spacing.sm,
