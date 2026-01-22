@@ -16,7 +16,6 @@ import { Audio } from 'expo-av';
 
 const playSound = async (type: 'flip' | 'match' | 'mismatch' | 'success' | 'gameover') => {
     try {
-        const soundObject = new Audio.Sound();
         let source;
         switch (type) {
             case 'flip': source = require('../../assets/sounds/flip.mp3'); break;
@@ -25,13 +24,27 @@ const playSound = async (type: 'flip' | 'match' | 'mismatch' | 'success' | 'game
             case 'success': source = require('../../assets/sounds/success.mp3'); break;
             case 'gameover': source = require('../../assets/sounds/gameover.mp3'); break;
         }
-        // Check if file exists in logic is hard with require, assuming user provides files.
-        // If file is missing, require might fail at runtime or build time. 
-        // For robustness, we wrap in try-catch.
-        await soundObject.loadAsync(source);
-        await soundObject.playAsync();
+
+        // Use createAsync for one-shot playback. 
+        // We don't await the unload because we want fire-and-forget for UI responsiveness.
+        // However, for proper cleanup, usually we should unload. 
+        // For simple UI sounds, letting basic garbage collection handle it is often 'good enough' for quick prototypes,
+        // but explicit unload is better. 
+
+        const { sound } = await Audio.Sound.createAsync(
+            source,
+            { shouldPlay: true }
+        );
+
+        // Optional: Unload from memory when finished
+        sound.setOnPlaybackStatusUpdate(async (status) => {
+            if (status.isLoaded && status.didJustFinish) {
+                await sound.unloadAsync();
+            }
+        });
+
     } catch (error) {
-        // console.log('Sound playback failed', error); // Silent fail if asset missing
+        console.log('Sound playback failed', error);
     }
 };
 
