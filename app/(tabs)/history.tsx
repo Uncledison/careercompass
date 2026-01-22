@@ -51,7 +51,27 @@ const careerFieldInfo: Record<CareerField, { label: string; icon: string; color:
   arts: { label: '예체능', icon: '🎨', color: Colors.career.arts.main },
 };
 
-// 결과 카드 컴포넌트
+// 유형명 매핑 (계열 → 캐릭터형 이름)
+const typeNames: Record<CareerField, string> = {
+  humanities: '인문 탐구자',
+  social: '사회 리더',
+  natural: '자연 탐험가',
+  engineering: '공학 메이커',
+  medicine: '생명 수호자',
+  arts: '예술 크리에이터',
+};
+
+// 유형별 핵심 키워드
+const typeKeywords: Record<CareerField, string[]> = {
+  humanities: ['공감', '언어감각', '비판적사고'],
+  social: ['리더십', '설득력', '소통'],
+  natural: ['탐구심', '분석력', '논리'],
+  engineering: ['창의력', '문제해결', '도전정신'],
+  medicine: ['봉사정신', '책임감', '집중력'],
+  arts: ['창의성', '표현력', '감성'],
+};
+
+// 결과 카드 컴포넌트 (새로운 디자인)
 const ResultCard = ({
   item,
   index,
@@ -64,6 +84,8 @@ const ResultCard = ({
   onDelete: (id: string) => void;
 }) => {
   const careerInfo = careerFieldInfo[item.topCareer];
+  const typeName = typeNames[item.topCareer];
+  const keywords = typeKeywords[item.topCareer];
 
   const handleDelete = (e: any) => {
     e.stopPropagation(); // 카드 클릭 이벤트 방지
@@ -76,19 +98,21 @@ const ResultCard = ({
     <Pressable onPress={onPress}>
       <Animated.View
         entering={FadeInDown.delay(index * 100).duration(400)}
-        style={styles.card}
+        style={[styles.card, { borderLeftColor: careerInfo.color }]}
       >
+        {/* 상단: 유형명 + 점수 */}
         <View style={styles.cardHeader}>
           <View style={[styles.iconContainer, { backgroundColor: careerInfo.color + '20' }]}>
             <Text style={styles.icon}>{careerInfo.icon}</Text>
           </View>
           <View style={styles.cardInfo}>
-            <Text style={styles.cardTitle}>
-              {careerInfo.label} 계열 {item.topScore}점
+            <Text style={[styles.cardTypeName, { color: careerInfo.color }]}>
+              {typeName}
             </Text>
-            <Text style={styles.cardSubtitle}>
-              {formatResultTitle(item)}
-            </Text>
+            <View style={styles.cardScoreRow}>
+              <Text style={styles.cardScore}>{item.topScore}점</Text>
+              <Text style={styles.cardDate}>{formatResultTitle(item)}</Text>
+            </View>
           </View>
           <Pressable
             onPress={handleDelete}
@@ -105,6 +129,15 @@ const ResultCard = ({
               />
             </Svg>
           </Pressable>
+        </View>
+
+        {/* 키워드 */}
+        <View style={styles.keywordsRow}>
+          {keywords.map((keyword, idx) => (
+            <View key={idx} style={[styles.keywordChip, { backgroundColor: careerInfo.color + '15' }]}>
+              <Text style={[styles.keywordText, { color: careerInfo.color }]}>#{keyword}</Text>
+            </View>
+          ))}
         </View>
 
         {/* 간단한 점수 바 */}
@@ -291,6 +324,7 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: Colors.background.primary,
     borderRadius: BorderRadius.lg,
+    borderLeftWidth: 4,
     padding: Spacing.md,
     marginBottom: Spacing.sm,
     ...Shadow.sm,
@@ -298,7 +332,7 @@ const styles = StyleSheet.create({
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.sm,
   },
   iconContainer: {
     width: 48,
@@ -314,6 +348,25 @@ const styles = StyleSheet.create({
   cardInfo: {
     flex: 1,
   },
+  cardTypeName: {
+    ...TextStyle.headline,
+    fontWeight: '700',
+  },
+  cardScoreRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginTop: 2,
+  },
+  cardScore: {
+    ...TextStyle.callout,
+    fontWeight: '700',
+    color: Colors.text.primary,
+  },
+  cardDate: {
+    ...TextStyle.caption1,
+    color: Colors.text.secondary,
+  },
   cardTitle: {
     ...TextStyle.headline,
     color: Colors.text.primary,
@@ -322,6 +375,21 @@ const styles = StyleSheet.create({
     ...TextStyle.caption1,
     color: Colors.text.secondary,
     marginTop: 2,
+  },
+  keywordsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.xs,
+    marginBottom: Spacing.sm,
+  },
+  keywordChip: {
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 2,
+    borderRadius: BorderRadius.full,
+  },
+  keywordText: {
+    ...TextStyle.caption2,
+    fontWeight: '600',
   },
   deleteButton: {
     padding: Spacing.xs,

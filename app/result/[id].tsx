@@ -171,9 +171,9 @@ const SummaryCard = ({
   score,
   nickname,
   character,
+  level,
   onKakaoShare,
   onPngSave,
-  onPdfSave,
   onToggleDetail,
   isDetailOpen,
 }: {
@@ -181,15 +181,16 @@ const SummaryCard = ({
   score: number;
   nickname?: string;
   character: string;
+  level: string;
   onKakaoShare: () => void;
   onPngSave: () => void;
-  onPdfSave: () => void;
   onToggleDetail: () => void;
   isDetailOpen: boolean;
 }) => {
   const info = careerFieldInfo[topField];
   const typeName = typeNames[topField];
   const keywords = typeKeywords[topField];
+  const questionCount = QUESTION_COUNTS[level] || 35;
 
   return (
     <Animated.View entering={FadeIn.duration(600)} style={styles.summaryCardContainer}>
@@ -197,19 +198,19 @@ const SummaryCard = ({
         colors={[info.color + 'F0', info.color + 'CC'] as const}
         style={styles.summaryCardGradient}
       >
-        {/* 사용자 캐릭터 (가장 크게) */}
+        {/* 사용자 캐릭터 (가장 크게, 중앙 정렬) */}
         <View style={styles.characterSection}>
           <View style={styles.characterContainer}>
             <ModelViewer3D
               modelPath={`/models/characters/${character}.gltf`}
               animations={['Wave', 'Yes']}
-              width={140}
-              height={140}
+              width={160}
+              height={160}
               autoRotate={false}
-              cameraDistance="13.5m"
-              cameraTarget="0.5m 1m 0m"
-              borderRadius={70}
-              backgroundColor="rgba(255,255,255,0.2)"
+              cameraDistance="12m"
+              cameraTarget="0m 1m 0m"
+              borderRadius={80}
+              backgroundColor="rgba(255,255,255,0.25)"
             />
           </View>
           <Text style={styles.greetingText}>
@@ -217,7 +218,7 @@ const SummaryCard = ({
           </Text>
         </View>
 
-        {/* 유형명 & 점수 */}
+        {/* 유형명 & 점수 (간격 축소) */}
         <View style={styles.typeSection}>
           <View style={styles.typeIconBadge}>
             <Text style={styles.typeIcon}>{info.icon}</Text>
@@ -238,58 +239,49 @@ const SummaryCard = ({
           ))}
         </View>
 
-        {/* 공유 버튼 3개 */}
+        {/* 공유 버튼 (카톡=메인, 이미지=보조) */}
         <View style={styles.summaryShareButtons}>
           <Pressable
             style={({ pressed }) => [
-              styles.summaryShareBtn,
-              styles.kakaoShareBtn,
+              styles.kakaoMainBtn,
               pressed && styles.shareBtnPressed,
             ]}
             onPress={onKakaoShare}
           >
-            <Text style={styles.kakaoShareIcon}>💬</Text>
-            <Text style={styles.kakaoShareText}>카톡 공유</Text>
+            <Text style={styles.kakaoMainIcon}>💬</Text>
+            <Text style={styles.kakaoMainText}>카톡 공유</Text>
           </Pressable>
 
           <Pressable
             style={({ pressed }) => [
-              styles.summaryShareBtn,
-              styles.pngShareBtn,
+              styles.imageSubBtn,
               pressed && styles.shareBtnPressed,
             ]}
             onPress={onPngSave}
           >
-            <Text style={styles.pngShareIcon}>🖼️</Text>
-            <Text style={styles.pngShareText}>PNG 저장</Text>
-          </Pressable>
-
-          <Pressable
-            style={({ pressed }) => [
-              styles.summaryShareBtn,
-              styles.pdfShareBtn,
-              pressed && styles.shareBtnPressed,
-            ]}
-            onPress={onPdfSave}
-          >
-            <Text style={styles.pdfShareIcon}>📄</Text>
-            <Text style={styles.pdfShareText}>PDF 저장</Text>
+            <Text style={styles.imageSubIcon}>🖼️</Text>
+            <Text style={styles.imageSubText}>이미지 저장</Text>
           </Pressable>
         </View>
 
-        {/* 상세 분석 보기 버튼 */}
+        {/* 신뢰 배지 (보라색 영역 내부) */}
+        <View style={styles.trustBadgeInCard}>
+          <Text style={styles.trustBadgeIcon}>🎓</Text>
+          <Text style={styles.trustBadgeText}>
+            과학적 검사 기반 · {questionCount}문항 분석
+          </Text>
+        </View>
+
+        {/* 상세 분석 보기 (작은 텍스트 링크) */}
         <Pressable
           style={({ pressed }) => [
-            styles.detailToggleButton,
-            pressed && styles.detailToggleButtonPressed,
+            styles.detailToggleLink,
+            pressed && styles.detailToggleLinkPressed,
           ]}
           onPress={onToggleDetail}
         >
-          <Text style={styles.detailToggleText}>
-            {isDetailOpen ? '상세 분석 접기' : '상세 분석 보기'}
-          </Text>
-          <Text style={styles.detailToggleArrow}>
-            {isDetailOpen ? '▲' : '▼'}
+          <Text style={styles.detailToggleLinkText}>
+            {isDetailOpen ? '상세 분석 접기 ▲' : '상세 분석 보기 ▼'}
           </Text>
         </Pressable>
       </LinearGradient>
@@ -297,7 +289,7 @@ const SummaryCard = ({
   );
 };
 
-// 신뢰 배지 컴포넌트
+// 신뢰 배지 컴포넌트 (더 이상 사용하지 않음 - SummaryCard 내부로 이동)
 const TrustBadge = ({ level }: { level: string }) => {
   const questionCount = QUESTION_COUNTS[level] || 35;
 
@@ -933,15 +925,12 @@ export default function ResultScreen() {
           score={topCareer.score}
           nickname={profile?.nickname}
           character={profile?.character || 'Female_1'}
+          level={level || 'elementary'}
           onKakaoShare={handleKakaoShare}
           onPngSave={handlePngSave}
-          onPdfSave={handleExportPDF}
           onToggleDetail={handleToggleDetail}
           isDetailOpen={isDetailOpen}
         />
-
-        {/* 신뢰 배지 (과학적 검사 기반 + 문항 수) */}
-        <TrustBadge level={level || 'elementary'} />
 
         {/* ===== 하단: 상세 분석 레이어 (접힘/펼침) ===== */}
         {isDetailOpen && (
@@ -1001,6 +990,18 @@ export default function ResultScreen() {
 
               {/* 종합 코멘트 */}
               <SummaryComment topField={topCareer.field} score={topCareer.score} />
+
+              {/* PDF 저장 버튼 (상세 리포트 하단) */}
+              <Pressable
+                style={({ pressed }) => [
+                  styles.pdfSaveButton,
+                  pressed && styles.buttonPressed,
+                ]}
+                onPress={handleExportPDF}
+              >
+                <Text style={styles.pdfSaveIcon}>📄</Text>
+                <Text style={styles.pdfSaveText}>상세 리포트 PDF 저장</Text>
+              </Pressable>
             </View>
           </View>
         )}
@@ -1053,7 +1054,7 @@ const styles = StyleSheet.create({
 
   // ===== 요약 카드 스타일 =====
   summaryCardContainer: {
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.sm,
   },
   summaryCardGradient: {
     paddingTop: Spacing.xl,
@@ -1065,14 +1066,16 @@ const styles = StyleSheet.create({
   },
   characterSection: {
     alignItems: 'center',
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.sm,
   },
   characterContainer: {
-    width: 140,
-    height: 140,
-    borderRadius: 70,
+    width: 160,
+    height: 160,
+    borderRadius: 80,
     overflow: 'hidden',
     marginBottom: Spacing.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   greetingText: {
     ...TextStyle.callout,
@@ -1081,37 +1084,38 @@ const styles = StyleSheet.create({
   },
   typeSection: {
     alignItems: 'center',
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.xs,
   },
   typeIconBadge: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: 'rgba(255,255,255,0.25)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: Spacing.xs,
+    marginBottom: 2,
   },
   typeIcon: {
-    fontSize: 28,
+    fontSize: 24,
   },
   typeName: {
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: '800',
     color: Colors.text.inverse,
-    marginBottom: Spacing.xs,
+    marginBottom: 0,
   },
   scoreContainer: {
     flexDirection: 'row',
     alignItems: 'baseline',
+    marginTop: -2,
   },
   scoreValue: {
-    fontSize: 44,
+    fontSize: 40,
     fontWeight: '900',
     color: Colors.text.inverse,
   },
   scoreUnit: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
     color: 'rgba(255,255,255,0.8)',
     marginLeft: 2,
@@ -1121,7 +1125,8 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     justifyContent: 'center',
     gap: Spacing.xs,
-    marginBottom: Spacing.lg,
+    marginTop: Spacing.sm,
+    marginBottom: Spacing.md,
   },
   keywordChip: {
     backgroundColor: 'rgba(255,255,255,0.25)',
@@ -1134,14 +1139,87 @@ const styles = StyleSheet.create({
     color: Colors.text.inverse,
     fontWeight: '600',
   },
-  // 요약 카드 내 공유 버튼
+  // 공유 버튼 (카톡=메인, 이미지=보조)
   summaryShareButtons: {
     flexDirection: 'row',
     justifyContent: 'center',
     gap: Spacing.sm,
     marginBottom: Spacing.md,
     width: '100%',
+    paddingHorizontal: Spacing.md,
   },
+  kakaoMainBtn: {
+    flex: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.md,
+    backgroundColor: '#FEE500',
+    gap: 6,
+  },
+  kakaoMainIcon: {
+    fontSize: 18,
+  },
+  kakaoMainText: {
+    ...TextStyle.callout,
+    fontWeight: '700',
+    color: '#3C1E1E',
+  },
+  imageSubBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.md,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.5)',
+    gap: 4,
+  },
+  imageSubIcon: {
+    fontSize: 14,
+  },
+  imageSubText: {
+    ...TextStyle.caption1,
+    fontWeight: '600',
+    color: Colors.text.inverse,
+  },
+  // 신뢰 배지 (카드 내부)
+  trustBadgeInCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.full,
+    marginBottom: Spacing.sm,
+    gap: 6,
+  },
+  trustBadgeIcon: {
+    fontSize: 14,
+  },
+  trustBadgeText: {
+    ...TextStyle.caption2,
+    color: 'rgba(255,255,255,0.9)',
+    fontWeight: '500',
+  },
+  // 상세 분석 보기 (텍스트 링크)
+  detailToggleLink: {
+    paddingVertical: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+  },
+  detailToggleLinkPressed: {
+    opacity: 0.7,
+  },
+  detailToggleLinkText: {
+    ...TextStyle.caption1,
+    color: 'rgba(255,255,255,0.8)',
+    fontWeight: '500',
+    textDecorationLine: 'underline',
+  },
+  // 이전 스타일 (사용 안함 - 호환성 유지)
   summaryShareBtn: {
     flex: 1,
     flexDirection: 'row',
@@ -1323,6 +1401,27 @@ const styles = StyleSheet.create({
   },
   moreBtnText: {
     ...TextStyle.caption2,
+    fontWeight: '600',
+    color: Colors.text.inverse,
+  },
+
+  // PDF 저장 버튼 (상세 리포트 하단)
+  pdfSaveButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.secondary.main,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.md,
+    marginTop: Spacing.md,
+    gap: Spacing.xs,
+    ...Shadow.sm,
+  },
+  pdfSaveIcon: {
+    fontSize: 18,
+  },
+  pdfSaveText: {
+    ...TextStyle.callout,
     fontWeight: '600',
     color: Colors.text.inverse,
   },
