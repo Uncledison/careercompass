@@ -125,6 +125,7 @@ const StageCompleteModal = ({
   currentStage,
   onContinue,
 }: StageCompleteModalProps) => {
+  const lottieRef = useRef<LottieView>(null);
   const soundRef = useRef<Audio.Sound | null>(null);
 
   // 축하 메시지 (스테이지별로 다른 메시지)
@@ -136,22 +137,6 @@ const StageCompleteModal = ({
   // 캐릭터 애니메이션 (학령별)
   const celebrationAnimation = useMemo(() => {
     return CELEBRATION_ANIMATIONS[level] || CELEBRATION_ANIMATIONS.elementary;
-  }, [level]);
-
-  // 학령별 카메라 설정 (초등: 측면 뷰, 중/고등: 정면)
-  const cameraConfig = useMemo(() => {
-    // 초등: 오른쪽을 향하도록 90deg 회전, 약간 위에서 내려다봄
-    if (level === 'elementary') {
-      return {
-        orbit: '90deg 70deg auto',  // 90도 회전 = 측면 뷰
-        target: '0m 0m 0m',  // 중심에 맞춤
-      };
-    }
-    // 중등/고등: 정면
-    return {
-      orbit: '0deg 70deg auto',  // 정면
-      target: '0m 0.3m 0m',  // 약간 위로 (사람 캐릭터 기준)
-    };
   }, [level]);
 
   // 현재 스테이지의 모델 경로 가져오기
@@ -178,7 +163,11 @@ const StageCompleteModal = ({
         }
       };
       playSound();
-      // Note: Lottie 애니메이션은 autoPlay로 자동 시작됨
+
+      // Lottie 애니메이션 시작
+      if (lottieRef.current) {
+        lottieRef.current.play();
+      }
     }
 
     return () => {
@@ -198,26 +187,15 @@ const StageCompleteModal = ({
       exiting={FadeOut.duration(200)}
       style={styles.modalOverlay}
     >
-      {/* 전체 화면 폭죽 효과 - 10개 인스턴스로 더 화려하게 */}
-      {[...Array(10)].map((_, i) => (
-        <LottieView
-          key={`confetti-${i}`}
-          source={require('../../assets/lottie/confetti.json')}
-          style={[
-            styles.confettiAnimation,
-            {
-              transform: [
-                { translateX: (i % 3 - 1) * 100 },
-                { translateY: Math.floor(i / 3) * 80 - 100 },
-                { scale: 0.8 + (i % 3) * 0.2 },
-              ],
-            },
-          ]}
-          autoPlay
-          loop={false}
-          speed={0.6 + (i * 0.05)}
-        />
-      ))}
+      {/* 전체 화면 폭죽 효과 */}
+      <LottieView
+        ref={lottieRef}
+        source={require('../../assets/lottie/confetti.json')}
+        style={styles.confettiAnimation}
+        autoPlay
+        loop={false}
+        speed={0.8}
+      />
 
       <Animated.View
         entering={FadeIn.delay(200).duration(300)}
@@ -230,8 +208,7 @@ const StageCompleteModal = ({
               modelPath={modelConfig.path}
               animations={celebrationAnimation}
               cameraDistance={modelConfig.cameraDistance || '8m'}
-              cameraOrbit={cameraConfig.orbit}
-              cameraTarget={cameraConfig.target}
+              cameraTarget="0m 0.5m 0m"
               width={140}
               height={140}
               autoRotate={false}
@@ -245,10 +222,10 @@ const StageCompleteModal = ({
           )}
         </View>
 
-        {/* 축하 메시지 - 하나로 통합 */}
-        <Text style={styles.modalTitle}>
-          {celebrationMessage}
-        </Text>
+        {/* 축하 메시지 */}
+        <Text style={styles.celebrationMessage}>{celebrationMessage}</Text>
+
+        <Text style={styles.modalTitle}>축하해요!</Text>
         <Text style={styles.modalSubtitle}>
           {stageName}을 완료하고{'\n'}
           <Text style={{ color: stageColor, fontWeight: '700' }}>{badgeName}</Text> 배지를 획득했어요!
@@ -838,7 +815,6 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.xxl,
     padding: Spacing.xl,
     alignItems: 'center',
-    zIndex: 10,
     ...Shadow.xxl,
   },
   badgeContainer: {
