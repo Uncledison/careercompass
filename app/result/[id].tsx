@@ -871,7 +871,7 @@ export default function ResultScreen() {
           return;
         }
 
-              const canvas = await html2canvas(element as any, {
+        const canvas = await html2canvas(element as any, {
           backgroundColor: null,
           scale: 2,
           logging: false,
@@ -885,10 +885,12 @@ export default function ResultScreen() {
         if (ctx && profile?.character) {
           const characterImg = new Image();
           characterImg.crossOrigin = 'anonymous';
-          
-          const characterFileName = profile.character.replace('.gltf', '.png');
+
+          // 캐릭터 파일명 생성 (.gltf 제거 후 .png 추가)
+          const characterBase = profile.character.replace('.gltf', '');
+          const characterFileName = `${characterBase}.png`;
           characterImg.src = `/character-screenshots/${characterFileName}`;
-          
+
           await new Promise((resolve, reject) => {
             characterImg.onload = () => {
               const imgSize = 400;
