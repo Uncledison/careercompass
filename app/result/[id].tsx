@@ -890,7 +890,7 @@ export default function ResultScreen() {
         // 캐릭터 이미지 오버레이
         const ctx = canvas.getContext('2d');
         if (ctx && profile?.character) {
-          const characterImg = new Image();
+          const characterImg = new window.Image();
           characterImg.crossOrigin = 'anonymous';
 
           // 캐릭터 파일명 생성 (.gltf 제거 후 .png 추가)
