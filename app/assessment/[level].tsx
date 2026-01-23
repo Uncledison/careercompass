@@ -190,21 +190,16 @@ const StageCompleteModal = ({
             case 3: soundSource = require('../../assets/sounds/fanfare-03.mp3'); break;
             case 4: soundSource = require('../../assets/sounds/fanfare-04.mp3'); break;
             case 5: soundSource = require('../../assets/sounds/fanfare-05.mp3'); break;
-            default: soundSource = require('../../assets/sounds/success.mp3');
+            default: return; // 스테이지 범위 벗어나면 사운드 재생 안 함
           }
 
           const { sound } = await Audio.Sound.createAsync(soundSource);
           soundRef.current = sound;
-          await sound.setVolumeAsync(0.6); // 볼륨 줄임
+          await sound.setVolumeAsync(0.6);
           await sound.playAsync();
         } catch (error) {
           console.log('Sound play error:', error);
-          // 팡파레 파일이 없으면 success.mp3로 fallback
-          try {
-            const { sound } = await Audio.Sound.createAsync(require('../../assets/sounds/success.mp3'));
-            soundRef.current = sound;
-            await sound.playAsync();
-          } catch (e) { }
+          // 에러 발생 시 조용히 무시 (비프음 재생하지 않음)
         }
       };
       playSound();
