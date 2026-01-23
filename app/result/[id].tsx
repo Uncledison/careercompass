@@ -893,10 +893,8 @@ export default function ResultScreen() {
 
           await new Promise((resolve, reject) => {
             characterImg.onload = () => {
-              const imgSize = 400;
-              const x = (canvas.width - imgSize) / 2;
-              const y = 200;
-              ctx.drawImage(characterImg, x, y, imgSize, imgSize);
+                          // 정렬된 이미지를 전체 캔버스에 오버레이
+              ctx.drawImage(characterImg, 0, 0, canvas.width, canvas.height);
               resolve(null);
             };
             characterImg.onerror = reject;
