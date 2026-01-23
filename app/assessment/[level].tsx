@@ -139,6 +139,22 @@ const StageCompleteModal = ({
     return CELEBRATION_ANIMATIONS[level] || CELEBRATION_ANIMATIONS.elementary;
   }, [level]);
 
+  // 학령별 카메라 설정
+  const cameraConfig = useMemo(() => {
+    if (level === 'elementary') {
+      // 초등: 오른쪽 측면 뷰, 캐릭터를 아래로 (Y값 음수)
+      return {
+        orbit: '90deg 75deg auto',
+        target: '0m -0.3m 0m',
+      };
+    }
+    // 중등/고등: 정면, 캐릭터를 아래로
+    return {
+      orbit: '0deg 75deg auto',
+      target: '0m -0.2m 0m',
+    };
+  }, [level]);
+
   // 현재 스테이지의 모델 경로 가져오기
   const modelConfig = useMemo(() => {
     const levelModels = MODEL_PATHS[level];
@@ -208,7 +224,8 @@ const StageCompleteModal = ({
               modelPath={modelConfig.path}
               animations={celebrationAnimation}
               cameraDistance={modelConfig.cameraDistance || '8m'}
-              cameraTarget="0m 0.5m 0m"
+              cameraOrbit={cameraConfig.orbit}
+              cameraTarget={cameraConfig.target}
               width={140}
               height={140}
               autoRotate={false}
@@ -222,10 +239,8 @@ const StageCompleteModal = ({
           )}
         </View>
 
-        {/* 축하 메시지 */}
-        <Text style={styles.celebrationMessage}>{celebrationMessage}</Text>
-
-        <Text style={styles.modalTitle}>축하해요!</Text>
+        {/* 축하 메시지 - 하나로 통합 */}
+        <Text style={styles.modalTitle}>{celebrationMessage}</Text>
         <Text style={styles.modalSubtitle}>
           {stageName}을 완료하고{'\n'}
           <Text style={{ color: stageColor, fontWeight: '700' }}>{badgeName}</Text> 배지를 획득했어요!
