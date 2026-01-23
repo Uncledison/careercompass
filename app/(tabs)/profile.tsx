@@ -385,6 +385,42 @@ export default function ProfileScreen() {
           <View style={styles.modalContent}>
             <Text style={[styles.modalTitle, { color: colors.text.primary }]}>프로필 수정</Text>
 
+            {/* 캐릭터 선택 (가장 상단 배치) */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>캐릭터</Text>
+              <View style={styles.characterRow}>
+                {CHARACTER_OPTIONS.map((char) => (
+                  <Pressable
+                    key={char.id}
+                    style={[
+                      styles.characterOption,
+                      editCharacter === char.id && styles.characterOptionSelected
+                    ]}
+                    onPress={() => setEditCharacter(char.id)}
+                  >
+                    <View style={styles.characterPreview} pointerEvents="none">
+                      <ModelViewer3D
+                        modelPath={`/models/characters/${char.id}.gltf`}
+                        animations={['Idle']}
+                        width={60}
+                        height={60}
+                        autoRotate={false}
+                        cameraDistance="5m"
+                        cameraTarget="0m 1.0m 0m"
+                        disableControls
+                        backgroundColor="transparent"
+                      />
+                    </View>
+                    {editCharacter === char.id && (
+                      <View style={styles.checkmark}>
+                        <Text style={styles.checkmarkText}>✓</Text>
+                      </View>
+                    )}
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+
             {/* 닉네임 */}
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>닉네임</Text>
@@ -438,41 +474,7 @@ export default function ProfileScreen() {
               </View>
             </View>
 
-            {/* 캐릭터 선택 */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>캐릭터</Text>
-              <View style={styles.characterRow}>
-                {CHARACTER_OPTIONS.map((char) => (
-                  <Pressable
-                    key={char.id}
-                    style={[
-                      styles.characterOption,
-                      editCharacter === char.id && styles.characterOptionSelected
-                    ]}
-                    onPress={() => setEditCharacter(char.id)}
-                  >
-                    <View style={styles.characterPreview}>
-                      <ModelViewer3D
-                        modelPath={`/models/characters/${char.id}.gltf`}
-                        animations={['Idle']}
-                        width={60}
-                        height={60}
-                        autoRotate={false}
-                        cameraDistance="6m"
-                        cameraTarget="0m 0.8m 0m"
-                        disableControls
-                        backgroundColor="transparent"
-                      />
-                    </View>
-                    {editCharacter === char.id && (
-                      <View style={styles.checkmark}>
-                        <Text style={styles.checkmarkText}>✓</Text>
-                      </View>
-                    )}
-                  </Pressable>
-                ))}
-              </View>
-            </View>
+
 
             <View style={styles.modalButtons}>
               <Pressable style={styles.cancelButton} onPress={() => setShowEditModal(false)}>
