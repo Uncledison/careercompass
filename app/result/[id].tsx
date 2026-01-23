@@ -858,33 +858,52 @@ export default function ResultScreen() {
     }
   };
 
-  // PNG 저장 (웹에서는 캡처 기능 제한)
-  // PNG 저장 (captureRef 사용)
+   // PNG 저장 (웹: html2canvas, 모바일: captureRef)
   const handlePngSave = async () => {
     try {
-      if (captureViewRef.current) {
-        const uri = await captureRef(captureViewRef.current, {
-          format: 'png',
-          quality: 1,
-          result: 'tmpfile'
+      if (Platform.OS === 'web') {
+        // 웹: html2canvas 사용
+        const html2canvas = (await import('html2canvas')).default;
+        const element = captureViewRef.current;
+        
+        if (!element) {
+          Alert.alert('오류', '캡처할 영역을 찾을 수 없습니다.');
+          return;
+        }
+
+        const canvas = await html2canvas(element as any, {
+          backgroundColor: null,
+          scale: 2,
+          logging: false,
         });
 
-        if (Platform.OS !== 'web') {
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `career-compass-result-${Date.now()}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            Alert.alert('완료', '이미지가 다운로드되었습니다!');
+          }
+        });
+      } else {
+        // 모바일: captureRef 사용
+        if (captureViewRef.current) {
+          const uri = await captureRef(captureViewRef.current, {
+            format: 'png',
+            quality: 1,
+          });
+
           const Sharing = require('expo-sharing');
           if (await Sharing.isAvailableAsync()) {
             await Sharing.shareAsync(uri);
           } else {
             Alert.alert('오류', '공유 기능을 사용할 수 없습니다.');
           }
-        } else {
-          // 웹: 다운로드 링크 생성
-          const link = document.createElement('a');
-          link.href = uri;
-          link.download = `career-compass-result-${Date.now()}.png`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          Alert.alert('완료', '이미지가 다운로드되었습니다!');
         }
       }
     } catch (error) {
