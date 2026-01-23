@@ -383,10 +383,12 @@ export default function AssessmentScreen() {
 
   // 검사 초기화 (Multi-slot Save 지원)
   useEffect(() => {
+    // level 파라미터 안전하게 처리
+    const levelStr = Array.isArray(level) ? level[0] : level;
     let gradeLevel: GradeLevel = 'elementary_lower';
-    if (level === 'middle') {
+    if (levelStr === 'middle') {
       gradeLevel = 'middle';
-    } else if (level === 'high') {
+    } else if (levelStr === 'high') {
       gradeLevel = 'high';
     }
 
@@ -397,6 +399,10 @@ export default function AssessmentScreen() {
       if (state.sessionId && state.questions.length > 0 && state.level === gradeLevel) {
         return;
       }
+
+      // *중요*: 레벨이 다르다면, 로딩/체크 중에 이전 질문이 보이지 않도록 상태를 먼저 비움
+      // 이렇게 하면 UI는 '로딩 중...' 상태가 되어 혼란을 방지함
+      useAssessmentStore.setState({ questions: [], currentQuestionIndex: 0 });
 
       // 2. 저장된 파일 확인 (학령별 슬롯)
       const hasSaved = await state.hasSavedProgress(gradeLevel);
