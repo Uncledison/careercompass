@@ -16,6 +16,7 @@ import {
   Share,
   Platform,
   Alert,
+  Image,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -208,6 +209,12 @@ const SummaryCard = ({
           {/* 사용자 캐릭터 (화면 상단에서 적당한 거리를 두고 배치) */}
           <View style={styles.characterSection}>
             <View style={styles.characterCircle}>
+              {/* 모바일 캡처 및 백업용 이미지 (3D 모델 뒤에 배치) */}
+              <Image
+                source={{ uri: `/character-screenshots/${character.replace('.gltf', '')}.png` }}
+                style={[StyleSheet.absoluteFill, { width: 160, height: 160, borderRadius: 80 }]}
+                resizeMode="cover"
+              />
               <ModelViewer3D
                 modelPath={`/models/characters/${character}.gltf`}
                 animations={['Wave', 'Yes']}
@@ -893,7 +900,7 @@ export default function ResultScreen() {
 
           await new Promise((resolve, reject) => {
             characterImg.onload = () => {
-                          // 정렬된 이미지를 전체 캔버스에 오버레이
+              // 정렬된 이미지를 전체 캔버스에 오버레이
               ctx.drawImage(characterImg, 0, 0, canvas.width, canvas.height);
               resolve(null);
             };
