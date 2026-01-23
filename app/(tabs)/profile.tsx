@@ -405,8 +405,8 @@ export default function ProfileScreen() {
                         width={60}
                         height={60}
                         autoRotate={false}
-                        cameraDistance="5m"
-                        cameraTarget="0m 1.0m 0m"
+                        cameraDistance="8m"
+                        cameraTarget="0m 1.2m 0m"
                         disableControls
                         backgroundColor="transparent"
                       />
