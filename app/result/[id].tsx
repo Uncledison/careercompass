@@ -215,7 +215,7 @@ const SummaryCard = ({
                 height={160}
                 autoRotate={false}
                 cameraDistance="14m"
-                cameraTarget="0m 0.5m 0m"
+                cameraTarget="0m 0.9m 0m"
                 borderRadius={80}
                 backgroundColor="transparent"
               />
@@ -416,9 +416,9 @@ const RadarChart = ({ scores }: { scores: CareerScores }) => {
           <G key={`label-${index}`}>
             <SvgText
               x={labelPoint.x}
-              y={labelPoint.y - 6}
-              fontSize={12}
-              fontWeight="600"
+              y={labelPoint.y - 8}
+              fontSize={15}
+              fontWeight="700"
               fill={Colors.text.primary}
               textAnchor="middle"
             >
@@ -426,10 +426,10 @@ const RadarChart = ({ scores }: { scores: CareerScores }) => {
             </SvgText>
             <SvgText
               x={labelPoint.x}
-              y={labelPoint.y + 8}
-              fontSize={11}
+              y={labelPoint.y + 10}
+              fontSize={16}
               fill={info.color}
-              fontWeight="bold"
+              fontWeight="900"
               textAnchor="middle"
             >
               {scores[field]}점
@@ -918,9 +918,9 @@ export default function ResultScreen() {
           >
             {/* 상세 분석 구분선 */}
             <View style={styles.detailDivider}>
-              <View style={styles.detailDividerLine} />
-              <Text style={styles.detailDividerText}>상세 분석 리포트</Text>
-              <View style={styles.detailDividerLine} />
+              <Text style={styles.theoryBadgeText}>
+                🎓 과학적 검사 기반 : HOLLAND / 다중지능 / 진로발달 이론
+              </Text>
             </View>
 
             {/* 레이더 차트 */}
@@ -978,6 +978,17 @@ export default function ResultScreen() {
               >
                 <Text style={styles.pdfSaveIcon}>📄</Text>
                 <Text style={styles.pdfSaveText}>상세 리포트 PDF 저장</Text>
+              </Pressable>
+
+              {/* 하단 상세 분석 접기 버튼 */}
+              <Pressable
+                style={({ pressed }) => [
+                  styles.bottomFoldButton,
+                  pressed && styles.buttonPressed,
+                ]}
+                onPress={handleToggleDetail}
+              >
+                <Text style={styles.bottomFoldButtonText}>📊 상세 분석 접기 ▲</Text>
               </Pressable>
             </View>
           </View>
@@ -1318,23 +1329,36 @@ const styles = StyleSheet.create({
     color: Colors.text.inverse,
   },
 
-  // ===== 상세 분석 구분선 =====
+  // ===== 상세 분석 구분선 및 상단 텍스트 =====
   detailDivider: {
-    flexDirection: 'row',
     alignItems: 'center',
-    marginHorizontal: Spacing.md,
+    justifyContent: 'center',
     marginVertical: Spacing.lg,
-  },
-  detailDividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: Colors.gray[200],
-  },
-  detailDividerText: {
-    ...TextStyle.caption1,
-    fontWeight: '600',
-    color: Colors.text.tertiary,
+    marginTop: Spacing.xl,
     paddingHorizontal: Spacing.md,
+  },
+  theoryBadgeText: {
+    ...TextStyle.caption1,
+    color: Colors.primary.main,
+    fontWeight: '700',
+    textAlign: 'center',
+    backgroundColor: Colors.primary.main + '10',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.full,
+    overflow: 'hidden',
+  },
+
+  // 하단 접기 버튼
+  bottomFoldButton: {
+    paddingVertical: Spacing.md,
+    alignItems: 'center',
+    marginTop: Spacing.md,
+  },
+  bottomFoldButtonText: {
+    ...TextStyle.callout,
+    color: Colors.text.tertiary,
+    fontWeight: '600',
   },
 
   // ===== 기존 스타일 (수정) =====
