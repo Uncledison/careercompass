@@ -3,7 +3,9 @@
  * /assessment/elementary, /assessment/middle, /assessment/high
  */
 
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
+import LottieView from 'lottie-react-native';
+import { Audio } from 'expo-av';
 import {
   View,
   Text,
@@ -92,8 +94,25 @@ interface StageCompleteModalProps {
   badgeIcon: string;
   badgeName: string;
   stageColor: string;
+  level: string;
+  character: string;
+  currentStage: number;
   onContinue: () => void;
 }
+
+// 학령별 축하 애니메이션 설정
+const CELEBRATION_ANIMATIONS: Record<string, string[]> = {
+  elementary: ['Run'],
+  middle: ['Attack'],
+  high: ['Wave'],
+};
+
+// 학령별 축하 메시지
+const CELEBRATION_MESSAGES: Record<string, string[]> = {
+  elementary: ['대단해요! 🌟', '최고예요! 👏', '멋져요! 💪', '잘했어요! 🎉', '훌륭해요! ⭐'],
+  middle: ['멋진 실력이에요! 💥', '정말 잘했어요! 🔥', '대단한 집중력! 👊', '최고의 도전자! ⚡', '파워풀해요! 💪'],
+  high: ['훌륭한 성과예요! 🎓', '깊이 있는 탐색! 📚', '미래가 기대돼요! 🌟', '놀라운 성장! 🚀', '완벽해요! ✨'],
+};
 
 const StageCompleteModal = ({
   visible,
@@ -101,8 +120,65 @@ const StageCompleteModal = ({
   badgeIcon,
   badgeName,
   stageColor,
+  level,
+  character,
+  currentStage,
   onContinue,
 }: StageCompleteModalProps) => {
+  const lottieRef = useRef<LottieView>(null);
+  const soundRef = useRef<Audio.Sound | null>(null);
+
+  // 축하 메시지 (스테이지별로 다른 메시지)
+  const celebrationMessage = useMemo(() => {
+    const messages = CELEBRATION_MESSAGES[level] || CELEBRATION_MESSAGES.elementary;
+    return messages[(currentStage - 1) % messages.length];
+  }, [level, currentStage]);
+
+  // 캐릭터 애니메이션 (학령별)
+  const celebrationAnimation = useMemo(() => {
+    return CELEBRATION_ANIMATIONS[level] || CELEBRATION_ANIMATIONS.elementary;
+  }, [level]);
+
+  // 현재 스테이지의 모델 경로 가져오기
+  const modelConfig = useMemo(() => {
+    const levelModels = MODEL_PATHS[level];
+    if (levelModels && levelModels[currentStage]) {
+      return levelModels[currentStage];
+    }
+    return null;
+  }, [level, currentStage]);
+
+  // 사운드 재생
+  useEffect(() => {
+    if (visible) {
+      const playSound = async () => {
+        try {
+          const { sound } = await Audio.Sound.createAsync(
+            require('../../assets/sounds/success.mp3')
+          );
+          soundRef.current = sound;
+          await sound.playAsync();
+        } catch (error) {
+          console.log('Sound play error:', error);
+        }
+      };
+      playSound();
+
+      // Lottie 애니메이션 시작
+      if (lottieRef.current) {
+        lottieRef.current.play();
+      }
+    }
+
+    return () => {
+      // 사운드 정리
+      if (soundRef.current) {
+        soundRef.current.unloadAsync();
+        soundRef.current = null;
+      }
+    };
+  }, [visible]);
+
   if (!visible) return null;
 
   return (
@@ -111,14 +187,43 @@ const StageCompleteModal = ({
       exiting={FadeOut.duration(200)}
       style={styles.modalOverlay}
     >
+      {/* 전체 화면 폭죽 효과 */}
+      <LottieView
+        ref={lottieRef}
+        source={require('../../assets/lottie/confetti.json')}
+        style={styles.confettiAnimation}
+        autoPlay
+        loop={false}
+        speed={0.8}
+      />
+
       <Animated.View
         entering={FadeIn.delay(200).duration(300)}
         style={styles.modalContent}
       >
-        {/* 배지 */}
-        <View style={[styles.badgeContainer, { backgroundColor: stageColor + '20' }]}>
-          <Text style={styles.badgeIcon}>{badgeIcon}</Text>
+        {/* 캐릭터 축하 반응 */}
+        <View style={[styles.celebrationCharacterContainer, { backgroundColor: stageColor + '20' }]}>
+          {modelConfig ? (
+            <ModelViewer3D
+              modelPath={modelConfig.path}
+              animations={celebrationAnimation}
+              cameraDistance={modelConfig.cameraDistance || '8m'}
+              cameraTarget="0m 0.5m 0m"
+              width={140}
+              height={140}
+              autoRotate={false}
+              borderRadius={70}
+              backgroundColor="transparent"
+            />
+          ) : (
+            <View style={styles.badgeContainer}>
+              <Text style={styles.badgeIcon}>{badgeIcon}</Text>
+            </View>
+          )}
         </View>
+
+        {/* 축하 메시지 */}
+        <Text style={styles.celebrationMessage}>{celebrationMessage}</Text>
 
         <Text style={styles.modalTitle}>축하해요!</Text>
         <Text style={styles.modalSubtitle}>
@@ -537,6 +642,9 @@ export default function AssessmentScreen() {
         badgeIcon={stageInfo.badge.icon}
         badgeName={stageInfo.badge.name}
         stageColor={stageInfo.color}
+        level={level || 'elementary'}
+        character={String(currentStage)}
+        currentStage={currentStage}
         onContinue={handleStageContinue}
       />
     </View>
@@ -747,5 +855,28 @@ const styles = StyleSheet.create({
   modalButtonText: {
     ...TextStyle.headline,
     color: Colors.text.inverse,
+  },
+  // 축하 애니메이션 스타일
+  confettiAnimation: {
+    position: 'absolute',
+    width: SCREEN_WIDTH,
+    height: SCREEN_HEIGHT,
+    zIndex: 0,
+  },
+  celebrationCharacterContainer: {
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.md,
+    overflow: 'hidden',
+  },
+  celebrationMessage: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: Colors.text.primary,
+    marginBottom: Spacing.sm,
+    textAlign: 'center',
   },
 });
