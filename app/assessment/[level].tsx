@@ -401,8 +401,7 @@ export default function AssessmentScreen() {
           return;
         }
 
-        // *중요*: 레벨이 다르다면, 로딩/체크 중에 이전 질문이 보이지 않도록 상태를 먼저 비움
-        useAssessmentStore.setState({ questions: [], currentQuestionIndex: 0 });
+
 
         // 2. 저장된 파일 확인 (학령별 슬롯)
         const hasSaved = await state.hasSavedProgress(gradeLevel);
