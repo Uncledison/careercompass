@@ -374,8 +374,157 @@ export default function ProfileScreen() {
 
 
 
-      {/* 기타 모달들은 생략 없이 원본 유지하되 배경/텍스트 색상만 override 해야함... 
-          하지만 복잡도를 줄이기 위해 편집 모달 등은 일단 둡니다. */}
+      {/* 편집 모달 */}
+      <Modal
+        visible={showEditModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowEditModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={[styles.modalTitle, { color: colors.text.primary }]}>프로필 수정</Text>
+
+            {/* 닉네임 */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>닉네임</Text>
+              <TextInput
+                style={[styles.textInput, { color: colors.text.primary, backgroundColor: colors.gray[100] }]}
+                value={editNickname}
+                onChangeText={setEditNickname}
+                placeholder="닉네임을 입력하세요"
+                placeholderTextColor={colors.gray[400]}
+              />
+            </View>
+
+            {/* 학교급 */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>학교</Text>
+              <View style={styles.schoolTypeRow}>
+                <SchoolTypeButton
+                  type="elementary"
+                  label="초등"
+                  selected={editSchoolType === 'elementary'}
+                  onPress={() => handleSchoolTypeChange('elementary')}
+                />
+                <SchoolTypeButton
+                  type="middle"
+                  label="중등"
+                  selected={editSchoolType === 'middle'}
+                  onPress={() => handleSchoolTypeChange('middle')}
+                />
+                <SchoolTypeButton
+                  type="high"
+                  label="고등"
+                  selected={editSchoolType === 'high'}
+                  onPress={() => handleSchoolTypeChange('high')}
+                />
+              </View>
+            </View>
+
+            {/* 학년 */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>학년</Text>
+              <View style={styles.gradeRow}>
+                {[1, 2, 3, 4, 5, 6].map((g) => (
+                  <GradeButton
+                    key={g}
+                    grade={g as GradeNumber}
+                    selected={editGrade === g}
+                    onPress={() => setEditGrade(g as GradeNumber)}
+                    maxGrade={getMaxGrade(editSchoolType)}
+                  />
+                ))}
+              </View>
+            </View>
+
+            {/* 캐릭터 선택 */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>캐릭터</Text>
+              <View style={styles.characterRow}>
+                {CHARACTER_OPTIONS.map((char) => (
+                  <Pressable
+                    key={char.id}
+                    style={[
+                      styles.characterOption,
+                      editCharacter === char.id && styles.characterOptionSelected
+                    ]}
+                    onPress={() => setEditCharacter(char.id)}
+                  >
+                    <View style={styles.characterPreview}>
+                      <ModelViewer3D
+                        modelPath={`/models/characters/${char.id}.gltf`}
+                        animations={['Idle']}
+                        width={60}
+                        height={60}
+                        autoRotate={false}
+                        cameraDistance="6m"
+                        cameraTarget="0m 0.8m 0m"
+                        disableControls
+                        backgroundColor="transparent"
+                      />
+                    </View>
+                    {editCharacter === char.id && (
+                      <View style={styles.checkmark}>
+                        <Text style={styles.checkmarkText}>✓</Text>
+                      </View>
+                    )}
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.modalButtons}>
+              <Pressable style={styles.cancelButton} onPress={() => setShowEditModal(false)}>
+                <Text style={styles.cancelButtonText}>취소</Text>
+              </Pressable>
+              <Pressable style={styles.saveButton} onPress={handleSave}>
+                <Text style={styles.saveButtonText}>저장</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* 이용약관 모달 */}
+      <Modal
+        visible={showTermsModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowTermsModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.legalModalContent, { backgroundColor: colors.background.primary }]}>
+            <Text style={[styles.modalTitle, { color: colors.text.primary }]}>이용약관</Text>
+            <ScrollView style={styles.legalScrollView}>
+              <Text style={[styles.legalText, { color: colors.text.secondary }]}>{TERMS_OF_SERVICE}</Text>
+            </ScrollView>
+            <Pressable style={styles.closeButton} onPress={() => setShowTermsModal(false)}>
+              <Text style={styles.closeButtonText}>닫기</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
+
+      {/* 개인정보처리방침 모달 */}
+      <Modal
+        visible={showPrivacyModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowPrivacyModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.legalModalContent, { backgroundColor: colors.background.primary }]}>
+            <Text style={[styles.modalTitle, { color: colors.text.primary }]}>개인정보처리방침</Text>
+            <ScrollView style={styles.legalScrollView}>
+              <Text style={[styles.legalText, { color: colors.text.secondary }]}>{PRIVACY_POLICY}</Text>
+            </ScrollView>
+            <Pressable style={styles.closeButton} onPress={() => setShowPrivacyModal(false)}>
+              <Text style={styles.closeButtonText}>닫기</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView >
   );
 }
