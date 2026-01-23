@@ -397,17 +397,27 @@ export default function AssessmentScreen() {
 
     const initialize = async () => {
       try {
+        console.log('[DEBUG] Initialize started for level:', gradeLevel);
         const state = useAssessmentStore.getState();
+        console.log('[DEBUG] Current state:', {
+          sessionId: state.sessionId,
+          questionsLength: state.questions.length,
+          stateLevel: state.level
+        });
 
         // 1. 메모리에 있는 세션 확인 (현재 레벨과 일치하는 경우)
         if (state.sessionId && state.questions.length > 0 && state.level === gradeLevel) {
+          console.log('[DEBUG] Memory check passed - resuming existing session');
           setIsLoading(false);
           return;
         }
 
         // 2. 저장된 파일 확인 (학령별 슬롯)
+        console.log('[DEBUG] Checking saved progress for:', gradeLevel);
         const hasSaved = await state.hasSavedProgress(gradeLevel);
+        console.log('[DEBUG] Has saved progress:', hasSaved);
         if (hasSaved) {
+          console.log('[DEBUG] Showing alert for resume/restart');
           Alert.alert(
             '검사 이어하기',
             '이전에 진행하던 기록이 있습니다.\n이어서 하시겠습니까?',
@@ -444,10 +454,12 @@ export default function AssessmentScreen() {
         }
 
         // 3. 새로 시작
+        console.log('[DEBUG] No saved progress - starting new assessment');
         initAssessment(gradeLevel);
+        console.log('[DEBUG] initAssessment completed, setting isLoading to false');
         setIsLoading(false);
       } catch (error) {
-        console.error('Initialization failed:', error);
+        console.error('[DEBUG] Initialization failed:', error);
         // 에러 발생 시 안전하게 새로 시작
         initAssessment(gradeLevel);
         setIsLoading(false);
