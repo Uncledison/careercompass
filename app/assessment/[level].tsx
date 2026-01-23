@@ -98,6 +98,7 @@ interface StageCompleteModalProps {
   character: string;
   currentStage: number;
   onContinue: () => void;
+  isMuted?: boolean;
 }
 
 // 학령별 축하 애니메이션 설정
@@ -124,6 +125,7 @@ const StageCompleteModal = ({
   character,
   currentStage,
   onContinue,
+  isMuted = false,
 }: StageCompleteModalProps) => {
   const lottieRef = useRef<LottieView>(null);
   const soundRef = useRef<Audio.Sound | null>(null);
@@ -177,7 +179,7 @@ const StageCompleteModal = ({
 
   // 사운드 재생
   useEffect(() => {
-    if (visible) {
+    if (visible && !isMuted) {
       const playSound = async () => {
         try {
           let soundSource;
@@ -215,7 +217,7 @@ const StageCompleteModal = ({
         soundRef.current = null;
       }
     };
-  }, [visible]);
+  }, [visible, isMuted]);
 
   if (!visible) return null;
 
@@ -358,6 +360,11 @@ export default function AssessmentScreen() {
   const [currentValue, setCurrentValue] = useState<ResponseValue>(3);
   const [showStageModal, setShowStageModal] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isMuted, setIsMuted] = useState(false); // 사운드 음소거 상태
+
+  const toggleMute = useCallback(() => {
+    setIsMuted(prev => !prev);
+  }, []);
 
   // 현재 스테이지 정보 (레벨에 맞는 스테이지 데이터 사용)
   const stages = getStagesByLevel(level || 'elementary');
@@ -561,7 +568,45 @@ export default function AssessmentScreen() {
             </Text>
           </View>
 
-          <View style={{ width: 24 }} />
+          {/* 사운드 토글 버튼 */}
+          <Pressable onPress={toggleMute} style={styles.closeButton}>
+            {isMuted ? (
+              // 음소거 아이콘 (Speaker X)
+              <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+                <Path
+                  d="M1 9V15H5L10 20V4L5 9H1Z"
+                  fill={Colors.gray[500]}
+                  stroke={Colors.gray[500]}
+                  strokeWidth={1.5}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <Path
+                  d="M16 9L22 15M22 9L16 15"
+                  stroke={Colors.gray[500]}
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </Svg>
+            ) : (
+              // 소리 켜짐 아이콘 (Speaker Wave)
+              <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
+                <Path
+                  d="M11 5L6 9H2v6h4l5 4V5z"
+                  fill={Colors.gray[500]}
+                  stroke={Colors.gray[500]}
+                  strokeWidth={1.5}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <Path
+                  d="M19.07 4.93L17.66 6.34C18.5 7.18 19 8.28 19 9.5c0 1.22-.5 2.32-1.34 3.16l1.41 1.41C20.45 12.69 21 11.17 21 9.5c0-1.67-.55-3.19-1.93-4.57zM15.54 8.46l-1.41 1.41C14.67 10.33 15 10.89 15 11.5c0 .61-.33 1.17-.87 1.63l1.41 1.41C16.8 13.59 17.5 12.61 17.5 11.5c0-1.11-.7-2.09-1.96-3.04z"
+                  fill={Colors.gray[500]}
+                />
+              </Svg>
+            )}
+          </Pressable>
         </View>
 
         {/* 프로그레스 바 */}
@@ -611,7 +656,12 @@ export default function AssessmentScreen() {
               <Text
                 style={[
                   styles.questionText,
-                  { fontSize: getQuestionFontSize(question.contentKid || question.content) }
+                  {
+                    fontSize: getQuestionFontSize(question.contentKid || question.content),
+                    // @ts-ignore: React Native Web support for semantic breaks
+                    wordBreak: 'keep-all',
+                    wordWrap: 'break-word'
+                  }
                 ]}
                 numberOfLines={2}
                 adjustsFontSizeToFit
@@ -695,6 +745,7 @@ export default function AssessmentScreen() {
         character={String(currentStage)}
         currentStage={currentStage}
         onContinue={handleStageContinue}
+        isMuted={isMuted}
       />
     </View>
   );
