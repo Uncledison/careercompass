@@ -142,18 +142,29 @@ const StageCompleteModal = ({
   // 학령별 카메라 설정
   const cameraConfig = useMemo(() => {
     if (level === 'elementary') {
-      // 초등: 오른쪽 측면 뷰 (270deg), 캐릭터를 원의 중앙으로 (타겟을 대폭 올려서 캐릭터를 아래로 내림)
+      // 거리 설정: 1단계(병아리)는 2단계 더 크게(2.5m -> 1.5m), 나머지는 1단계 더 크게(약 80% 거리)
+      let distance = 'auto';
+      if (currentStage === 1) {
+        distance = '1.5m'; // 병아리 아주 크게
+      } else {
+        // 기존 대비 약간 줌인 (기본값들이 5~6m이므로 4~5m 정도로)
+        distance = '4.5m';
+      }
+
+      // 초등: 오른쪽 측면 뷰 (270deg), 캐릭터를 원의 중앙으로
       return {
         orbit: '270deg 75deg auto',
         target: '0m 1.5m 0m',
+        distance: distance
       };
     }
     // 중등/고등: 정면, 캐릭터를 원의 중앙으로
     return {
       orbit: '0deg 75deg auto',
       target: '0m 1.8m 0m',
+      distance: null // 기본값 사용
     };
-  }, [level]);
+  }, [level, currentStage]);
 
   // 현재 스테이지의 모델 경로 가져오기
   const modelConfig = useMemo(() => {
@@ -181,6 +192,7 @@ const StageCompleteModal = ({
 
           const { sound } = await Audio.Sound.createAsync(soundSource);
           soundRef.current = sound;
+          await sound.setVolumeAsync(0.6); // 볼륨 줄임
           await sound.playAsync();
         } catch (error) {
           console.log('Sound play error:', error);
@@ -215,7 +227,6 @@ const StageCompleteModal = ({
     >
       {/* 전체 화면 폭죽 효과 */}
       <LottieView
-        ref={lottieRef}
         source={require('../../assets/lottie/confetti.json')}
         style={styles.confettiAnimation}
         autoPlay
@@ -233,7 +244,7 @@ const StageCompleteModal = ({
             <ModelViewer3D
               modelPath={modelConfig.path}
               animations={celebrationAnimation}
-              cameraDistance={modelConfig.cameraDistance || '8m'}
+              cameraDistance={cameraConfig.distance || modelConfig.cameraDistance || '8m'}
               cameraOrbit={cameraConfig.orbit}
               cameraTarget={cameraConfig.target}
               width={140}
