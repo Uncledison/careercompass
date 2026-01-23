@@ -19,6 +19,7 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -382,19 +383,23 @@ export default function AssessmentScreen() {
 
   // 검사 초기화 (재개가 아닐 때만)
   useEffect(() => {
-    // 이미 세션이 있으면 재개 상태이므로 초기화하지 않음
-    const state = useAssessmentStore.getState();
-    if (state.sessionId && state.questions.length > 0) {
-      // 재개 상태 - 초기화 건너뛰기
-      return;
-    }
-
     let gradeLevel: GradeLevel = 'elementary_lower';
     if (level === 'middle') {
       gradeLevel = 'middle';
     } else if (level === 'high') {
       gradeLevel = 'high';
     }
+
+    // 이미 세션이 있으면 재개 상태이므로 초기화하지 않음
+    const state = useAssessmentStore.getState();
+    if (state.sessionId && state.questions.length > 0) {
+      // *중요*: 저장된 레벨과 현재 진입한 레벨이 같을 때만 재개
+      if (state.level === gradeLevel) {
+        return;
+      }
+      // 레벨이 다르면(예: 초등 하다가 고등으로 옴) 무시하고 새로 초기화
+    }
+
     initAssessment(gradeLevel);
   }, [level]);
 
