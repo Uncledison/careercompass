@@ -401,11 +401,32 @@ export default function AssessmentScreen() {
       // 2. 저장된 파일 확인 (학령별 슬롯)
       const hasSaved = await state.hasSavedProgress(gradeLevel);
       if (hasSaved) {
-        const saved = await state.loadSavedProgress(gradeLevel);
-        if (saved) {
-          state.resumeAssessment(saved);
-          return;
-        }
+        Alert.alert(
+          '검사 이어하기',
+          '이전에 진행하던 기록이 있습니다.\n이어서 하시겠습니까?',
+          [
+            {
+              text: '처음부터',
+              style: 'destructive',
+              onPress: async () => {
+                await state.clearSavedProgress(gradeLevel);
+                initAssessment(gradeLevel);
+              },
+            },
+            {
+              text: '이어하기',
+              onPress: async () => {
+                const saved = await state.loadSavedProgress(gradeLevel);
+                if (saved) {
+                  state.resumeAssessment(saved);
+                } else {
+                  initAssessment(gradeLevel);
+                }
+              },
+            },
+          ]
+        );
+        return;
       }
 
       // 3. 새로 시작
