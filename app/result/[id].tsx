@@ -209,12 +209,6 @@ const SummaryCard = ({
           {/* 사용자 캐릭터 (화면 상단에서 적당한 거리를 두고 배치) */}
           <View style={styles.characterSection}>
             <View style={styles.characterCircle}>
-              {/* 모바일 캡처 및 백업용 이미지 (3D 모델 뒤에 배치) */}
-              <Image
-                source={{ uri: `/character-screenshots/${character.replace('.gltf', '')}.png` }}
-                style={[StyleSheet.absoluteFill, { width: 160, height: 160, borderRadius: 80 }]}
-                resizeMode="cover"
-              />
               <ModelViewer3D
                 modelPath={`/models/characters/${character}.gltf`}
                 animations={['Wave', 'Yes']}
@@ -896,7 +890,8 @@ export default function ResultScreen() {
           // 캐릭터 파일명 생성 (.gltf 제거 후 .png 추가)
           const characterBase = profile.character.replace('.gltf', '');
           const characterFileName = `${characterBase}.png`;
-          characterImg.src = `/character-screenshots/${characterFileName}`;
+          // 캐시 버스팅을 위해 타임스탬프 추가
+          characterImg.src = `/character-screenshots/${characterFileName}?t=${new Date().getTime()}`;
 
           await new Promise((resolve, reject) => {
             characterImg.onload = () => {
