@@ -393,50 +393,59 @@ export default function AssessmentScreen() {
     }
 
     const initialize = async () => {
-      const state = useAssessmentStore.getState();
+      try {
+        const state = useAssessmentStore.getState();
 
-      // 1. 메모리에 있는 세션 확인 (현재 레벨과 일치하는 경우)
-      if (state.sessionId && state.questions.length > 0 && state.level === gradeLevel) {
-        return;
-      }
+        // 1. 메모리에 있는 세션 확인 (현재 레벨과 일치하는 경우)
+        if (state.sessionId && state.questions.length > 0 && state.level === gradeLevel) {
+          return;
+        }
 
-      // *중요*: 레벨이 다르다면, 로딩/체크 중에 이전 질문이 보이지 않도록 상태를 먼저 비움
-      // 이렇게 하면 UI는 '로딩 중...' 상태가 되어 혼란을 방지함
-      useAssessmentStore.setState({ questions: [], currentQuestionIndex: 0 });
+        // *중요*: 레벨이 다르다면, 로딩/체크 중에 이전 질문이 보이지 않도록 상태를 먼저 비움
+        useAssessmentStore.setState({ questions: [], currentQuestionIndex: 0 });
 
-      // 2. 저장된 파일 확인 (학령별 슬롯)
-      const hasSaved = await state.hasSavedProgress(gradeLevel);
-      if (hasSaved) {
-        Alert.alert(
-          '검사 이어하기',
-          '이전에 진행하던 기록이 있습니다.\n이어서 하시겠습니까?',
-          [
-            {
-              text: '처음부터',
-              style: 'destructive',
-              onPress: async () => {
-                await state.clearSavedProgress(gradeLevel);
-                initAssessment(gradeLevel);
-              },
-            },
-            {
-              text: '이어하기',
-              onPress: async () => {
-                const saved = await state.loadSavedProgress(gradeLevel);
-                if (saved) {
-                  state.resumeAssessment(saved);
-                } else {
+        // 2. 저장된 파일 확인 (학령별 슬롯)
+        const hasSaved = await state.hasSavedProgress(gradeLevel);
+        if (hasSaved) {
+          Alert.alert(
+            '검사 이어하기',
+            '이전에 진행하던 기록이 있습니다.\n이어서 하시겠습니까?',
+            [
+              {
+                text: '처음부터',
+                style: 'destructive',
+                onPress: async () => {
+                  await state.clearSavedProgress(gradeLevel);
                   initAssessment(gradeLevel);
-                }
+                },
               },
-            },
-          ]
-        );
-        return;
-      }
+              {
+                text: '이어하기',
+                onPress: async () => {
+                  try {
+                    const saved = await state.loadSavedProgress(gradeLevel);
+                    if (saved) {
+                      state.resumeAssessment(saved);
+                    } else {
+                      initAssessment(gradeLevel);
+                    }
+                  } catch (e) {
+                    initAssessment(gradeLevel);
+                  }
+                },
+              },
+            ]
+          );
+          return;
+        }
 
-      // 3. 새로 시작
-      initAssessment(gradeLevel);
+        // 3. 새로 시작
+        initAssessment(gradeLevel);
+      } catch (error) {
+        console.error('Initialization failed:', error);
+        // 에러 발생 시 안전하게 새로 시작
+        initAssessment(gradeLevel);
+      }
     };
 
     initialize();
