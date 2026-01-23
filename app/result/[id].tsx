@@ -871,7 +871,7 @@ export default function ResultScreen() {
           return;
         }
 
-        const canvas = await html2canvas(element as any, {
+              const canvas = await html2canvas(element as any, {
           backgroundColor: null,
           scale: 2,
           logging: false,
@@ -879,6 +879,27 @@ export default function ResultScreen() {
           allowTaint: true,
           foreignObjectRendering: false,
         });
+
+        // 캐릭터 이미지 오버레이
+        const ctx = canvas.getContext('2d');
+        if (ctx && profile?.character) {
+          const characterImg = new Image();
+          characterImg.crossOrigin = 'anonymous';
+          
+          const characterFileName = profile.character.replace('.gltf', '.png');
+          characterImg.src = `/character-screenshots/${characterFileName}`;
+          
+          await new Promise((resolve, reject) => {
+            characterImg.onload = () => {
+              const imgSize = 400;
+              const x = (canvas.width - imgSize) / 2;
+              const y = 200;
+              ctx.drawImage(characterImg, x, y, imgSize, imgSize);
+              resolve(null);
+            };
+            characterImg.onerror = reject;
+          });
+        }
 
         canvas.toBlob((blob) => {
           if (blob) {
