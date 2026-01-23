@@ -424,7 +424,7 @@ export default function AssessmentScreen() {
             console.log('[DEBUG] Alert timeout - auto-starting new assessment');
             initAssessment(gradeLevel);
             setIsLoading(false);
-          }, 500);
+          }, 50);
 
           Alert.alert(
             '검사 이어하기',
