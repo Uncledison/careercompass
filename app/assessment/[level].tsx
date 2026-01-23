@@ -169,21 +169,31 @@ const StageCompleteModal = ({
     if (visible) {
       const playSound = async () => {
         try {
-          const { sound } = await Audio.Sound.createAsync(
-            require('../../assets/sounds/success.mp3')
-          );
+          let soundSource;
+          switch (currentStage) {
+            case 1: soundSource = require('../../assets/sounds/fanfare-01.mp3'); break;
+            case 2: soundSource = require('../../assets/sounds/fanfare-02.mp3'); break;
+            case 3: soundSource = require('../../assets/sounds/fanfare-03.mp3'); break;
+            case 4: soundSource = require('../../assets/sounds/fanfare-04.mp3'); break;
+            case 5: soundSource = require('../../assets/sounds/fanfare-05.mp3'); break;
+            default: soundSource = require('../../assets/sounds/success.mp3');
+          }
+
+          const { sound } = await Audio.Sound.createAsync(soundSource);
           soundRef.current = sound;
           await sound.playAsync();
         } catch (error) {
           console.log('Sound play error:', error);
+          // 팡파레 파일이 없으면 success.mp3로 fallback
+          try {
+            const { sound } = await Audio.Sound.createAsync(require('../../assets/sounds/success.mp3'));
+            soundRef.current = sound;
+            await sound.playAsync();
+          } catch (e) { }
         }
       };
       playSound();
-
-      // Lottie 애니메이션 시작
-      if (lottieRef.current) {
-        lottieRef.current.play();
-      }
+      // Note: Lottie 애니메이션은 autoPlay로 자동 시작됨
     }
 
     return () => {
