@@ -838,6 +838,7 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.xxl,
     padding: Spacing.xl,
     alignItems: 'center',
+    zIndex: 10,
     ...Shadow.xxl,
   },
   badgeContainer: {
