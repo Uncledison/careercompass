@@ -101,10 +101,10 @@ interface AssessmentState {
 
   // 중단/재개 기능
   saveProgress: () => Promise<void>;
-  loadSavedProgress: () => Promise<SavedAssessmentState | null>;
+  loadSavedProgress: (level?: GradeLevel) => Promise<SavedAssessmentState | null>;
   resumeAssessment: (saved: SavedAssessmentState) => void;
-  clearSavedProgress: () => Promise<void>;
-  hasSavedProgress: () => Promise<boolean>;
+  clearSavedProgress: (level?: GradeLevel) => Promise<void>;
+  hasSavedProgress: (level?: GradeLevel) => Promise<boolean>;
 }
 
 // 초기 점수
@@ -315,7 +315,9 @@ export const useAssessmentStore = create<AssessmentState>((set, get) => ({
     };
 
     try {
-      await storage.setItem(SAVED_ASSESSMENT_KEY, JSON.stringify(savedState));
+      // 레벨별 키 사용
+      const key = `${SAVED_ASSESSMENT_KEY}_${level}`;
+      await storage.setItem(key, JSON.stringify(savedState));
     } catch (error) {
       console.error('Failed to save progress:', error);
       throw error;
@@ -323,9 +325,11 @@ export const useAssessmentStore = create<AssessmentState>((set, get) => ({
   },
 
   // 저장된 진행 상태 로드
-  loadSavedProgress: async () => {
+  loadSavedProgress: async (level?: GradeLevel) => {
     try {
-      const stored = await storage.getItem(SAVED_ASSESSMENT_KEY);
+      const targetLevel = level || get().level;
+      const key = `${SAVED_ASSESSMENT_KEY}_${targetLevel}`;
+      const stored = await storage.getItem(key);
       if (stored) {
         return JSON.parse(stored) as SavedAssessmentState;
       }
@@ -357,18 +361,22 @@ export const useAssessmentStore = create<AssessmentState>((set, get) => ({
   },
 
   // 저장된 진행 상태 삭제
-  clearSavedProgress: async () => {
+  clearSavedProgress: async (level?: GradeLevel) => {
     try {
-      await storage.removeItem(SAVED_ASSESSMENT_KEY);
+      const targetLevel = level || get().level;
+      const key = `${SAVED_ASSESSMENT_KEY}_${targetLevel}`;
+      await storage.removeItem(key);
     } catch (error) {
       console.error('Failed to clear saved progress:', error);
     }
   },
 
   // 저장된 진행 상태 존재 여부
-  hasSavedProgress: async () => {
+  hasSavedProgress: async (level?: GradeLevel) => {
     try {
-      const stored = await storage.getItem(SAVED_ASSESSMENT_KEY);
+      const targetLevel = level || get().level;
+      const key = `${SAVED_ASSESSMENT_KEY}_${targetLevel}`;
+      const stored = await storage.getItem(key);
       return stored !== null;
     } catch {
       return false;

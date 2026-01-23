@@ -381,7 +381,7 @@ export default function AssessmentScreen() {
     }
   }, [question?.id, responses]);
 
-  // 검사 초기화 (재개가 아닐 때만)
+  // 검사 초기화 (Multi-slot Save 지원)
   useEffect(() => {
     let gradeLevel: GradeLevel = 'elementary_lower';
     if (level === 'middle') {
@@ -390,17 +390,29 @@ export default function AssessmentScreen() {
       gradeLevel = 'high';
     }
 
-    // 이미 세션이 있으면 재개 상태이므로 초기화하지 않음
-    const state = useAssessmentStore.getState();
-    if (state.sessionId && state.questions.length > 0) {
-      // *중요*: 저장된 레벨과 현재 진입한 레벨이 같을 때만 재개
-      if (state.level === gradeLevel) {
+    const initialize = async () => {
+      const state = useAssessmentStore.getState();
+
+      // 1. 메모리에 있는 세션 확인 (현재 레벨과 일치하는 경우)
+      if (state.sessionId && state.questions.length > 0 && state.level === gradeLevel) {
         return;
       }
-      // 레벨이 다르면(예: 초등 하다가 고등으로 옴) 무시하고 새로 초기화
-    }
 
-    initAssessment(gradeLevel);
+      // 2. 저장된 파일 확인 (학령별 슬롯)
+      const hasSaved = await state.hasSavedProgress(gradeLevel);
+      if (hasSaved) {
+        const saved = await state.loadSavedProgress(gradeLevel);
+        if (saved) {
+          state.resumeAssessment(saved);
+          return;
+        }
+      }
+
+      // 3. 새로 시작
+      initAssessment(gradeLevel);
+    };
+
+    initialize();
   }, [level]);
 
   // 뒤로가기 방지
@@ -576,40 +588,9 @@ export default function AssessmentScreen() {
           {/* 사운드 토글 버튼 */}
           <Pressable onPress={toggleMute} style={styles.closeButton}>
             {isMuted ? (
-              // 음소거 아이콘 (Speaker X)
-              <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
-                <Path
-                  d="M1 9V15H5L10 20V4L5 9H1Z"
-                  fill={Colors.gray[500]}
-                  stroke={Colors.gray[500]}
-                  strokeWidth={1.5}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <Path
-                  d="M16 9L22 15M22 9L16 15"
-                  stroke={Colors.gray[500]}
-                  strokeWidth={2}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </Svg>
+              <Ionicons name="volume-mute-outline" size={24} color={Colors.gray[500]} />
             ) : (
-              // 소리 켜짐 아이콘 (Speaker Wave)
-              <Svg width={24} height={24} viewBox="0 0 24 24" fill="none">
-                <Path
-                  d="M11 5L6 9H2v6h4l5 4V5z"
-                  fill={Colors.gray[500]}
-                  stroke={Colors.gray[500]}
-                  strokeWidth={1.5}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <Path
-                  d="M19.07 4.93L17.66 6.34C18.5 7.18 19 8.28 19 9.5c0 1.22-.5 2.32-1.34 3.16l1.41 1.41C20.45 12.69 21 11.17 21 9.5c0-1.67-.55-3.19-1.93-4.57zM15.54 8.46l-1.41 1.41C14.67 10.33 15 10.89 15 11.5c0 .61-.33 1.17-.87 1.63l1.41 1.41C16.8 13.59 17.5 12.61 17.5 11.5c0-1.11-.7-2.09-1.96-3.04z"
-                  fill={Colors.gray[500]}
-                />
-              </Svg>
+              <Ionicons name="volume-high-outline" size={24} color={Colors.gray[500]} />
             )}
           </Pressable>
         </View>
