@@ -225,13 +225,26 @@ const StageCompleteModal = ({
       exiting={FadeOut.duration(200)}
       style={styles.modalOverlay}
     >
-      {/* 전체 화면 폭죽 효과 */}
+      {/* 하단 폭죽 효과 (랜덤) */}
       <LottieView
-        source={require('../../assets/lottie/confetti.json')}
-        style={styles.confettiAnimation}
+        source={[
+          require('../../assets/lottie/Fireworks-01.json'),
+          require('../../assets/lottie/Fireworks-02.json'),
+          require('../../assets/lottie/Fireworks-03.json'),
+          require('../../assets/lottie/Fireworks-04.json'),
+          require('../../assets/lottie/Fireworks-05.json'),
+        ][Math.floor(Math.random() * 5)]}
+        style={{
+          position: 'absolute',
+          width: SCREEN_WIDTH,
+          height: 400,
+          bottom: 0,
+          zIndex: 0,
+        }}
         autoPlay
         loop={false}
-        speed={0.8}
+        speed={1.0}
+        resizeMode="cover"
       />
 
       <Animated.View
