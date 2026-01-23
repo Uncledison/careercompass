@@ -142,16 +142,16 @@ const StageCompleteModal = ({
   // 학령별 카메라 설정
   const cameraConfig = useMemo(() => {
     if (level === 'elementary') {
-      // 초등: 오른쪽 측면 뷰 (270deg), 캐릭터를 원의 중앙으로 (타겟을 위로 올려서 캐릭터를 상대적으로 내림)
+      // 초등: 오른쪽 측면 뷰 (270deg), 캐릭터를 원의 중앙으로 (타겟을 대폭 올려서 캐릭터를 아래로 내림)
       return {
         orbit: '270deg 75deg auto',
-        target: '0m 0.5m 0m',
+        target: '0m 1.5m 0m',
       };
     }
     // 중등/고등: 정면, 캐릭터를 원의 중앙으로
     return {
       orbit: '0deg 75deg auto',
-      target: '0m 0.9m 0m',
+      target: '0m 1.8m 0m',
     };
   }, [level]);
 
