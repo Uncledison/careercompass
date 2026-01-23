@@ -418,6 +418,14 @@ export default function AssessmentScreen() {
         console.log('[DEBUG] Has saved progress:', hasSaved);
         if (hasSaved) {
           console.log('[DEBUG] Showing alert for resume/restart');
+
+          // Alert가 표시되지 않을 경우를 대비한 타임아웃
+          const fallbackTimeout = setTimeout(() => {
+            console.log('[DEBUG] Alert timeout - auto-starting new assessment');
+            initAssessment(gradeLevel);
+            setIsLoading(false);
+          }, 500);
+
           Alert.alert(
             '검사 이어하기',
             '이전에 진행하던 기록이 있습니다.\n이어서 하시겠습니까?',
@@ -426,6 +434,7 @@ export default function AssessmentScreen() {
                 text: '처음부터',
                 style: 'destructive',
                 onPress: async () => {
+                  clearTimeout(fallbackTimeout);
                   await state.clearSavedProgress(gradeLevel);
                   initAssessment(gradeLevel);
                   setIsLoading(false);
@@ -434,6 +443,7 @@ export default function AssessmentScreen() {
               {
                 text: '이어하기',
                 onPress: async () => {
+                  clearTimeout(fallbackTimeout);
                   try {
                     const saved = await state.loadSavedProgress(gradeLevel);
                     if (saved) {
