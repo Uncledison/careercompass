@@ -858,14 +858,14 @@ export default function ResultScreen() {
     }
   };
 
-   // PNG 저장 (웹: html2canvas, 모바일: captureRef)
+  // PNG 저장 (웹: html2canvas, 모바일: captureRef)
   const handlePngSave = async () => {
     try {
       if (Platform.OS === 'web') {
         // 웹: html2canvas 사용
         const html2canvas = (await import('html2canvas')).default;
         const element = captureViewRef.current;
-        
+
         if (!element) {
           Alert.alert('오류', '캡처할 영역을 찾을 수 없습니다.');
           return;
@@ -875,6 +875,9 @@ export default function ResultScreen() {
           backgroundColor: null,
           scale: 2,
           logging: false,
+          useCORS: true,
+          allowTaint: true,
+          foreignObjectRendering: false,
         });
 
         canvas.toBlob((blob) => {
