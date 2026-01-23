@@ -663,7 +663,7 @@ export default function AssessmentScreen() {
                     wordWrap: 'break-word'
                   }
                 ]}
-                numberOfLines={2}
+                numberOfLines={4}
                 adjustsFontSizeToFit
                 minimumFontScale={0.7}
               >
