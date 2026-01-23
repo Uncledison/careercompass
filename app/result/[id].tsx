@@ -877,7 +877,14 @@ export default function ResultScreen() {
             Alert.alert('오류', '공유 기능을 사용할 수 없습니다.');
           }
         } else {
-          Alert.alert('알림', '웹에서는 이미지 다운로드가 제한됩니다.');
+          // 웹: 다운로드 링크 생성
+          const link = document.createElement('a');
+          link.href = uri;
+          link.download = `career-compass-result-${Date.now()}.png`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          Alert.alert('완료', '이미지가 다운로드되었습니다!');
         }
       }
     } catch (error) {
