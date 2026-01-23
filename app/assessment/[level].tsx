@@ -361,6 +361,7 @@ export default function AssessmentScreen() {
   const [currentValue, setCurrentValue] = useState<ResponseValue>(3);
   const [showStageModal, setShowStageModal] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // 로딩 상태 제어
   const [isMuted, setIsMuted] = useState(false); // 사운드 음소거 상태
 
   const toggleMute = useCallback(() => {
@@ -383,6 +384,8 @@ export default function AssessmentScreen() {
 
   // 검사 초기화 (Multi-slot Save 지원)
   useEffect(() => {
+    setIsLoading(true);
+
     // level 파라미터 안전하게 처리
     const levelStr = Array.isArray(level) ? level[0] : level;
     let gradeLevel: GradeLevel = 'elementary_lower';
@@ -398,10 +401,9 @@ export default function AssessmentScreen() {
 
         // 1. 메모리에 있는 세션 확인 (현재 레벨과 일치하는 경우)
         if (state.sessionId && state.questions.length > 0 && state.level === gradeLevel) {
+          setIsLoading(false);
           return;
         }
-
-
 
         // 2. 저장된 파일 확인 (학령별 슬롯)
         const hasSaved = await state.hasSavedProgress(gradeLevel);
@@ -416,6 +418,7 @@ export default function AssessmentScreen() {
                 onPress: async () => {
                   await state.clearSavedProgress(gradeLevel);
                   initAssessment(gradeLevel);
+                  setIsLoading(false);
                 },
               },
               {
@@ -430,6 +433,8 @@ export default function AssessmentScreen() {
                     }
                   } catch (e) {
                     initAssessment(gradeLevel);
+                  } finally {
+                    setIsLoading(false);
                   }
                 },
               },
@@ -440,10 +445,12 @@ export default function AssessmentScreen() {
 
         // 3. 새로 시작
         initAssessment(gradeLevel);
+        setIsLoading(false);
       } catch (error) {
         console.error('Initialization failed:', error);
         // 에러 발생 시 안전하게 새로 시작
         initAssessment(gradeLevel);
+        setIsLoading(false);
       }
     };
 
@@ -581,7 +588,7 @@ export default function AssessmentScreen() {
     }
   }, [handleSaveAndClose, handleCloseWithoutSave]);
 
-  if (!question || !stageInfo) {
+  if (isLoading || !question || !stageInfo) {
     return (
       <View style={styles.loadingContainer}>
         <Text>로딩 중...</Text>
