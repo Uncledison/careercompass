@@ -894,9 +894,14 @@ export default function ResultScreen() {
           characterImg.src = `/character-screenshots/${characterFileName}?t=${new Date().getTime()}`;
 
           await new Promise((resolve, reject) => {
-            characterImg.onload = () => {
-              // 정렬된 이미지를 전체 캔버스에 오버레이
-              ctx.drawImage(characterImg, 0, 0, canvas.width, canvas.height);
+                     characterImg.onload = () => {
+              // 이미지 원본 비율 유지하면서 캔버스 중앙 상단에 배치
+              const targetWidth = characterImg.width;
+              const targetHeight = characterImg.height;
+              const x = (canvas.width - targetWidth) / 2;
+              const y = 0; // 상단부터 시작
+              
+              ctx.drawImage(characterImg, x, y, targetWidth, targetHeight);
               resolve(null);
             };
             characterImg.onerror = reject;
