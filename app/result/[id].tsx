@@ -894,20 +894,24 @@ export default function ResultScreen() {
           characterImg.src = `/character-screenshots/${characterFileName}?t=${new Date().getTime()}`;
 
           await new Promise((resolve, reject) => {
-            characterImg.onload = () => {
-              // 원의 중심 좌표 (scale=2 적용)
-              const circleCenterX = 419 * 2; // 838px
-              const circleCenterY = 319 * 2; // 638px
+characterImg.onload = () => {
+  // 실제 캔버스 스케일 계산
+  const actualScale = canvas.width / (element as HTMLElement).offsetWidth;
+  
+  // 원의 중심 좌표 (실제 스케일 적용)
+  const circleCenterX = 419 * actualScale;
+  const circleCenterY = 319 * actualScale;
 
-              // 이미지 중심을 원의 중심에 맞춤
-              const targetWidth = characterImg.width;
-              const targetHeight = characterImg.height;
-              const x = circleCenterX - (targetWidth / 2);
-              const y = circleCenterY - (targetHeight / 2);
+  // 이미지 중심을 원의 중심에 맞춤
+  const targetWidth = characterImg.width;
+  const targetHeight = characterImg.height;
+  const x = circleCenterX - (targetWidth / 2);
+  const y = circleCenterY - (targetHeight / 2);
 
-              ctx.drawImage(characterImg, x, y, targetWidth, targetHeight);
-              resolve(null);
-            };
+  console.log('Scale:', actualScale, 'Position:', x, y);
+  ctx.drawImage(characterImg, x, y, targetWidth, targetHeight);
+  resolve(null);
+};
             characterImg.onerror = reject;
           });
         }
