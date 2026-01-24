@@ -914,6 +914,9 @@ export default function ResultScreen() {
               console.log('Drawing at:', x, y, 'size:', targetWidth, targetHeight);
               console.log('Image bounds:', x, 'to', x + targetWidth, '(canvas width:', canvas.width, ')');
 
+              // 중요: html2canvas가 옮겨놓은 좌표축을 원점으로 되돌림
+              ctx.setTransform(1, 0, 0, 1, 0, 0);
+
               ctx.drawImage(characterImg, x, y, targetWidth, targetHeight);
               console.log('✅ Image drawn');
               resolve(null);
