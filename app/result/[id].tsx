@@ -716,7 +716,18 @@ export default function ResultScreen() {
 
   // ...
 
-  const { id } = params;
+  /* 
+ * [Fix] useLocalSearchParams로 파라미터를 가져옵니다. 
+ * safeParam 함수: 파라미터가 배열일 경우 첫 번째 값을, 아니면 그대로 반환하여 타입 안전성 확보.
+ */
+  const params = useLocalSearchParams();
+
+  const safeParam = (param: string | string[] | undefined): string | undefined => {
+    if (Array.isArray(param)) return param[0];
+    return param;
+  };
+
+  const id = safeParam(params.id);
 
   const router = useRouter();
   const { scores, level, resetAssessment } = useAssessmentStore();
@@ -743,8 +754,9 @@ export default function ResultScreen() {
   const displayScores = useMemo(() => {
     // 1. 공유 모드일 때: URL 파라미터로 점수 재구성
     if (isShareMode && params.field && params.score) {
-      const field = params.field as CareerField;
-      const score = parseInt(params.score, 10);
+      const field = safeParam(params.field) as CareerField;
+      const scoreStr = safeParam(params.score);
+      const score = scoreStr ? parseInt(scoreStr, 10) : 0;
 
       // 해당 분야만 점수 할당, 나머지는 평균값(Mock) 처리하여 차트 모양 유지
       return {
@@ -770,15 +782,15 @@ export default function ResultScreen() {
   }, [historyResult, scores, isShareMode, params]);
 
   const displayLevel = isShareMode
-    ? (params.level as GradeLevel || 'elementary')
+    ? (safeParam(params.level) as GradeLevel || 'elementary')
     : (historyResult ? historyResult.level : (level || 'elementary'));
 
   const displayNickname = isShareMode
-    ? (params.name || '게스트')
+    ? (safeParam(params.name) || '게스트')
     : (historyResult ? historyResult.nickname : profile?.nickname);
 
   const displayCharacter = isShareMode
-    ? (params.character || 'Female_1')
+    ? (safeParam(params.character) || 'Female_1')
     : (profile?.character || 'Female_1');
 
   // 캡처용 Ref
@@ -888,10 +900,10 @@ export default function ResultScreen() {
       script.async = true;
 
       script.onload = () => {
-        // @ts-ignore
-        if (window.Kakao && !window.Kakao.isInitialized()) {
+        const kakao = (window as any).Kakao;
+        if (kakao && !kakao.isInitialized()) {
           // 카카오 JavaScript 키 초기화
-          window.Kakao.init('b176649d7c304af7de3437e1fbeed519');
+          kakao.init('b176649d7c304af7de3437e1fbeed519');
           console.log('Kakao SDK Initialized');
         }
       };
@@ -1061,7 +1073,7 @@ export default function ResultScreen() {
               console.log('✅ Image loaded:', characterImg.width, 'x', characterImg.height);
 
               // 실제 캔버스 스케일 계산
-              const actualScale = canvas.width / (element as HTMLElement).offsetWidth;
+              const actualScale = canvas.width / (element as unknown as HTMLElement).offsetWidth;
 
               // 캔버스 중앙 기준으로 계산 (화면 좌표 대신)
               const canvasCenterX = canvas.width / 2;
