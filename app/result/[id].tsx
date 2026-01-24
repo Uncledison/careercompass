@@ -1346,7 +1346,7 @@ const styles = StyleSheet.create({
   // ========== 스타일 수정 ==========
   // 1. Top Badge
   topBadgeContainer: {
-    marginTop: 60, // 상단바 여백 + 배치 조정
+    marginTop: 32, // 여백 줄임 (60 -> 32)
     alignItems: 'center',
     marginBottom: 30, // 캐릭터와의 간격 확보 (중앙 배치 느낌)
     backgroundColor: 'rgba(0,0,0,0.2)',
