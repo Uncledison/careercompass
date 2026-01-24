@@ -894,24 +894,30 @@ export default function ResultScreen() {
           characterImg.src = `/character-screenshots/${characterFileName}?t=${new Date().getTime()}`;
 
           await new Promise((resolve, reject) => {
-characterImg.onload = () => {
-  // 실제 캔버스 스케일 계산
-  const actualScale = canvas.width / (element as HTMLElement).offsetWidth;
-  
-  // 원의 중심 좌표 (실제 스케일 적용)
-  const circleCenterX = 419 * actualScale;
-  const circleCenterY = 319 * actualScale;
+            characterImg.onload = () => {
+              console.log('✅ Image loaded:', characterImg.width, 'x', characterImg.height);
 
-  // 이미지 중심을 원의 중심에 맞춤
-  const targetWidth = characterImg.width;
-  const targetHeight = characterImg.height;
-  const x = circleCenterX - (targetWidth / 2);
-  const y = circleCenterY - (targetHeight / 2);
+              // 실제 캔버스 스케일 계산
+              const actualScale = canvas.width / (element as HTMLElement).offsetWidth;
 
-  console.log('Scale:', actualScale, 'Position:', x, y);
-  ctx.drawImage(characterImg, x, y, targetWidth, targetHeight);
-  resolve(null);
-};
+              // 캔버스 중앙 기준으로 계산 (화면 좌표 대신)
+              const canvasCenterX = canvas.width / 2;
+              const canvasCenterY = 319 * actualScale; // Y는 상단에서의 거리 유지
+
+              // 이미지 중심을 캔버스 중앙에 맞춤
+              const targetWidth = characterImg.width;
+              const targetHeight = characterImg.height;
+              const x = canvasCenterX - (targetWidth / 2);
+              const y = canvasCenterY - (targetHeight / 2);
+
+              console.log('Canvas:', canvas.width, 'x', canvas.height);
+              console.log('Drawing at:', x, y, 'size:', targetWidth, targetHeight);
+              console.log('Image bounds:', x, 'to', x + targetWidth, '(canvas width:', canvas.width, ')');
+
+              ctx.drawImage(characterImg, x, y, targetWidth, targetHeight);
+              console.log('✅ Image drawn');
+              resolve(null);
+            };
             characterImg.onerror = reject;
           });
         }
