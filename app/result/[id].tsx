@@ -260,7 +260,7 @@ const SummaryCard = ({
           )}
 
           {/* 1. Top Badge */}
-          <View style={[styles.topBadgeContainer, { marginTop: 60, marginBottom: 40 }]}>
+          <View style={[styles.topBadgeContainer, { marginBottom: 40 }]}>
             <Text style={styles.trustBadgeText}>
               🎓 과학적 검사 기반 · {questionCount}문항 분석
             </Text>
@@ -276,7 +276,7 @@ const SummaryCard = ({
                 height={160}
                 autoRotate={false}
                 cameraDistance="14m"
-                cameraTarget="0m 1.25m 0m"
+                cameraTarget="0m 1.55m 0m"
                 borderRadius={80}
                 backgroundColor="transparent"
               />
