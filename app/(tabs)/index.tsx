@@ -251,8 +251,7 @@ export default function HomeScreen() {
             style={styles.headerLeft}
             onPress={() => router.push('/(tabs)/profile')}
           >
-            <Text style={styles.greeting}>안녕하세요!</Text>
-            <Text style={styles.userName}>{profile?.nickname || '탐험가'}님</Text>
+            <Text style={styles.userName}>안녕하세요! {profile?.nickname || '탐험가'}님</Text>
           </Pressable>
           <Pressable
             onPress={() => router.push('/(tabs)/profile')}
@@ -261,7 +260,7 @@ export default function HomeScreen() {
             <View style={styles.smallCharacterContainer}>
               <ModelViewer3D
                 modelPath={`/models/characters/${profile?.character || 'Female_1'}.gltf`}
-                animations={['Wave']}
+                animations={['Run']}
                 width={56}
                 height={56}
                 autoRotate={false}
@@ -499,10 +498,6 @@ const styles = StyleSheet.create({
   headerLeft: {
     gap: 2,
   },
-  greeting: {
-    ...TextStyle.subhead,
-    color: Colors.text.secondary,
-  },
   userName: {
     ...TextStyle.title2,
     color: Colors.text.primary,
@@ -685,7 +680,8 @@ const styles = StyleSheet.create({
   },
   quickActions: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start',
+    gap: 32,
   },
   quickAction: {
     alignItems: 'center',
