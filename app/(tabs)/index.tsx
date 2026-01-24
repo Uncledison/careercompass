@@ -251,8 +251,10 @@ export default function HomeScreen() {
             style={styles.headerLeft}
             onPress={() => router.push('/(tabs)/profile')}
           >
-            <Text style={styles.greeting}>안녕하세요!</Text>
-            <Text style={styles.userName}>{profile?.nickname || '탐험가'}님</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 4 }}>
+              <Text style={styles.greeting}>안녕하세요!</Text>
+              <Text style={styles.userName}>{profile?.nickname || '탐험가'}님</Text>
+            </View>
           </Pressable>
           <Pressable
             onPress={() => router.push('/(tabs)/profile')}
@@ -487,11 +489,12 @@ const styles = StyleSheet.create({
   },
   headerLeft: {
     gap: 2,
+    marginLeft: 6, // 1글자 들여쓰기
   },
   greeting: {
     ...TextStyle.subhead,
     color: Colors.text.secondary,
-    marginBottom: -4, // 간격 조절
+    // marginBottom removed (row layout)
   },
   userName: {
     ...TextStyle.title2,
@@ -587,6 +590,7 @@ const styles = StyleSheet.create({
     ...TextStyle.headline,
     color: Colors.text.primary,
     marginBottom: Spacing.xs,
+    marginLeft: 6, // 1글자 들여쓰기
   },
   sectionSubtitle: {
     ...TextStyle.caption1,
