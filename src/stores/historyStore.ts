@@ -156,7 +156,7 @@ export const useHistoryStore = create<HistoryState>((set, get) => ({
 export const getLevelLabel = (level: GradeLevel): string => {
   switch (level) {
     case 'elementary_lower':
-      return '초등 저학년';
+      return '초등생';
     case 'elementary_upper':
       return '초등 고학년';
     case 'middle':

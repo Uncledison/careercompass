@@ -42,6 +42,8 @@ import { exportToPDF } from '../../src/utils/pdfExport';
 import { ModelViewer3D } from '../../src/components/character/ModelViewer3D';
 import * as Linking from 'expo-linking';
 import { captureRef } from 'react-native-view-shot';
+import { Audio } from 'expo-av';
+import LottieView from 'lottie-react-native';
 
 // 학년별 문항 수
 const QUESTION_COUNTS: Record<string, number> = {
@@ -167,6 +169,21 @@ const careerFieldInfo: Record<CareerField, CareerFieldDetail> = {
   },
 };
 
+const FIREWORKS = [
+  require('../../assets/lottie/Fireworks-01.json'),
+  require('../../assets/lottie/Fireworks-02.json'),
+  require('../../assets/lottie/Fireworks-03.json'),
+  require('../../assets/lottie/Fireworks-04.json'),
+  require('../../assets/lottie/Fireworks-05.json'),
+];
+
+const FINISH_SOUNDS = [
+  require('../../assets/sounds/Finish-01.mp3'),
+  require('../../assets/sounds/Finish-02.mp3'),
+  require('../../assets/sounds/Finish-03.mp3'),
+  require('../../assets/sounds/Finish-04.mp3'),
+];
+
 // 요약 카드 컴포넌트 
 const SummaryCard = ({
   topField,
@@ -176,7 +193,6 @@ const SummaryCard = ({
   level,
   onKakaoShare,
   onPngSave,
-  onCopyLink, // New Prop
   onToggleDetail,
   isDetailOpen,
   captureRef,
@@ -188,7 +204,6 @@ const SummaryCard = ({
   level: string;
   onKakaoShare: () => void;
   onPngSave: () => void;
-  onCopyLink: () => void; // New Prop
   onToggleDetail: () => void;
   isDetailOpen: boolean;
   captureRef?: React.RefObject<View | null>;
@@ -198,6 +213,31 @@ const SummaryCard = ({
   const keywords = typeKeywords[topField];
   const questionCount = QUESTION_COUNTS[level] || 35;
 
+  const [fireworkSource, setFireworkSource] = useState<any>(null);
+
+  useEffect(() => {
+    // 1. 랜덤 폭죽 선택
+    const randomFirework = FIREWORKS[Math.floor(Math.random() * FIREWORKS.length)];
+    setFireworkSource(randomFirework);
+
+    // 2. 랜덤 사운드 재생
+    const playSound = async () => {
+      try {
+        const randomSound = FINISH_SOUNDS[Math.floor(Math.random() * FINISH_SOUNDS.length)];
+        const { sound } = await Audio.Sound.createAsync(randomSound, { shouldPlay: true });
+        // 사운드가 끝나면 메모리 해제는 자동으로 되지 않으므로 unloadAsync 호출 필요할 수 있음.
+        // 하지만 createAsync는 반환된 sound 객체로 제어.
+        // 여기서는 간단히 재생만 하고 둠. (React Native Sound 관리에 따라 다름)
+        // 짧은 효과음이므로 큰 문제 없음.
+      } catch (error) {
+        console.log('Sound playback error:', error);
+      }
+    };
+
+    // 화면 진입 시 재생
+    playSound();
+  }, []);
+
   return (
     <Animated.View entering={FadeIn.duration(600)} style={styles.summaryCardContainer}>
       <View ref={captureRef} collapsable={false} style={{ backgroundColor: 'transparent' }}>
@@ -205,7 +245,19 @@ const SummaryCard = ({
           colors={[info.color + 'F0', info.color + 'CC'] as const}
           style={styles.summaryCardGradient}
         >
-          {/* ... (existing top content) ... */}
+          {/* 랜덤 폭죽 효과 (배경 위, 콘텐츠 아래 혹은 위?) - 캐릭터 주변이라고 했으므로 캐릭터 위에 겹치게 */}
+          {fireworkSource && (
+            <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+              <LottieView
+                source={fireworkSource}
+                autoPlay
+                loop={false}
+                style={{ width: '100%', height: '100%' }}
+                resizeMode="cover"
+              />
+            </View>
+          )}
+
           <View style={styles.topSpacer} />
           <View style={styles.characterSection}>
             <View style={styles.characterCircle}>
@@ -263,18 +315,6 @@ const SummaryCard = ({
             <Pressable
               style={({ pressed }) => [
                 styles.shareBtn,
-                styles.linkBtn, // New Style
-                pressed && styles.shareBtnPressed,
-              ]}
-              onPress={onCopyLink}
-            >
-              <Text style={styles.shareBtnIcon}>🔗</Text>
-              <Text style={styles.linkBtnText}>링크 복사</Text>
-            </Pressable>
-
-            <Pressable
-              style={({ pressed }) => [
-                styles.shareBtn,
                 styles.imageBtn,
                 pressed && styles.shareBtnPressed,
               ]}
@@ -284,8 +324,6 @@ const SummaryCard = ({
               <Text style={styles.imageBtnText}>이미지 저장</Text>
             </Pressable>
           </View>
-
-          {/* ... (rest of logic) ... */}
 
           <View style={styles.trustBadgeInCard}>
             <Text style={styles.trustBadgeText}>
@@ -1002,37 +1040,7 @@ export default function ResultScreen() {
     }
   };
 
-  // 링크 복사 기능
-  const handleCopyLink = async () => {
-    // 1. Stateless URL 생성
-    const baseUrl = Platform.OS === 'web'
-      ? window.location.origin
-      : 'https://ai-careercompass.vercel.app';
 
-    // URL 생성 (기존 로직 활용)
-    const resultUrl = Platform.OS === 'web'
-      ? window.location.href
-      : `https://ai-careercompass.vercel.app/result/share?` + new URLSearchParams({
-        field: topCareer.field,
-        score: topCareer.score.toString(),
-        name: displayNickname || '',
-        level: displayLevel,
-        character: displayCharacter,
-      }).toString();
-
-    // 2. 클립보드 복사
-    if (Platform.OS === 'web') {
-      try {
-        await navigator.clipboard.writeText(resultUrl);
-        Alert.alert('완료', '링크가 복사되었습니다!');
-      } catch (err) {
-        console.error('Copy failed', err);
-        Alert.alert('오류', '복사에 실패했습니다.');
-      }
-    } else {
-      Alert.alert('알림', '공유하기 버튼을 이용해주세요.');
-    }
-  };
 
   // PNG 저장 (웹: html2canvas, 모바일: captureRef)
   const handlePngSave = async () => {
@@ -1152,7 +1160,6 @@ export default function ResultScreen() {
           character={displayCharacter}
           level={displayLevel}
           onKakaoShare={handleKakaoShare}
-          onCopyLink={handleCopyLink}
           onPngSave={handlePngSave}
           onToggleDetail={handleToggleDetail}
           isDetailOpen={isDetailOpen}
@@ -1440,15 +1447,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#3C1E1E', // 카카오 가이드라인 준수
   },
-  // 링크 복사 버튼 (회색)
-  linkBtn: {
-    backgroundColor: '#E9E9EB',
-  },
-  linkBtnText: {
-    ...TextStyle.callout,
-    fontWeight: '700',
-    color: '#333333',
-  },
+
   // 이미지 저장 버튼 (투명+테두리)
   imageBtn: {
     backgroundColor: 'rgba(255,255,255,0.2)',
