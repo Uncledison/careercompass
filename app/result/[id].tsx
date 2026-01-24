@@ -894,13 +894,17 @@ export default function ResultScreen() {
           characterImg.src = `/character-screenshots/${characterFileName}?t=${new Date().getTime()}`;
 
           await new Promise((resolve, reject) => {
-                     characterImg.onload = () => {
-              // 이미지 원본 비율 유지하면서 캔버스 중앙 상단에 배치
+            characterImg.onload = () => {
+              // 원의 중심 좌표 (scale=2 적용)
+              const circleCenterX = 412 * 2; // 824px
+              const circleCenterY = 318 * 2; // 636px
+
+              // 이미지 중심을 원의 중심에 맞춤
               const targetWidth = characterImg.width;
               const targetHeight = characterImg.height;
-              const x = (canvas.width - targetWidth) / 2;
-              const y = 0; // 상단부터 시작
-              
+              const x = circleCenterX - (targetWidth / 2);
+              const y = circleCenterY - (targetHeight / 2);
+
               ctx.drawImage(characterImg, x, y, targetWidth, targetHeight);
               resolve(null);
             };
