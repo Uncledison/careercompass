@@ -896,8 +896,8 @@ export default function ResultScreen() {
           await new Promise((resolve, reject) => {
             characterImg.onload = () => {
               // 원의 중심 좌표 (scale=2 적용)
-              const circleCenterX = 412 * 2; // 824px
-              const circleCenterY = 318 * 2; // 636px
+              const circleCenterX = 419 * 2; // 838px
+              const circleCenterY = 319 * 2; // 638px
 
               // 이미지 중심을 원의 중심에 맞춤
               const targetWidth = characterImg.width;
