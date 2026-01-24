@@ -840,8 +840,6 @@ export default function ResultScreen() {
     if (Platform.OS === 'web') {
       const script = document.createElement('script');
       script.src = 'https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js';
-      script.integrity = 'sha384-DKYJZ8NLiK8KRY0aLCVw6NC8kk5wu4geKdXzSc2n4t6Myb8q3p8oQf6mz1dZwEag';
-      script.crossOrigin = 'anonymous';
       script.async = true;
 
       script.onload = () => {
