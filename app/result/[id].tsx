@@ -1113,7 +1113,7 @@ export default function ResultScreen() {
               // 캔버스 중앙 기준으로 계산 (화면 좌표 대신)
               const canvasCenterX = canvas.width / 2;
               // 상단 여백(32) + 배지(30) + 간격(30) + 패딩(8) ~= 100px. 원 중심 = 100 + 80 = 180px
-              const canvasCenterY = 180 * actualScale; // Y는 상단에서의 거리 유지
+              const canvasCenterY = 200 * actualScale; // Y는 상단에서의 거리 유지
 
               // 이미지 중심을 캔버스 중앙에 맞춤
               const targetWidth = characterImg.width;
