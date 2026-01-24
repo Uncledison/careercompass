@@ -401,11 +401,7 @@ export default function HomeScreen() {
               label="지난 결과"
               onPress={() => router.push('/(tabs)/history')}
             />
-            <QuickAction
-              icon="👨‍👩‍👧"
-              label="가족 연동"
-              onPress={() => { }}
-            />
+            {/* 가족 연동 Removed */}
             <QuickAction
               icon="📈"
               label="통계 분석"

@@ -17,8 +17,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Line, Circle, G, Text as SvgText, Rect } from 'react-native-svg';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Colors, Spacing, BorderRadius, Shadow, TextStyle } from '../src/constants';
-import { useHistoryStore, SavedResult, formatDate } from '../src/stores/historyStore';
-import { CareerField } from '../src/types';
+import { useHistoryStore, SavedResult, formatDate, getLevelLabel } from '../src/stores/historyStore';
+import { CareerField, GradeLevel } from '../src/types';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CHART_WIDTH = SCREEN_WIDTH - Spacing.md * 4;
@@ -198,20 +198,20 @@ const ChangeAnalysisCard = ({
         styles.changeBadge,
         {
           backgroundColor: isImproved
-            ? Colors.success + '20'
+            ? Colors.semantic.success + '20'
             : isDeclined
-            ? Colors.error + '20'
-            : Colors.gray[100],
+              ? Colors.semantic.error + '20'
+              : Colors.gray[100],
         },
       ]}>
         <Text style={[
           styles.changeBadgeText,
           {
             color: isImproved
-              ? Colors.success
+              ? Colors.semantic.success
               : isDeclined
-              ? Colors.error
-              : Colors.gray[500],
+                ? Colors.semantic.error
+                : Colors.gray[500],
           },
         ]}>
           {isImproved ? '↑' : isDeclined ? '↓' : '→'} {Math.abs(change)}점
@@ -225,23 +225,31 @@ export default function StatsScreen() {
   const router = useRouter();
   const { results, loadHistory } = useHistoryStore();
   const [selectedField, setSelectedField] = useState<CareerField | 'all'>('all');
+  const [selectedLevel, setSelectedLevel] = useState<GradeLevel | 'all'>('all');
 
   useEffect(() => {
     loadHistory();
   }, [loadHistory]);
 
-  // 통계 계산
-  const stats = useMemo(() => {
-    if (results.length === 0) return null;
+  // 레벨 필터링된 결과
+  const filteredResults = useMemo(() => {
+    if (selectedLevel === 'all') return results;
+    return results.filter(r => r.level === selectedLevel);
+  }, [results, selectedLevel]);
 
-    const totalTests = results.length;
-    const firstResult = results[results.length - 1];
-    const lastResult = results[0];
+  // 통계 계산 (filteredResults 사용)
+  const stats = useMemo(() => {
+    if (filteredResults.length === 0) return null;
+
+    const totalTests = filteredResults.length;
+    // ... (rest of logic using filteredResults)
+    const firstResult = filteredResults[filteredResults.length - 1]; // Oldest
+    const lastResult = filteredResults[0]; // Newest
 
     // 평균 점수 계산
     const averageScores: Record<CareerField, number> = {} as Record<CareerField, number>;
     careerFields.forEach((field) => {
-      const sum = results.reduce((acc, r) => acc + r.scores[field], 0);
+      const sum = filteredResults.reduce((acc, r) => acc + r.scores[field], 0);
       averageScores[field] = Math.round(sum / totalTests);
     });
 
@@ -268,11 +276,36 @@ export default function StatsScreen() {
       mostImproved,
       improvements,
     };
+  }, [filteredResults]);
+
+  // 사용 가능한 레벨 목록 확인
+  const availableLevels = useMemo(() => {
+    const levels = new Set(results.map(r => r.level));
+    return Array.from(levels);
+  }, [results]);
+
+  // 초기 레벨 설정 (가장 최근 결과의 레벨로)
+  useEffect(() => {
+    if (results.length > 0 && selectedLevel === 'all') {
+      // 기본적으로 전체보기가 아니라 최근 레벨을 보여주는 것이 사용자에게 덜 혼란스러움
+      // 단, 사용자가 명시적으로 'all'을 선택할 수도 있으므로 초기 진입 시에만 적용할 수도 있음
+      // 여기서는 '전체'가 기본이되, 섞여있다면 안내를 하는 방식 or 
+      // User requested: "connects elementary and middle... how to improve?"
+      // Answer: Default to the *latest* level is smarter.
+      const latest = results[0].level;
+      // 다른 레벨이 섞여있는지 확인
+      const hasMixed = results.some(r => r.level !== latest);
+      if (hasMixed) {
+        setSelectedLevel(latest);
+      }
+    }
   }, [results]);
 
   if (results.length === 0) {
+    // ... (empty state)
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
+        {/* ... (keep existing empty state) ... */}
         <View style={styles.header}>
           <Pressable onPress={() => router.back()} style={styles.headerBackButton}>
             <Svg width={24} height={24} viewBox="0 0 24 24">
@@ -323,24 +356,60 @@ export default function StatsScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        {/* 레벨 필터 (레벨이 2개 이상일 때만 표시) */}
+        {availableLevels.length > 1 && (
+          <View style={styles.levelFilterContainer}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.levelFilterScroll}>
+              <Pressable
+                style={[
+                  styles.levelChip,
+                  selectedLevel === 'all' && styles.levelChipActive
+                ]}
+                onPress={() => setSelectedLevel('all')}
+              >
+                <Text style={[
+                  styles.levelChipText,
+                  selectedLevel === 'all' && styles.levelChipTextActive
+                ]}>전체</Text>
+              </Pressable>
+              {availableLevels.map(level => (
+                <Pressable
+                  key={level}
+                  style={[
+                    styles.levelChip,
+                    selectedLevel === level && styles.levelChipActive
+                  ]}
+                  onPress={() => setSelectedLevel(level)}
+                >
+                  <Text style={[
+                    styles.levelChipText,
+                    selectedLevel === level && styles.levelChipTextActive
+                  ]}>{getLevelLabel(level)}</Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
         {/* 요약 카드 */}
         <Animated.View entering={FadeInDown.duration(500)} style={styles.summaryCard}>
+          {/* ... (same content using stats) ... */}
           <View style={styles.summaryRow}>
             <View style={styles.summaryItem}>
-              <Text style={styles.summaryValue}>{stats?.totalTests}</Text>
+              <Text style={styles.summaryValue}>{stats?.totalTests || 0}</Text>
               <Text style={styles.summaryLabel}>총 검사 횟수</Text>
             </View>
             <View style={styles.summaryDivider} />
             <View style={styles.summaryItem}>
               <Text style={styles.summaryValue}>
-                {careerFieldInfo[stats?.topField || 'humanities'].icon}
+                {stats ? careerFieldInfo[stats.topField].icon : '-'}
               </Text>
               <Text style={styles.summaryLabel}>강점 계열</Text>
             </View>
             <View style={styles.summaryDivider} />
             <View style={styles.summaryItem}>
-              <Text style={[styles.summaryValue, { color: Colors.success }]}>
-                +{Math.max(stats?.mostImproved.change || 0, 0)}
+              <Text style={[styles.summaryValue, { color: Colors.semantic.success }]}>
+                {stats ? `+${Math.max(stats.mostImproved.change, 0)}` : '0'}
               </Text>
               <Text style={styles.summaryLabel}>최대 상승</Text>
             </View>
@@ -358,8 +427,8 @@ export default function StatsScreen() {
               {stats.mostImproved.change > 0
                 ? `${careerFieldInfo[stats.mostImproved.field].label} 계열이 ${stats.mostImproved.change}점 상승했어요! 꾸준히 관심을 가져보세요.`
                 : stats.mostImproved.change < 0
-                ? `최근 점수가 다소 하락했지만, 다양한 경험을 통해 새로운 가능성을 발견해보세요!`
-                : `점수가 안정적으로 유지되고 있어요. 새로운 활동에 도전해보는 것도 좋아요!`}
+                  ? `최근 점수가 다소 하락했지만, 다양한 경험을 통해 새로운 가능성을 발견해보세요!`
+                  : `점수가 안정적으로 유지되고 있어요. 새로운 활동에 도전해보는 것도 좋아요!`}
             </Text>
           </Animated.View>
         )}
@@ -370,6 +439,11 @@ export default function StatsScreen() {
           style={styles.section}
         >
           <Text style={styles.sectionTitle}>점수 변화 추이</Text>
+          {selectedLevel === 'all' && availableLevels.length > 1 && (
+            <Text style={styles.warningText}>* 서로 다른 난이도의 검사 결과가 섞여있습니다.</Text>
+          )}
+
+
 
           {/* 필드 선택 */}
           <ScrollView
@@ -421,7 +495,7 @@ export default function StatsScreen() {
           </ScrollView>
 
           <View style={styles.chartContainer}>
-            <TrendLineChart results={results} selectedField={selectedField} />
+            <TrendLineChart results={filteredResults} selectedField={selectedField} />
           </View>
 
           {/* 범례 */}
@@ -441,6 +515,8 @@ export default function StatsScreen() {
             </View>
           )}
         </Animated.View>
+
+        {/* ... (rest of file) ... */}
 
         {/* 계열별 변화 */}
         {stats && stats.totalTests >= 2 && (
@@ -499,6 +575,7 @@ export default function StatsScreen() {
 }
 
 const styles = StyleSheet.create({
+  // ... (previous styles)
   container: {
     flex: 1,
     backgroundColor: Colors.background.secondary,
@@ -524,6 +601,40 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingBottom: Spacing.xxl,
   },
+  // Level Filter Styles
+  levelFilterContainer: {
+    marginBottom: Spacing.md,
+  },
+  levelFilterScroll: {
+    gap: Spacing.xs,
+    paddingVertical: Spacing.xs,
+  },
+  levelChip: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 6,
+    borderRadius: BorderRadius.full,
+    backgroundColor: Colors.gray[200],
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  levelChipActive: {
+    backgroundColor: Colors.primary.main + '20',
+    borderColor: Colors.primary.main,
+  },
+  levelChipText: {
+    ...TextStyle.caption1,
+    color: Colors.text.secondary,
+    fontWeight: '600',
+  },
+  levelChipTextActive: {
+    color: Colors.primary.main,
+  },
+  warningText: {
+    ...TextStyle.caption2,
+    color: Colors.semantic.error,
+    marginBottom: Spacing.xs,
+  },
+  // ... (rest of styles)
   summaryCard: {
     backgroundColor: Colors.background.primary,
     borderRadius: BorderRadius.xl,

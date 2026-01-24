@@ -167,7 +167,7 @@ const careerFieldInfo: Record<CareerField, CareerFieldDetail> = {
   },
 };
 
-// 요약 카드 컴포넌트 (최상단 - 3초 안에 파악)
+// 요약 카드 컴포넌트 
 const SummaryCard = ({
   topField,
   score,
@@ -176,6 +176,7 @@ const SummaryCard = ({
   level,
   onKakaoShare,
   onPngSave,
+  onCopyLink, // New Prop
   onToggleDetail,
   isDetailOpen,
   captureRef,
@@ -187,6 +188,7 @@ const SummaryCard = ({
   level: string;
   onKakaoShare: () => void;
   onPngSave: () => void;
+  onCopyLink: () => void; // New Prop
   onToggleDetail: () => void;
   isDetailOpen: boolean;
   captureRef?: React.RefObject<View | null>;
@@ -203,10 +205,8 @@ const SummaryCard = ({
           colors={[info.color + 'F0', info.color + 'CC'] as const}
           style={styles.summaryCardGradient}
         >
-          {/* 상단: 요약 카드 영역 (전체 화면 높이의 약 70-80% 차지) */}
+          {/* ... (existing top content) ... */}
           <View style={styles.topSpacer} />
-
-          {/* 사용자 캐릭터 (화면 상단에서 적당한 거리를 두고 배치) */}
           <View style={styles.characterSection}>
             <View style={styles.characterCircle}>
               <ModelViewer3D
@@ -223,14 +223,11 @@ const SummaryCard = ({
             </View>
           </View>
 
-          {/* 인사말 */}
           <Text style={styles.greetingText}>
             {nickname ? `${nickname}님의 진로 유형` : '나의 진로 유형'}
           </Text>
 
-          {/* 유형명 & 점수 (시각적 중심) */}
           <View style={styles.typeSection}>
-            {/* 아이콘 */}
             <View style={styles.iconCircle}>
               <Text style={styles.typeIcon}>{info.icon}</Text>
             </View>
@@ -241,7 +238,6 @@ const SummaryCard = ({
             </View>
           </View>
 
-          {/* 강점 키워드 */}
           <View style={styles.keywordsSection}>
             {keywords.map((keyword, idx) => (
               <View key={idx} style={styles.keywordChip}>
@@ -250,12 +246,12 @@ const SummaryCard = ({
             ))}
           </View>
 
-          {/* 공유 버튼 (높이 48px, 동일 크기, 색상 강조) */}
+          {/* 공유 버튼 Row */}
           <View style={styles.shareButtonsRow}>
             <Pressable
               style={({ pressed }) => [
                 styles.shareBtn,
-                styles.kakaoBtn, // 노란색 배경
+                styles.kakaoBtn,
                 pressed && styles.shareBtnPressed,
               ]}
               onPress={onKakaoShare}
@@ -267,7 +263,19 @@ const SummaryCard = ({
             <Pressable
               style={({ pressed }) => [
                 styles.shareBtn,
-                styles.imageBtn, // 투명 배경 + 테두리
+                styles.linkBtn, // New Style
+                pressed && styles.shareBtnPressed,
+              ]}
+              onPress={onCopyLink}
+            >
+              <Text style={styles.shareBtnIcon}>🔗</Text>
+              <Text style={styles.linkBtnText}>링크 복사</Text>
+            </Pressable>
+
+            <Pressable
+              style={({ pressed }) => [
+                styles.shareBtn,
+                styles.imageBtn,
                 pressed && styles.shareBtnPressed,
               ]}
               onPress={onPngSave}
@@ -277,14 +285,14 @@ const SummaryCard = ({
             </Pressable>
           </View>
 
-          {/* 신뢰 배지 */}
+          {/* ... (rest of logic) ... */}
+
           <View style={styles.trustBadgeInCard}>
             <Text style={styles.trustBadgeText}>
               🎓 과학적 검사 기반 · {questionCount}문항 분석
             </Text>
           </View>
 
-          {/* 상세 분석 보기 (작은 텍스트 링크) */}
           <Pressable
             style={({ pressed }) => [
               styles.detailToggleLink,
@@ -292,18 +300,9 @@ const SummaryCard = ({
             ]}
             onPress={onToggleDetail}
           >
-            {/* 상세 분석 보기 (작은 텍스트 링크, 시각적 우선순위 낮춤) */}
-            <Pressable
-              style={({ pressed }) => [
-                styles.detailToggleLink,
-                pressed && styles.detailToggleLinkPressed,
-              ]}
-              onPress={onToggleDetail}
-            >
-              <Text style={styles.detailToggleLinkText}>
-                {isDetailOpen ? '📊 상세 분석 접기' : '📊 상세 분석 보기 ▼'}
-              </Text>
-            </Pressable>
+            <Text style={styles.detailToggleLinkText}>
+              {isDetailOpen ? '📊 상세 분석 접기' : '📊 상세 분석 보기 ▼'}
+            </Text>
           </Pressable>
         </LinearGradient>
       </View>
@@ -699,15 +698,24 @@ const SummaryComment = ({
   );
 };
 
+import { scheduleRetestReminder } from '../../src/utils/notifications';
+
+// ...
+
 export default function ResultScreen() {
-  const params = useLocalSearchParams<{
-    id: string;
-    field?: string;
-    score?: string;
-    name?: string;
-    level?: string;
-    character?: string;
-  }>();
+  // ... (hooks)
+
+  // ... (existing useEffects)
+
+  // 결과 화면 진입 시 3개월 후 알림 예약 (새로운 결과이거나 최근 결과일 때)
+  useEffect(() => {
+    if (Platform.OS !== 'web') {
+      scheduleRetestReminder();
+    }
+  }, []);
+
+  // ...
+
   const { id } = params;
 
   const router = useRouter();
@@ -982,6 +990,38 @@ export default function ResultScreen() {
     }
   };
 
+  // 링크 복사 기능
+  const handleCopyLink = async () => {
+    // 1. Stateless URL 생성
+    const baseUrl = Platform.OS === 'web'
+      ? window.location.origin
+      : 'https://ai-careercompass.vercel.app';
+
+    // URL 생성 (기존 로직 활용)
+    const resultUrl = Platform.OS === 'web'
+      ? window.location.href
+      : `https://ai-careercompass.vercel.app/result/share?` + new URLSearchParams({
+        field: topCareer.field,
+        score: topCareer.score.toString(),
+        name: displayNickname || '',
+        level: displayLevel,
+        character: displayCharacter,
+      }).toString();
+
+    // 2. 클립보드 복사
+    if (Platform.OS === 'web') {
+      try {
+        await navigator.clipboard.writeText(resultUrl);
+        Alert.alert('완료', '링크가 복사되었습니다!');
+      } catch (err) {
+        console.error('Copy failed', err);
+        Alert.alert('오류', '복사에 실패했습니다.');
+      }
+    } else {
+      Alert.alert('알림', '공유하기 버튼을 이용해주세요.');
+    }
+  };
+
   // PNG 저장 (웹: html2canvas, 모바일: captureRef)
   const handlePngSave = async () => {
     try {
@@ -1100,6 +1140,7 @@ export default function ResultScreen() {
           character={displayCharacter}
           level={displayLevel}
           onKakaoShare={handleKakaoShare}
+          onCopyLink={handleCopyLink}
           onPngSave={handlePngSave}
           onToggleDetail={handleToggleDetail}
           isDetailOpen={isDetailOpen}
@@ -1386,6 +1427,15 @@ const styles = StyleSheet.create({
     ...TextStyle.callout,
     fontWeight: '700',
     color: '#3C1E1E', // 카카오 가이드라인 준수
+  },
+  // 링크 복사 버튼 (회색)
+  linkBtn: {
+    backgroundColor: '#E9E9EB',
+  },
+  linkBtnText: {
+    ...TextStyle.callout,
+    fontWeight: '700',
+    color: '#333333',
   },
   // 이미지 저장 버튼 (투명+테두리)
   imageBtn: {
