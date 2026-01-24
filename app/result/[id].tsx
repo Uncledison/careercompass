@@ -861,7 +861,12 @@ export default function ResultScreen() {
 
   // 카카오톡 공유
   const handleKakaoShare = async () => {
-    const shareText = `Career Compass 진로검사 결과\n\n나의 진로 유형: ${topInfo.icon} ${typeNames[topCareer.field]}\n적성 점수: ${topCareer.score}점\n\n#CareerCompass #진로탐색 #${typeNames[topCareer.field]}`;
+    // 결과 페이지 URL 구성
+    const resultUrl = Platform.OS === 'web'
+      ? window.location.href
+      : `https://ai-careercompass.vercel.app/result/${id}`;
+
+    const shareText = `Career Compass 진로검사 결과\n\n나의 진로 유형: ${topInfo.icon} ${typeNames[topCareer.field]}\n적성 점수: ${topCareer.score}점\n\n#CareerCompass #진로탐색 #${typeNames[topCareer.field]}\n\n${resultUrl}`;
 
     // 카카오톡 앱이 있는지 확인하고 공유
     if (Platform.OS !== 'web') {
