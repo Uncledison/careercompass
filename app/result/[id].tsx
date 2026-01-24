@@ -260,7 +260,7 @@ const SummaryCard = ({
           )}
 
           {/* 1. Top Badge */}
-          <View style={styles.topBadgeContainer}>
+          <View style={[styles.topBadgeContainer, { marginTop: 60, marginBottom: 40 }]}>
             <Text style={styles.trustBadgeText}>
               🎓 과학적 검사 기반 · {questionCount}문항 분석
             </Text>
@@ -288,7 +288,7 @@ const SummaryCard = ({
             <Text style={styles.greetingMain}>
               {gradeLabel} {nickname}
             </Text>
-            <Text style={[styles.greetingSuffix, { color: info.color }]}>
+            <Text style={[styles.greetingSuffix, { color: 'rgba(255,255,255,0.7)' }]}>
               님 진로 유형
             </Text>
           </View>
@@ -304,7 +304,7 @@ const SummaryCard = ({
           {/* 5. Score */}
           <View style={styles.scoreContainer}>
             <Text style={styles.scoreValue}>{score}</Text>
-            <Text style={[styles.scoreUnit, { color: info.color }]}>점</Text>
+            <Text style={[styles.scoreUnit, { color: 'rgba(255,255,255,0.7)' }]}>점</Text>
           </View>
 
           {/* 6. Keywords */}
@@ -317,7 +317,7 @@ const SummaryCard = ({
           </View>
 
           {/* 7. Date (Footer Metadata) */}
-          <Text style={[styles.dateText, { color: info.color }]}>{date}</Text>
+          <Text style={[styles.dateText, { color: 'rgba(255,255,255,0.7)' }]}>{date}</Text>
 
           {/* 8. Detail Toggle */}
           <Pressable
@@ -327,10 +327,10 @@ const SummaryCard = ({
             ]}
             onPress={onToggleDetail}
           >
-            <Text style={[styles.detailToggleLinkText, { color: info.color }]}>
+            <Text style={[styles.detailToggleLinkText, { color: 'rgba(255,255,255,0.7)' }]}>
               📊 상세 분석 보기
             </Text>
-            <MaterialIcons name="keyboard-arrow-down" size={24} color={info.color} />
+            <MaterialIcons name="keyboard-arrow-down" size={24} color={'rgba(255,255,255,0.7)'} />
           </Pressable>
 
           <View style={styles.spacer} />
@@ -365,7 +365,7 @@ const SummaryCard = ({
           </View>
 
           {/* 10. URL Footer */}
-          <Text style={styles.urlFooter}>
+          <Text style={[styles.urlFooter, { color: 'rgba(255,255,255,0.75)' }]}>
             http://ai-careercompass.vercel.app
           </Text>
 
@@ -1346,10 +1346,10 @@ const styles = StyleSheet.create({
   // ========== 스타일 수정 ==========
   // 1. Top Badge
   topBadgeContainer: {
-    marginTop: 48, // 상단바 여백 확보
+    marginTop: 60, // 상단바 여백 + 배치 조정
     alignItems: 'center',
-    marginBottom: Spacing.md,
-    backgroundColor: 'rgba(0,0,0,0.2)', // 진한 반투명
+    marginBottom: 30, // 캐릭터와의 간격 확보 (중앙 배치 느낌)
+    backgroundColor: 'rgba(0,0,0,0.2)',
     paddingHorizontal: 16,
     paddingVertical: 6,
     borderRadius: BorderRadius.full,
