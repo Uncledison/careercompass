@@ -847,11 +847,9 @@ export default function ResultScreen() {
       script.onload = () => {
         // @ts-ignore
         if (window.Kakao && !window.Kakao.isInitialized()) {
-          // 여기에 사용자의 카카오 JavaScript 키를 입력해야 합니다.
-          // 예: window.Kakao.init('a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6');
-          // 현재는 키가 없으므로 주석 처리 또는 플레이스홀더 사용
-          // window.Kakao.init('YOUR_KAKAO_JAVASCRIPT_KEY');
-          console.log('Kakao SDK Loaded. Please initialize with valid key.');
+          // 카카오 JavaScript 키 초기화
+          window.Kakao.init('b176649d7c304af7de3437e1fbeed519');
+          console.log('Kakao SDK Initialized');
         }
       };
 
