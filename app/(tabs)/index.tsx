@@ -251,7 +251,8 @@ export default function HomeScreen() {
             style={styles.headerLeft}
             onPress={() => router.push('/(tabs)/profile')}
           >
-            <Text style={styles.userName}>안녕하세요! {profile?.nickname || '탐험가'}님</Text>
+            <Text style={styles.greeting}>안녕하세요!</Text>
+            <Text style={styles.userName}>{profile?.nickname || '탐험가'}님</Text>
           </Pressable>
           <Pressable
             onPress={() => router.push('/(tabs)/profile')}
@@ -339,20 +340,9 @@ export default function HomeScreen() {
                   나에게 맞는 미래를 발견해요
                 </Text>
               </View>
-              <View style={styles.mainCharacterContainer}>
-                <ModelViewer3D
-                  modelPath={`/models/characters/${profile?.character || 'Female_1'}.gltf`}
-                  animations={['Run']}
-                  width={100}
-                  height={100}
-                  autoRotate={false}
-                  cameraDistance="8.0m"
-                  cameraTarget="0m 1.4m 0m"
-                  disableControls={true}
-                  backgroundColor="rgba(255,255,255,0.2)"
-                  borderRadius={50}
-                />
-              </View>
+              {/* <View style={styles.mainCharacterContainer}>
+                캐릭터 삭제됨
+              </View> */}
             </View>
             <View style={styles.mainCardBadge}>
               <Text style={styles.mainCardBadgeText}>약 15분 소요</Text>
@@ -497,6 +487,11 @@ const styles = StyleSheet.create({
   },
   headerLeft: {
     gap: 2,
+  },
+  greeting: {
+    ...TextStyle.subhead,
+    color: Colors.text.secondary,
+    marginBottom: -4, // 간격 조절
   },
   userName: {
     ...TextStyle.title2,
