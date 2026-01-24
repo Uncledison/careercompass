@@ -37,7 +37,7 @@ import { Colors, Spacing, BorderRadius, Shadow, TextStyle } from '../../src/cons
 import { useAssessmentStore } from '../../src/stores/assessmentStore';
 import { useHistoryStore } from '../../src/stores/historyStore';
 import { useProfileStore, getShortGradeLabel, SchoolType } from '../../src/stores/profileStore';
-import { CareerField, CareerScores } from '../../src/types';
+import { CareerField, CareerScores, GradeLevel } from '../../src/types';
 import { exportToPDF } from '../../src/utils/pdfExport';
 import { ModelViewer3D } from '../../src/components/character/ModelViewer3D';
 import * as Linking from 'expo-linking';
@@ -700,7 +700,16 @@ const SummaryComment = ({
 };
 
 export default function ResultScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const params = useLocalSearchParams<{
+    id: string;
+    field?: string;
+    score?: string;
+    name?: string;
+    level?: string;
+    character?: string;
+  }>();
+  const { id } = params;
+
   const router = useRouter();
   const { scores, level, resetAssessment } = useAssessmentStore();
   const { saveResult } = useHistoryStore();
@@ -710,17 +719,36 @@ export default function ResultScreen() {
   const detailSectionY = useRef(0);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
+  // 공유된 링크로 들어온 경우 (Stateless Mode)
+  const isShareMode = id === 'share';
+
   // 히스토리 모드 확인
   const { getResultById } = useHistoryStore();
   const historyResult = useMemo(() => {
-    if (id && id !== 'new') {
+    if (id && id !== 'new' && !isShareMode) {
       return getResultById(id);
     }
     return null;
-  }, [id, getResultById]);
+  }, [id, getResultById, isShareMode]);
 
   // 표시할 점수 데이터 결정
   const displayScores = useMemo(() => {
+    // 1. 공유 모드일 때: URL 파라미터로 점수 재구성
+    if (isShareMode && params.field && params.score) {
+      const field = params.field as CareerField;
+      const score = parseInt(params.score, 10);
+
+      // 해당 분야만 점수 할당, 나머지는 평균값(Mock) 처리하여 차트 모양 유지
+      return {
+        humanities: field === 'humanities' ? score : 60,
+        social: field === 'social' ? score : 60,
+        natural: field === 'natural' ? score : 60,
+        engineering: field === 'engineering' ? score : 60,
+        medicine: field === 'medicine' ? score : 60,
+        arts: field === 'arts' ? score : 60,
+      } as CareerScores;
+    }
+
     if (historyResult) return historyResult.scores;
     if (scores) return scores;
     return {
@@ -731,10 +759,19 @@ export default function ResultScreen() {
       medicine: 71,
       arts: 58,
     };
-  }, [historyResult, scores]);
+  }, [historyResult, scores, isShareMode, params]);
 
-  const displayLevel = historyResult ? historyResult.level : (level || 'elementary');
-  const displayNickname = historyResult ? historyResult.nickname : profile?.nickname;
+  const displayLevel = isShareMode
+    ? (params.level as GradeLevel || 'elementary')
+    : (historyResult ? historyResult.level : (level || 'elementary'));
+
+  const displayNickname = isShareMode
+    ? (params.name || '게스트')
+    : (historyResult ? historyResult.nickname : profile?.nickname);
+
+  const displayCharacter = isShareMode
+    ? (params.character || 'Female_1')
+    : (profile?.character || 'Female_1');
 
   // 캡처용 Ref
   const captureViewRef = useRef<View>(null);
@@ -753,9 +790,9 @@ export default function ResultScreen() {
   // 최하위 계열 (성장 포인트용)
   const bottomCareer = useMemo(() => allCareers[allCareers.length - 1], [allCareers]);
 
-  // 결과 자동 저장 (최초 1회)
+  // 결과 자동 저장 (최초 1회) - 공유 모드에서는 저장하지 않음
   useEffect(() => {
-    if (scores && !savedRef.current) {
+    if (scores && !savedRef.current && !isShareMode && !historyResult) {
       savedRef.current = true;
       const topCareer = topCareers[0];
       // 학년을 "초등2", "중2", "고2" 형식으로 저장
@@ -763,7 +800,7 @@ export default function ResultScreen() {
         ? getShortGradeLabel(profile.schoolType, profile.grade)
         : undefined;
       saveResult({
-        level,
+        level: level || 'elementary',
         scores,
         topCareer: topCareer.field,
         topScore: topCareer.score,
@@ -771,7 +808,7 @@ export default function ResultScreen() {
         grade: gradeLabel,
       }).catch(console.error);
     }
-  }, [scores, level, topCareers, saveResult, profile]);
+  }, [scores, level, topCareers, saveResult, profile, isShareMode, historyResult]);
 
   // 1위 계열
   const topCareer = topCareers[0];
@@ -863,13 +900,25 @@ export default function ResultScreen() {
 
   // 카카오톡 공유
   const handleKakaoShare = async () => {
-    // 결과 페이지 URL 구성
-    // 배포 환경과 로컬 환경 대응
-    const resultUrl = Platform.OS === 'web'
-      ? window.location.href
-      : `https://ai-careercompass.vercel.app/result/${id}`;
+    // 결과 페이지 URL 구성 (Stateless URL 생성)
+    // 예: /result/share?field=humanities&score=95&name=홍길동&level=high...
 
-    console.log('Sharing URL:', resultUrl);
+    const baseUrl = Platform.OS === 'web'
+      ? window.location.origin
+      : 'https://ai-careercompass.vercel.app';
+
+    // 파라미터 인코딩
+    const queryParams = new URLSearchParams({
+      field: topCareer.field,
+      score: topCareer.score.toString(),
+      name: displayNickname || '',
+      level: displayLevel,
+      character: displayCharacter,
+    }).toString();
+
+    const resultUrl = `${baseUrl}/result/share?${queryParams}`;
+
+    console.log('Sharing Stateless URL:', resultUrl);
 
     const shareText = `Career Compass 진로검사 결과\n\n나의 진로 유형: ${topInfo.icon} ${typeNames[topCareer.field]}\n적성 점수: ${topCareer.score}점\n\n#CareerCompass #진로탐색 #${typeNames[topCareer.field]}\n\n${resultUrl}`;
 
@@ -886,7 +935,7 @@ export default function ResultScreen() {
       // 웹 (PC Web & Mobile Web): Kakao SDK 사용
       // @ts-ignore
       if (window.Kakao && window.Kakao.isInitialized()) {
-        const characterBase = profile?.character?.replace('.gltf', '') || 'Female_1';
+        const characterBase = displayCharacter.replace('.gltf', '');
         const imageUrl = `${window.location.origin}/character-screenshots/${characterBase}.png`;
 
         try {
@@ -1048,7 +1097,7 @@ export default function ResultScreen() {
           topField={topCareer.field}
           score={topCareer.score}
           nickname={displayNickname}
-          character={profile?.character || 'Female_1'}
+          character={displayCharacter}
           level={displayLevel}
           onKakaoShare={handleKakaoShare}
           onPngSave={handlePngSave}
