@@ -37,6 +37,7 @@ import { Colors, Spacing, BorderRadius, Shadow, TextStyle } from '../../src/cons
 import { useAssessmentStore } from '../../src/stores/assessmentStore';
 import { useHistoryStore } from '../../src/stores/historyStore';
 import { useProfileStore, getShortGradeLabel, SchoolType } from '../../src/stores/profileStore';
+import { MaterialIcons } from '@expo/vector-icons';
 import { CareerField, CareerScores, GradeLevel } from '../../src/types';
 import { exportToPDF } from '../../src/utils/pdfExport';
 import { ModelViewer3D } from '../../src/components/character/ModelViewer3D';
@@ -191,6 +192,8 @@ const SummaryCard = ({
   nickname,
   character,
   level,
+  gradeLabel, // New Prop
+  date,       // New Prop
   onKakaoShare,
   onPngSave,
   onToggleDetail,
@@ -202,6 +205,8 @@ const SummaryCard = ({
   nickname?: string;
   character: string;
   level: string;
+  gradeLabel: string; // New Prop
+  date: string;       // New Prop
   onKakaoShare: () => void;
   onPngSave: () => void;
   onToggleDetail: () => void;
@@ -225,10 +230,6 @@ const SummaryCard = ({
       try {
         const randomSound = FINISH_SOUNDS[Math.floor(Math.random() * FINISH_SOUNDS.length)];
         const { sound } = await Audio.Sound.createAsync(randomSound, { shouldPlay: true });
-        // 사운드가 끝나면 메모리 해제는 자동으로 되지 않으므로 unloadAsync 호출 필요할 수 있음.
-        // 하지만 createAsync는 반환된 sound 객체로 제어.
-        // 여기서는 간단히 재생만 하고 둠. (React Native Sound 관리에 따라 다름)
-        // 짧은 효과음이므로 큰 문제 없음.
       } catch (error) {
         console.log('Sound playback error:', error);
       }
@@ -245,7 +246,7 @@ const SummaryCard = ({
           colors={[info.color + 'F0', info.color + 'CC'] as const}
           style={styles.summaryCardGradient}
         >
-          {/* 랜덤 폭죽 효과 (배경 위, 콘텐츠 아래 혹은 위?) - 캐릭터 주변이라고 했으므로 캐릭터 위에 겹치게 */}
+          {/* 랜덤 폭죽 효과 */}
           {fireworkSource && (
             <View pointerEvents="none" style={StyleSheet.absoluteFill}>
               <LottieView
@@ -258,7 +259,14 @@ const SummaryCard = ({
             </View>
           )}
 
-          <View style={styles.topSpacer} />
+          {/* 1. Top Badge */}
+          <View style={styles.topBadgeContainer}>
+            <Text style={styles.trustBadgeText}>
+              🎓 과학적 검사 기반 · {questionCount}문항 분석
+            </Text>
+          </View>
+
+          {/* 2. Character */}
           <View style={styles.characterSection}>
             <View style={styles.characterCircle}>
               <ModelViewer3D
@@ -275,21 +283,31 @@ const SummaryCard = ({
             </View>
           </View>
 
-          <Text style={styles.greetingText}>
-            {nickname ? `${nickname}님의 진로 유형` : '나의 진로 유형'}
-          </Text>
+          {/* 3. Greeting (Grade + Name + Suffix) */}
+          <View style={styles.greetingRow}>
+            <Text style={styles.greetingMain}>
+              {gradeLabel} {nickname}
+            </Text>
+            <Text style={[styles.greetingSuffix, { color: info.color }]}>
+              님 진로 유형
+            </Text>
+          </View>
 
+          {/* 4. Type Name & Icon */}
           <View style={styles.typeSection}>
-            <View style={styles.iconCircle}>
+            <View style={[styles.iconCircle, { backgroundColor: info.color + '30' }]}>
               <Text style={styles.typeIcon}>{info.icon}</Text>
             </View>
             <Text style={styles.typeName}>{typeName}</Text>
-            <View style={styles.scoreContainer}>
-              <Text style={styles.scoreValue}>{score}</Text>
-              <Text style={styles.scoreUnit}>점</Text>
-            </View>
           </View>
 
+          {/* 5. Score */}
+          <View style={styles.scoreContainer}>
+            <Text style={styles.scoreValue}>{score}</Text>
+            <Text style={[styles.scoreUnit, { color: info.color }]}>점</Text>
+          </View>
+
+          {/* 6. Keywords */}
           <View style={styles.keywordsSection}>
             {keywords.map((keyword, idx) => (
               <View key={idx} style={styles.keywordChip}>
@@ -298,20 +316,28 @@ const SummaryCard = ({
             ))}
           </View>
 
-          {/* 공유 버튼 Row */}
-          <View style={styles.shareButtonsRow}>
-            <Pressable
-              style={({ pressed }) => [
-                styles.shareBtn,
-                styles.kakaoBtn,
-                pressed && styles.shareBtnPressed,
-              ]}
-              onPress={onKakaoShare}
-            >
-              <Text style={styles.shareBtnIcon}>💬</Text>
-              <Text style={styles.kakaoBtnText}>카톡 공유</Text>
-            </Pressable>
+          {/* 7. Date (Footer Metadata) */}
+          <Text style={[styles.dateText, { color: info.color }]}>{date}</Text>
 
+          {/* 8. Detail Toggle */}
+          <Pressable
+            style={({ pressed }) => [
+              styles.detailToggleLink,
+              pressed && styles.detailToggleLinkPressed,
+            ]}
+            onPress={onToggleDetail}
+          >
+            <Text style={[styles.detailToggleLinkText, { color: info.color }]}>
+              📊 상세 분석 보기
+            </Text>
+            <MaterialIcons name="keyboard-arrow-down" size={24} color={info.color} />
+          </Pressable>
+
+          <View style={styles.spacer} />
+
+          {/* 9. Buttons */}
+          <View style={styles.shareButtonsRow}>
+            {/* Image Save (Glass) */}
             <Pressable
               style={({ pressed }) => [
                 styles.shareBtn,
@@ -323,25 +349,26 @@ const SummaryCard = ({
               <Text style={styles.shareBtnIcon}>🖼️</Text>
               <Text style={styles.imageBtnText}>이미지 저장</Text>
             </Pressable>
+
+            {/* Kakao Share (Yellow) */}
+            <Pressable
+              style={({ pressed }) => [
+                styles.shareBtn,
+                styles.kakaoBtn,
+                pressed && styles.shareBtnPressed,
+              ]}
+              onPress={onKakaoShare}
+            >
+              <Text style={styles.shareBtnIcon}>💬</Text>
+              <Text style={styles.kakaoBtnText}>카톡 공유</Text>
+            </Pressable>
           </View>
 
-          <View style={styles.trustBadgeInCard}>
-            <Text style={styles.trustBadgeText}>
-              🎓 과학적 검사 기반 · {questionCount}문항 분석
-            </Text>
-          </View>
+          {/* 10. URL Footer */}
+          <Text style={styles.urlFooter}>
+            http://ai-careercompass.vercel.app
+          </Text>
 
-          <Pressable
-            style={({ pressed }) => [
-              styles.detailToggleLink,
-              pressed && styles.detailToggleLinkPressed,
-            ]}
-            onPress={onToggleDetail}
-          >
-            <Text style={styles.detailToggleLinkText}>
-              {isDetailOpen ? '📊 상세 분석 접기' : '📊 상세 분석 보기 ▼'}
-            </Text>
-          </Pressable>
         </LinearGradient>
       </View>
     </Animated.View>
@@ -1153,12 +1180,15 @@ export default function ResultScreen() {
       >
         {/* ===== 상단: 요약 카드 영역 ===== */}
         {/* ===== 상단: 요약 카드 영역 ===== */}
+        {/* ===== 상단: 요약 카드 영역 ===== */}
         <SummaryCard
           topField={topCareer.field}
           score={topCareer.score}
           nickname={displayNickname}
           character={displayCharacter}
           level={displayLevel}
+          gradeLabel={getShortGradeLabel(profile?.schoolType || 'elementary', profile?.grade || 5)}
+          date={historyResult ? new Date(historyResult.timestamp).toLocaleDateString() : new Date().toLocaleDateString()}
           onKakaoShare={handleKakaoShare}
           onPngSave={handlePngSave}
           onToggleDetail={handleToggleDetail}
@@ -1298,7 +1328,6 @@ const styles = StyleSheet.create({
   },
 
   // ===== 요약 카드 스타일 =====
-  // ===== 요약 카드 스타일 =====
   summaryCardContainer: {
     marginBottom: Spacing.sm,
     overflow: 'hidden', // 캡처 시 깔끔하게
@@ -1313,182 +1342,156 @@ const styles = StyleSheet.create({
     minHeight: SCREEN_HEIGHT * 0.75, // 화면의 75% 정도 차지
     justifyContent: 'center', // 세로 중앙 정렬 유도
   },
-  // 상단 여백 (40px 정도)
-  topSpacer: {
-    height: 48,
+
+  // ========== 스타일 수정 ==========
+  // 1. Top Badge
+  topBadgeContainer: {
+    marginTop: 48, // 상단바 여백 확보
+    alignItems: 'center',
+    marginBottom: Spacing.md,
+    backgroundColor: 'rgba(0,0,0,0.2)', // 진한 반투명
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: BorderRadius.full,
   },
-  // 캐릭터 섹션
+  // trustBadgeInCard 삭제됨
+
+  // 2. Character Section
   characterSection: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: Spacing.lg,
-    marginTop: Spacing.md,
-  },
-  characterCircle: {
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    backgroundColor: 'rgba(255,255,255,0.25)', // 은은한 원형 배경
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...Shadow.sm,
+    marginBottom: Spacing.sm,
   },
 
-  // 인사말
-  greetingText: {
-    ...TextStyle.body,
-    color: 'rgba(255,255,255,0.95)',
-    fontWeight: '600',
-    marginBottom: Spacing.xs,
-    marginTop: Spacing.md,
+  // 3. Greeting Row
+  greetingRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    marginBottom: Spacing.sm,
+    justifyContent: 'center',
   },
-  // 유형 섹션
+  greetingMain: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#FFFFFF', // 흰색 강조
+  },
+  greetingSuffix: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginLeft: 4,
+    // color는 inline style로 tintColor 적용
+  },
+  greetingText: {
+    // 삭제됨
+  },
+
+  // 4. Type Section (Icon & Title)
   typeSection: {
     alignItems: 'center',
-    marginBottom: Spacing.lg,
+    marginBottom: 0,
   },
   iconCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    // backgroundColor: inline style tintColor + alpha
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: Spacing.xs,
+    marginBottom: 4,
   },
   typeIcon: {
-    fontSize: 24,
-  },
-  typeNameRow: {
-    // 삭제됨 (iconCircle로 대체)
-    flexDirection: 'row',
-    alignItems: 'center',
+    fontSize: 18,
   },
   typeName: {
-    fontSize: 28,
-    fontWeight: '800', // Fat font
-    color: Colors.text.inverse,
-    marginBottom: 4,
+    fontSize: 36,
+    fontWeight: '900',
+    color: '#FFFFFF', // 흰색 강조
+    marginBottom: 0,
     textShadowColor: 'rgba(0,0,0,0.1)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 4,
   },
+
+  // 5. Score
   scoreContainer: {
     flexDirection: 'row',
     alignItems: 'baseline',
+    marginBottom: Spacing.md,
   },
   scoreValue: {
-    fontSize: 48, // 점수 강조
+    fontSize: 64, // 매우 크게
     fontWeight: '900',
-    color: Colors.text.inverse,
+    color: '#FFFFFF', // 흰색 강조
+    lineHeight: 70,
   },
   scoreUnit: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: '600',
-    color: 'rgba(255,255,255,0.85)',
     marginLeft: 4,
+    // color: inline style tintColor
   },
 
-  // 키워드 섹션 (태그 스타일)
+  // 6. Keywords
   keywordsSection: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
     gap: 8,
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.sm,
   },
   keywordChip: {
-    backgroundColor: 'rgba(255,255,255,0.25)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
     borderRadius: BorderRadius.full,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.4)',
+    borderWidth: 0, // 테두리 제거
   },
-  keywordText: {
-    ...TextStyle.caption1,
-    color: Colors.text.inverse,
-    fontWeight: '700',
+  // keywordText Reuse
+
+  // 7. Date
+  dateText: {
+    ...TextStyle.caption2,
+    opacity: 0.8,
+    marginBottom: Spacing.md,
+    fontWeight: '500',
   },
 
-  // 공유 버튼 (동일 크기, 48px 높이)
+  // 8. Detail Toggle
+  detailToggleLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Spacing.xl,
+    padding: Spacing.sm,
+  },
+  detailToggleLinkText: {
+    fontSize: 15,
+    fontWeight: '600',
+    marginRight: 4,
+  },
+  // detailToggleLinkPressed reuse
+
+  spacer: {
+    flex: 1, // 버튼을 하단으로 밀어내기 위함 시도, 혹은 고정 여백
+    minHeight: 20,
+  },
+
+  // 9. Buttons
   shareButtonsRow: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 12, // 간격
+    gap: 16,
     marginBottom: Spacing.lg,
     width: '100%',
     paddingHorizontal: Spacing.xl,
   },
-  shareBtn: {
-    flex: 1, // 1:1 비율
-    maxWidth: 160, // 너무 넓어지지 않게
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 48,
-    borderRadius: 12, // 모바일 표준 둥글기
-    gap: 8,
-    ...Shadow.sm,
-  },
-  shareBtnIcon: {
-    fontSize: 18,
-  },
-  shareBtnPressed: {
-    opacity: 0.9,
-    transform: [{ scale: 0.98 }],
-  },
-  // 카카오 버튼 (노랑)
-  kakaoBtn: {
-    backgroundColor: '#FEE500',
-  },
-  kakaoBtnText: {
-    ...TextStyle.callout,
-    fontWeight: '700',
-    color: '#3C1E1E', // 카카오 가이드라인 준수
-  },
+  // imageBtn, kakaoBtn reuse...
 
-  // 이미지 저장 버튼 (투명+테두리)
-  imageBtn: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.6)',
-  },
-  imageBtnText: {
-    ...TextStyle.callout,
-    fontWeight: '700',
-    color: Colors.text.inverse,
-  },
-
-  // 신뢰 배지 (문구)
-  trustBadgeInCard: {
-    alignItems: 'center',
-    marginBottom: Spacing.md,
-    backgroundColor: 'rgba(0,0,0,0.1)', // 살짝 어둡게 해서 가독성 확보
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: BorderRadius.full,
-  },
-  trustBadgeText: {
+  // 10. URL Footer
+  urlFooter: {
     fontSize: 12,
-    color: 'rgba(255,255,255,0.9)',
+    color: 'rgba(255,255,255,0.8)',
     fontWeight: '500',
-  },
-
-  // 상세 분석 보기 (텍스트 링크)
-  detailToggleLink: {
-    marginTop: Spacing.xs,
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.lg,
-  },
-  detailToggleLinkPressed: {
-    opacity: 0.7,
-  },
-  detailToggleLinkText: {
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.9)',
-    fontWeight: '600',
-    textDecorationLine: 'underline', // 링크 느낌
+    marginBottom: Spacing.md,
   },
 
 
@@ -2045,5 +2048,65 @@ const styles = StyleSheet.create({
     ...TextStyle.caption1,
     color: Colors.text.secondary,
     lineHeight: 18,
+  },
+
+  // 11. Missing Styles Restored
+  characterCircle: {
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+    backgroundColor: 'rgba(255,255,255,0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Shadow.sm,
+  },
+  trustBadgeText: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.9)',
+    fontWeight: '500',
+  },
+  keywordText: {
+    ...TextStyle.caption1,
+    color: Colors.text.inverse,
+    fontWeight: '700',
+  },
+  detailToggleLinkPressed: {
+    opacity: 0.7,
+  },
+  shareBtn: {
+    flex: 1,
+    maxWidth: 160,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 48,
+    borderRadius: 12,
+    gap: 8,
+    ...Shadow.sm,
+  },
+  shareBtnIcon: {
+    fontSize: 18,
+  },
+  shareBtnPressed: {
+    opacity: 0.9,
+    transform: [{ scale: 0.98 }],
+  },
+  kakaoBtn: {
+    backgroundColor: '#FEE500',
+  },
+  kakaoBtnText: {
+    ...TextStyle.callout,
+    fontWeight: '700',
+    color: '#3C1E1E',
+  },
+  imageBtn: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.6)',
+  },
+  imageBtnText: {
+    ...TextStyle.callout,
+    fontWeight: '700',
+    color: Colors.text.inverse,
   },
 });
