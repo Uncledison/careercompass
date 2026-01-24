@@ -276,7 +276,7 @@ const SummaryCard = ({
                 height={160}
                 autoRotate={false}
                 cameraDistance="14m"
-                cameraTarget="0m 1.55m 0m"
+                cameraTarget="0m 2.2m 0m"
                 borderRadius={80}
                 backgroundColor="transparent"
               />
