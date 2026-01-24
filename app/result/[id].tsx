@@ -854,7 +854,9 @@ export default function ResultScreen() {
       document.head.appendChild(script);
 
       return () => {
-        document.head.removeChild(script);
+        if (document.head.contains(script)) {
+          document.head.removeChild(script);
+        }
       };
     }
   }, []);
@@ -862,13 +864,16 @@ export default function ResultScreen() {
   // 카카오톡 공유
   const handleKakaoShare = async () => {
     // 결과 페이지 URL 구성
+    // 배포 환경과 로컬 환경 대응
     const resultUrl = Platform.OS === 'web'
       ? window.location.href
       : `https://ai-careercompass.vercel.app/result/${id}`;
 
+    console.log('Sharing URL:', resultUrl);
+
     const shareText = `Career Compass 진로검사 결과\n\n나의 진로 유형: ${topInfo.icon} ${typeNames[topCareer.field]}\n적성 점수: ${topCareer.score}점\n\n#CareerCompass #진로탐색 #${typeNames[topCareer.field]}\n\n${resultUrl}`;
 
-    // 카카오톡 앱이 있는지 확인하고 공유
+    // 카카오톡 앱이 있는지 확인하고 공유 (Native App)
     if (Platform.OS !== 'web') {
       try {
         await Share.share({
@@ -878,34 +883,41 @@ export default function ResultScreen() {
         console.log('Share error:', error);
       }
     } else {
-      // 웹: Kakao SDK 사용
+      // 웹 (PC Web & Mobile Web): Kakao SDK 사용
       // @ts-ignore
       if (window.Kakao && window.Kakao.isInitialized()) {
         const characterBase = profile?.character?.replace('.gltf', '') || 'Female_1';
         const imageUrl = `${window.location.origin}/character-screenshots/${characterBase}.png`;
 
-        // @ts-ignore
-        window.Kakao.Share.sendDefault({
-          objectType: 'feed',
-          content: {
-            title: `${displayNickname}님의 진로 유형: ${typeNames[topCareer.field]}`,
-            description: `적성 점수: ${topCareer.score}점\n#CareerCompass #진로탐색`,
-            imageUrl: imageUrl,
-            link: {
-              mobileWebUrl: window.location.href,
-              webUrl: window.location.href,
-            },
-          },
-          buttons: [
-            {
-              title: '결과 자세히 보기',
+        try {
+          // @ts-ignore
+          window.Kakao.Share.sendDefault({
+            objectType: 'feed',
+            content: {
+              title: `${displayNickname}님의 진로 유형: ${typeNames[topCareer.field]}`,
+              description: `적성 점수: ${topCareer.score}점\n#CareerCompass #진로탐색`,
+              imageUrl: imageUrl,
               link: {
-                mobileWebUrl: window.location.href,
-                webUrl: window.location.href,
+                // 도메인이 카카오 디벨로퍼스에 등록되어 있어야 함
+                mobileWebUrl: resultUrl,
+                webUrl: resultUrl,
               },
             },
-          ],
-        });
+            buttons: [
+              {
+                title: '결과 자세히 보기',
+                link: {
+                  mobileWebUrl: resultUrl,
+                  webUrl: resultUrl,
+                },
+              },
+            ],
+            installTalk: true, // 카카오톡 미설치 시 마켓으로 이동
+          });
+        } catch (e) {
+          console.error('Kakao Share Error:', e);
+          alert('공유 도중 오류가 발생했습니다. 카카오 앱 키 설정을 확인해주세요.');
+        }
       } else {
         // 키가 없거나 SDK 로드 실패 시 클립보드 복사로 fallback
         try {
