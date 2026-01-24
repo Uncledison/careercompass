@@ -835,6 +835,34 @@ export default function ResultScreen() {
     }
   };
 
+  // 카카오 SDK 로드 및 초기화
+  useEffect(() => {
+    if (Platform.OS === 'web') {
+      const script = document.createElement('script');
+      script.src = 'https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js';
+      script.integrity = 'sha384-DKYJZ8NLiK8KRY0aLCVw6NC8kk5wu4geKdXzSc2n4t6Myb8q3p8oQf6mz1dZwEag';
+      script.crossOrigin = 'anonymous';
+      script.async = true;
+
+      script.onload = () => {
+        // @ts-ignore
+        if (window.Kakao && !window.Kakao.isInitialized()) {
+          // 여기에 사용자의 카카오 JavaScript 키를 입력해야 합니다.
+          // 예: window.Kakao.init('a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6');
+          // 현재는 키가 없으므로 주석 처리 또는 플레이스홀더 사용
+          // window.Kakao.init('YOUR_KAKAO_JAVASCRIPT_KEY');
+          console.log('Kakao SDK Loaded. Please initialize with valid key.');
+        }
+      };
+
+      document.head.appendChild(script);
+
+      return () => {
+        document.head.removeChild(script);
+      };
+    }
+  }, []);
+
   // 카카오톡 공유
   const handleKakaoShare = async () => {
     const shareText = `Career Compass 진로검사 결과\n\n나의 진로 유형: ${topInfo.icon} ${typeNames[topCareer.field]}\n적성 점수: ${topCareer.score}점\n\n#CareerCompass #진로탐색 #${typeNames[topCareer.field]}`;
@@ -849,12 +877,45 @@ export default function ResultScreen() {
         console.log('Share error:', error);
       }
     } else {
-      // 웹에서는 클립보드 복사
-      try {
-        await navigator.clipboard.writeText(shareText);
-        Alert.alert('복사 완료', '결과가 클립보드에 복사되었습니다.');
-      } catch {
-        Alert.alert('알림', '공유 기능은 앱에서 사용 가능합니다.');
+      // 웹: Kakao SDK 사용
+      // @ts-ignore
+      if (window.Kakao && window.Kakao.isInitialized()) {
+        const characterBase = profile?.character?.replace('.gltf', '') || 'Female_1';
+        const imageUrl = `${window.location.origin}/character-screenshots/${characterBase}.png`;
+
+        // @ts-ignore
+        window.Kakao.Share.sendDefault({
+          objectType: 'feed',
+          content: {
+            title: `${displayNickname}님의 진로 유형: ${typeNames[topCareer.field]}`,
+            description: `적성 점수: ${topCareer.score}점\n#CareerCompass #진로탐색`,
+            imageUrl: imageUrl,
+            link: {
+              mobileWebUrl: window.location.href,
+              webUrl: window.location.href,
+            },
+          },
+          buttons: [
+            {
+              title: '결과 자세히 보기',
+              link: {
+                mobileWebUrl: window.location.href,
+                webUrl: window.location.href,
+              },
+            },
+          ],
+        });
+      } else {
+        // 키가 없거나 SDK 로드 실패 시 클립보드 복사로 fallback
+        try {
+          await navigator.clipboard.writeText(shareText);
+          Alert.alert(
+            '링크 복사 완료',
+            '카카오톡 공유를 위해서는 앱 키 설정이 필요합니다.\n현재는 텍스트가 클립보드에 복사되었습니다.'
+          );
+        } catch {
+          Alert.alert('알림', '공유 기능은 앱에서 사용 가능합니다.');
+        }
       }
     }
   };
