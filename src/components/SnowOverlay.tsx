@@ -79,35 +79,54 @@ const Snowflake = ({ index, sensorData }: { index: number; sensorData: { x: numb
 export const SnowOverlay = () => {
     const [sensorData, setSensorData] = useState({ x: 0, y: 0, z: 0 });
     const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
+    const [webRawX, setWebRawX] = useState<number>(0);
 
     useEffect(() => {
-        let subscription: any;
-        const subscribe = async () => {
-            const available = await Accelerometer.isAvailableAsync();
-            setIsAvailable(available);
+        // Platform-specific sensor setup
+        if (Platform.OS === 'web') {
+            // Direct Web API fallback because expo-sensors might be flaky on some android webViews
+            const handleMotion = (event: any) => {
+                // Acceleration including gravity gives us what we want (tilt)
+                const acc = event.accelerationIncludingGravity;
+                if (acc) {
+                    // Normalize to approximately Gs (9.8 m/s^2 = 1G)
+                    const x = acc.x ? acc.x / 9.8 : 0;
 
-            if (available) {
-                if (Platform.OS !== 'web') {
-                    Accelerometer.setUpdateInterval(100);
+                    // Update raw debug value
+                    setWebRawX(x);
+
+                    // Directly drive the effect for web
+                    // ANDROID CHROME: Positive X is often tilt Left/Right. 
+                    // Let's pass it as-is first.
+                    setSensorData({ x: -x, y: 0, z: 0 }); // Invert if needed, let's try standard mapping
                 }
+            };
 
-                subscription = Accelerometer.addListener(data => {
-                    setSensorData(data);
-                });
-            } else {
-                if (Platform.OS === 'web') {
+            window.addEventListener('devicemotion', handleMotion);
+            setIsAvailable(true);
+
+            return () => {
+                window.removeEventListener('devicemotion', handleMotion);
+            };
+        } else {
+            // Native (iOS/Android App) logic remains same
+            let subscription: any;
+            const subscribe = async () => {
+                const available = await Accelerometer.isAvailableAsync();
+                setIsAvailable(available);
+
+                if (available) {
+                    Accelerometer.setUpdateInterval(100);
                     subscription = Accelerometer.addListener(data => {
                         setSensorData(data);
                     });
                 }
-            }
-        };
-
-        subscribe();
-
-        return () => {
-            subscription && subscription.remove();
-        };
+            };
+            subscribe();
+            return () => {
+                subscription && subscription.remove();
+            };
+        }
     }, []);
 
     const requestPermissions = async () => {
@@ -118,15 +137,15 @@ export const SnowOverlay = () => {
                     // @ts-ignore
                     const response = await DeviceMotionEvent.requestPermission();
                     if (response === 'granted') {
-                        alert('Sensor permission granted! Accelerometer should work now.');
+                        alert('Sensor permission granted!');
                     } else {
                         alert('Sensor permission denied');
                     }
                 } catch (e: any) {
-                    alert('Error calling requestPermission: ' + e.message);
+                    alert(e.message);
                 }
             } else {
-                alert('DeviceMotionEvent.requestPermission is not a function. Check browser settings or https.');
+                alert('Standard Web API active (Android/PC). Check "Web Raw X" value.');
             }
         } else {
             const { status } = await Accelerometer.requestPermissionsAsync();
@@ -136,13 +155,6 @@ export const SnowOverlay = () => {
 
     return (
         <View style={styles.container} pointerEvents="box-none">
-            {/* Pointer events 'box-none' allows clicking through to underlying views, 
-                BUT we need to capture clicks for our debug button. 
-                So the container should technically let clicks pass through (none) 
-                but the debug button needs to catch them. 
-                'box-none' means "I don't catch clicks, but my children do". 
-            */}
-
             <View pointerEvents="none" style={StyleSheet.absoluteFill}>
                 {Array.from({ length: SNOWFLAKE_COUNT }).map((_, index) => (
                     <Snowflake key={index} index={index} sensorData={sensorData} />
@@ -154,8 +166,11 @@ export const SnowOverlay = () => {
                 <Text style={{ color: 'white', fontSize: 14, marginBottom: 4 }}>
                     Avail: {isAvailable === null ? 'Checking...' : isAvailable.toString()}
                 </Text>
-                <Text style={{ color: 'white', fontSize: 14, marginBottom: 10 }}>
-                    Sensor X: {sensorData.x.toFixed(2)}
+                <Text style={{ color: 'white', fontSize: 14, marginBottom: 4 }}>
+                    Native X: {sensorData.x.toFixed(2)}
+                </Text>
+                <Text style={{ color: 'orange', fontSize: 14, marginBottom: 10 }}>
+                    Web Raw X: {webRawX.toFixed(2)}
                 </Text>
 
                 <Pressable onPress={requestPermissions} style={{ backgroundColor: '#007AFF', padding: 8, borderRadius: 4 }}>
