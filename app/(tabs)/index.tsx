@@ -191,54 +191,73 @@ export default function HomeScreen() {
   const [isInteractionLocked, setInteractionLocked] = useState(false);
   const animationMode = useRef<'idle' | 'active'>('idle');
   const sheepRef = useRef<LottieView>(null);
+  const animationTimer = useRef<any>(null);
 
   // Helper to start animations
-  const playAnimation = (mode: 'idle' | 'active') => {
+  const playAnimation = useCallback((mode: 'idle' | 'active') => {
     animationMode.current = mode;
-    console.log(`[Sheep] Playing mode: ${mode}`);
+    // console.log(`[Sheep] Playing mode: ${mode}`);
+
+    // Clear any existing timer
+    if (animationTimer.current) {
+      clearTimeout(animationTimer.current);
+      animationTimer.current = null;
+    }
+
     if (mode === 'idle') {
       try {
-        sheepRef.current?.play(30, 90); // Idle loop
+        sheepRef.current?.play(30, 90); // Idle loop 1s-3s (60 frames @ 30fps = 2s duration)
+
+        // Fallback loop if onAnimationFinish doesn't fire
+        animationTimer.current = setTimeout(() => {
+          if (animationMode.current === 'idle') {
+            playAnimation('idle');
+          }
+        }, 2000); // 2 seconds + buffer? Actually play(30,90) is exactly 2s. 
+        // If we loop manually via timeout, we don't need onAnimationFinish for idle.
       } catch (err) {
         console.error('[Sheep] Error playing idle:', err);
       }
     } else {
+      // Active
       try {
-        sheepRef.current?.play(150, 240); // Interaction
+        sheepRef.current?.play(150, 240); // Interaction 5s-8s (90 frames @ 30fps = 3s duration)
+
+        // Force unlock after duration
+        animationTimer.current = setTimeout(() => {
+          handleInteractionFinish();
+        }, 3000);
       } catch (err) {
         console.error('[Sheep] Error playing active:', err);
+        handleInteractionFinish();
       }
     }
+  }, []);
+
+  const handleInteractionFinish = () => {
+    // console.log('[Sheep] Interaction finished. Resetting to Idle.');
+    setInteractionLocked(false);
+    playAnimation('idle');
   };
 
   // Initial Start
   useEffect(() => {
-    console.log('[Sheep] Component Mounted. Starting Idle.');
-    // Small timeout to ensure ref is ready
     const timer = setTimeout(() => {
       playAnimation('idle');
-    }, 100);
-    return () => clearTimeout(timer);
+    }, 500); // Increased delay for Web readiness
+    return () => {
+      clearTimeout(timer);
+      if (animationTimer.current) clearTimeout(animationTimer.current);
+    };
   }, []);
 
-  const handleAnimationFinish = useCallback((isCancelled: boolean) => {
-    console.log(`[Sheep] Animation Finished. Mode: ${animationMode.current}, Cancelled: ${isCancelled}`);
-    if (isCancelled) return;
-
-    if (animationMode.current === 'active') {
-      // Interaction finished -> Go back to Idle
-      console.log('[Sheep] Interaction done. Switching to Idle.');
-      setInteractionLocked(false);
-      playAnimation('idle');
-    } else {
-      // Idle finished -> Loop Idle
-      // console.log('[Sheep] Idle finished. Looping.');
-      playAnimation('idle');
-    }
-  }, []);
+  // We rely on Timeouts now, so onAnimationFinish is optional or backup
+  // But strictly, let's ignore onAnimationFinish to avoid double-triggers with our timeouts
+  // OR use it to clear timeout? 
+  // Let's use Timeouts purely for reliability on Web.
 
   const handleSheepPress = useCallback(async () => {
-    console.log(`[Sheep] Pressed. Locked: ${isInteractionLocked}`);
+    // console.log(`[Sheep] Pressed. Locked: ${isInteractionLocked}`);
     if (isInteractionLocked) return;
 
     setInteractionLocked(true);
@@ -247,25 +266,22 @@ export default function HomeScreen() {
     // Play sound after 0.5 seconds
     setTimeout(async () => {
       try {
-        console.log('[Sheep] Loading Sound...');
         const { sound } = await Audio.Sound.createAsync(
           require('../../assets/sounds/Sheep.mp3')
         );
-        console.log('[Sheep] Playing Sound.');
 
         sound.setOnPlaybackStatusUpdate(async (status) => {
           if (status.isLoaded && status.didJustFinish) {
-            console.log('[Sheep] Sound Finished. Unloading.');
             await sound.unloadAsync();
           }
         });
 
         await sound.playAsync();
       } catch (error) {
-        console.error('[Sheep] Sound Error:', error);
+        // Ignore sound errors
       }
     }, 500);
-  }, [isInteractionLocked]);
+  }, [isInteractionLocked, playAnimation]);
   const [isSnowing, setIsSnowing] = useState(false);
 
   // 저장된 진행 상태 확인 (화면 포커스 시마다)
@@ -536,9 +552,8 @@ export default function HomeScreen() {
               ref={sheepRef}
               source={require('../../assets/lottie/Sheep.json')}
               style={styles.sheepLottie}
-              loop={false} // Manual looping via onAnimationFinish
+              loop={false}
               autoPlay={false}
-              onAnimationFinish={handleAnimationFinish}
             />
           </Pressable>
         </View>
