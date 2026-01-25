@@ -110,15 +110,7 @@ export default function WelcomeScreen() {
               </LinearGradient>
             </Pressable>
 
-            <Pressable
-              style={({ pressed }) => [
-                styles.secondaryButton,
-                pressed && styles.secondaryButtonPressed,
-              ]}
-              onPress={() => router.push('/(tabs)')}
-            >
-              <Text style={styles.secondaryButtonText}>이미 계정이 있어요</Text>
-            </Pressable>
+
           </View>
         </View>
 

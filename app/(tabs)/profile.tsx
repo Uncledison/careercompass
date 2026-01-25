@@ -18,6 +18,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import * as Linking from 'expo-linking';
 import LottieView from 'lottie-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors, Spacing, BorderRadius, Shadow, TextStyle } from '../../src/constants';
@@ -352,9 +353,17 @@ export default function ProfileScreen() {
             />
             <MenuItem
               icon="ℹ️"
-              label="앱 버전"
-              value="1.0.0"
-              onPress={() => { }}
+              label="앱 정보"
+              value="v1.0.0"
+              onPress={() => Alert.alert('Career Compass', '버전 1.0.0\nbuild 2026.01.01')}
+              colors={colors}
+            />
+
+            <MenuItem
+              icon="🌐"
+              label="웹사이트 방문"
+              value=""
+              onPress={() => Linking.openURL('https://ai.uncledison.com')}
               colors={colors}
             />
             <MenuItem
