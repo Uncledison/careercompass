@@ -188,45 +188,84 @@ export default function HomeScreen() {
   const { loadSavedProgress, resumeAssessment, clearSavedProgress, resetAssessment } = useAssessmentStore();
   const { profile, loadProfile } = useProfileStore();
   // Sheep Animation State
-  const [isSheepPlaying, setIsSheepPlaying] = useState(false);
+  const [isInteractionLocked, setInteractionLocked] = useState(false);
+  const animationMode = useRef<'idle' | 'active'>('idle');
   const sheepRef = useRef<LottieView>(null);
 
-  // Handle Animation State Changes
-  useEffect(() => {
-    if (isSheepPlaying) {
-      // Interaction: 5s - 8s (150 - 240 frames)
-      sheepRef.current?.play(150, 240);
+  // Helper to start animations
+  const playAnimation = (mode: 'idle' | 'active') => {
+    animationMode.current = mode;
+    console.log(`[Sheep] Playing mode: ${mode}`);
+    if (mode === 'idle') {
+      try {
+        sheepRef.current?.play(30, 90); // Idle loop
+      } catch (err) {
+        console.error('[Sheep] Error playing idle:', err);
+      }
     } else {
-      // Idle: 1s - 3s (30 - 90 frames)
-      sheepRef.current?.play(30, 90);
+      try {
+        sheepRef.current?.play(150, 240); // Interaction
+      } catch (err) {
+        console.error('[Sheep] Error playing active:', err);
+      }
     }
-  }, [isSheepPlaying]);
+  };
+
+  // Initial Start
+  useEffect(() => {
+    console.log('[Sheep] Component Mounted. Starting Idle.');
+    // Small timeout to ensure ref is ready
+    const timer = setTimeout(() => {
+      playAnimation('idle');
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleAnimationFinish = useCallback((isCancelled: boolean) => {
+    console.log(`[Sheep] Animation Finished. Mode: ${animationMode.current}, Cancelled: ${isCancelled}`);
+    if (isCancelled) return;
+
+    if (animationMode.current === 'active') {
+      // Interaction finished -> Go back to Idle
+      console.log('[Sheep] Interaction done. Switching to Idle.');
+      setInteractionLocked(false);
+      playAnimation('idle');
+    } else {
+      // Idle finished -> Loop Idle
+      // console.log('[Sheep] Idle finished. Looping.');
+      playAnimation('idle');
+    }
+  }, []);
 
   const handleSheepPress = useCallback(async () => {
-    if (isSheepPlaying) return;
+    console.log(`[Sheep] Pressed. Locked: ${isInteractionLocked}`);
+    if (isInteractionLocked) return;
 
-    setIsSheepPlaying(true);
+    setInteractionLocked(true);
+    playAnimation('active');
 
     // Play sound after 0.5 seconds
     setTimeout(async () => {
       try {
+        console.log('[Sheep] Loading Sound...');
         const { sound } = await Audio.Sound.createAsync(
           require('../../assets/sounds/Sheep.mp3')
         );
+        console.log('[Sheep] Playing Sound.');
 
-        // Auto unload after finish
         sound.setOnPlaybackStatusUpdate(async (status) => {
           if (status.isLoaded && status.didJustFinish) {
+            console.log('[Sheep] Sound Finished. Unloading.');
             await sound.unloadAsync();
           }
         });
 
         await sound.playAsync();
       } catch (error) {
-        // Ignore sound errors
+        console.error('[Sheep] Sound Error:', error);
       }
     }, 500);
-  }, [isSheepPlaying]);
+  }, [isInteractionLocked]);
   const [isSnowing, setIsSnowing] = useState(false);
 
   // 저장된 진행 상태 확인 (화면 포커스 시마다)
@@ -491,20 +530,15 @@ export default function HomeScreen() {
           <Pressable
             onPress={handleSheepPress}
             style={styles.sheepContainer}
-            disabled={isSheepPlaying} // Disable interaction while playing causes the "ignoring taps" behavior, but we also check inside handler.
+            disabled={isInteractionLocked}
           >
             <LottieView
               ref={sheepRef}
               source={require('../../assets/lottie/Sheep.json')}
               style={styles.sheepLottie}
-              loop={false} // We handle looping manually via useEffect for Idle state
+              loop={false} // Manual looping via onAnimationFinish
               autoPlay={false}
-              onAnimationFinish={() => {
-                // If interaction finished, go back to idle
-                if (isSheepPlaying) {
-                  setIsSheepPlaying(false);
-                }
-              }}
+              onAnimationFinish={handleAnimationFinish}
             />
           </Pressable>
         </View>
