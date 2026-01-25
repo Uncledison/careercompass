@@ -19,6 +19,7 @@ import { Colors, Spacing, BorderRadius, Shadow, TextStyle } from '../../src/cons
 import { useAssessmentStore, SavedAssessmentState } from '../../src/stores/assessmentStore';
 import { useProfileStore } from '../../src/stores/profileStore';
 import { ModelViewer3D } from '../../src/components/character/ModelViewer3D';
+import { SnowOverlay } from '../../src/components/SnowOverlay';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_WIDTH = SCREEN_WIDTH - Spacing.lg * 2;
@@ -184,6 +185,7 @@ export default function HomeScreen() {
   const [savedProgress, setSavedProgress] = useState<SavedAssessmentState | null>(null);
   const { loadSavedProgress, resumeAssessment, clearSavedProgress, resetAssessment } = useAssessmentStore();
   const { profile, loadProfile } = useProfileStore();
+  const [isSnowing, setIsSnowing] = useState(false);
 
   // 저장된 진행 상태 확인 (화면 포커스 시마다)
   useFocusEffect(
@@ -345,6 +347,30 @@ export default function HomeScreen() {
               {/* <View style={styles.mainCharacterContainer}>
                 캐릭터 삭제됨
               </View> */}
+
+
+              {/* Snow Cloud Trigger */}
+              <Pressable
+                onPress={(e) => {
+                  e.stopPropagation();
+                  setIsSnowing(prev => !prev);
+                }}
+                style={{
+                  position: 'absolute',
+                  top: 20,
+                  right: 20,
+                  width: 80,
+                  height: 60,
+                  zIndex: 50,
+                }}
+              >
+                <LottieView
+                  source={require('../../assets/lottie/cloud-snow.json')}
+                  autoPlay
+                  loop
+                  style={{ width: '100%', height: '100%' }}
+                />
+              </Pressable>
             </View>
             <View style={styles.mainCardBadge}>
               <Text style={styles.mainCardBadgeText}>약 15분 소요</Text>
@@ -465,6 +491,7 @@ export default function HomeScreen() {
           </View>
         </Pressable>
       </ScrollView>
+      {isSnowing && <SnowOverlay />}
     </SafeAreaView>
   );
 }

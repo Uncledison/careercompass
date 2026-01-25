@@ -45,7 +45,6 @@ import * as Linking from 'expo-linking';
 import { captureRef } from 'react-native-view-shot';
 import { Audio } from 'expo-av';
 import LottieView from 'lottie-react-native';
-import { SnowOverlay } from '../../src/components/SnowOverlay';
 
 // 학년별 문항 수
 const QUESTION_COUNTS: Record<string, number> = {
@@ -193,14 +192,13 @@ const SummaryCard = ({
   nickname,
   character,
   level,
-  gradeLabel, // New Prop
-  date,       // New Prop
+  gradeLabel,
+  date,
   onKakaoShare,
   onPngSave,
   onToggleDetail,
   isDetailOpen,
   captureRef,
-  onToggleSnow,
 }: {
   topField: CareerField;
   score: number;
@@ -213,7 +211,6 @@ const SummaryCard = ({
   onPngSave: () => void;
   onToggleDetail: () => void;
   isDetailOpen: boolean;
-  onToggleSnow: () => void;
   captureRef?: React.RefObject<View | null>;
 }) => {
   const info = careerFieldInfo[topField];
@@ -261,26 +258,6 @@ const SummaryCard = ({
               />
             </View>
           )}
-
-          {/* Snow Cloud Trigger */}
-          <Pressable
-            onPress={onToggleSnow}
-            style={{
-              position: 'absolute',
-              top: 20,
-              right: 20,
-              width: 80,
-              height: 60,
-              zIndex: 50,
-            }}
-          >
-            <LottieView
-              source={require('../../assets/lottie/cloud-snow.json')}
-              autoPlay
-              loop
-              style={{ width: '100%', height: '100%' }}
-            />
-          </Pressable>
 
           {/* 1. Top Badge */}
           <View style={[styles.topBadgeContainer, { marginBottom: 40 }]}>
@@ -792,7 +769,6 @@ import { scheduleRetestReminder } from '../../src/utils/notifications';
 
 export default function ResultScreen() {
   // ... (hooks)
-  const [isSnowing, setIsSnowing] = useState(false);
 
   // ... (existing useEffects)
 
@@ -1218,7 +1194,6 @@ export default function ResultScreen() {
           onPngSave={handlePngSave}
           onToggleDetail={handleToggleDetail}
           isDetailOpen={isDetailOpen}
-          onToggleSnow={() => setIsSnowing(prev => !prev)}
           captureRef={captureViewRef}
         />
 
@@ -1337,9 +1312,6 @@ export default function ResultScreen() {
           </View>
         </View>
       </ScrollView>
-
-      {/* Snow Overlay - Rendered over everything when active */}
-      {isSnowing && <SnowOverlay />}
     </SafeAreaView>
   );
 }
