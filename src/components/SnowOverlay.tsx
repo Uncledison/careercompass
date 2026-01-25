@@ -7,20 +7,20 @@ import Animated, {
     withTiming,
     Easing,
     withDelay,
-    cancelAnimation,
 } from 'react-native-reanimated';
-import { Gyroscope } from 'expo-sensors';
+import { Accelerometer } from 'expo-sensors';
 
 const { width, height } = Dimensions.get('window');
 const SNOWFLAKE_COUNT = 70;
 
-const Snowflake = ({ index, gyroscopeData }: { index: number; gyroscopeData: { x: number; y: number; z: number } }) => {
+const Snowflake = ({ index, sensorData }: { index: number; sensorData: { x: number; y: number; z: number } }) => {
     const startX = Math.random() * width;
-    const startY = -50 - Math.random() * 500; // Start comfortably above screen
+    const startY = -50 - Math.random() * 500;
     const duration = 3000 + Math.random() * 5000;
     const size = 3 + Math.random() * 5;
     const opacity = 0.5 + Math.random() * 0.5;
 
+    // Use shared values for high performance loop
     const translateY = useSharedValue(startY);
     const translateX = useSharedValue(startX);
 
@@ -34,6 +34,7 @@ const Snowflake = ({ index, gyroscopeData }: { index: number; gyroscopeData: { x
     });
 
     useEffect(() => {
+        // Continuous falling animation
         translateY.value = withDelay(
             Math.random() * 2000,
             withRepeat(
@@ -41,38 +42,42 @@ const Snowflake = ({ index, gyroscopeData }: { index: number; gyroscopeData: { x
                     duration: duration,
                     easing: Easing.linear,
                 }),
-                -1, // Infinite repeat
-                false // Do not reverse
+                -1,
+                false
             )
         );
     }, []);
 
-    // Effect to handle gyroscope drift
+    // Effect to handle drift (Wind/Gravity)
     useEffect(() => {
-        // Basic drift logic: adjust X based on gyroscope Y (tilt left/right usually affects X in portrait)
-        // Adjust this mapping based on device orientation behavior
-        if (gyroscopeData) {
-            // Sensitivity factor
-            const sensitive = 5;
-            // If we tilt phone, gyroscopeData.y (or x depending on axis) changes.
-            // Let's assume straight accumulation for a "wind" effect
-            translateX.value = withTiming(translateX.value + gyroscopeData.y * sensitive, { duration: 100 });
+        if (!sensorData) return;
 
-            // Wrap around screen width
-            if (translateX.value > width + 20) {
-                translateX.value = -20;
-            } else if (translateX.value < -20) {
-                translateX.value = width + 20;
-            }
+        // Accelerometer X:
+        // 0 = Flat
+        // >0 = Tilted Right (in some frames, but let's test. Usually tilting phone left/down makes X change).
+        // On Android/iOS:
+        // Holding portrait upright: X ~ 0.
+        // Tilting Left (top goes left): X becomes positive (gravity vector projection).
+        // We want snow to fall LEFT when tilted LEFT.
+        // So we SUBTRACT X from Position? or ADD?
+        // Let's assume drift proportional to X.
+
+        // Accumulate drift:
+        const drift = sensorData.x * 20; // 20px per update (~100ms)
+
+        // We update translateX slightly.
+        translateX.value = withTiming(translateX.value - drift, { duration: 100 });
+
+        // Wrap around logic handled by visual clipping usually, but we can reset if way off screen
+        if (translateX.value > width + 50) {
+            translateX.value = -50;
+        } else if (translateX.value < -50) {
+            translateX.value = width + 50;
         }
-    }, [gyroscopeData]);
+
+    }, [sensorData]);
 
     const style = useAnimatedStyle(() => {
-        // Continuous downward movement is handled by the initial loop.
-        // We add the dynamic drift here if we wanted to simpler stateless approach, 
-        // but mixing state-driven updates with reanimated loops can be tricky.
-        // Instead, let's just let the 'translateX' be driven by the sensor updates above
-        // and 'translateY' be the constant fall.
         return {
             position: 'absolute',
             top: 0,
@@ -90,20 +95,19 @@ const Snowflake = ({ index, gyroscopeData }: { index: number; gyroscopeData: { x
 };
 
 export const SnowOverlay = () => {
-    const [gyroscopeData, setGyroscopeData] = useState({ x: 0, y: 0, z: 0 });
+    const [sensorData, setSensorData] = useState({ x: 0, y: 0, z: 0 });
 
     useEffect(() => {
-        // Gyroscope not supported on web
+        // Accelerometer not supported on web in the same way, disable for now
         if (Platform.OS === 'web') return;
 
-        // Subscribe to gyroscope
         let subscription: any;
         const subscribe = async () => {
-            const isAvailable = await Gyroscope.isAvailableAsync();
+            const isAvailable = await Accelerometer.isAvailableAsync();
             if (isAvailable) {
-                Gyroscope.setUpdateInterval(100);
-                subscription = Gyroscope.addListener(data => {
-                    setGyroscopeData(data);
+                Accelerometer.setUpdateInterval(100);
+                subscription = Accelerometer.addListener(data => {
+                    setSensorData(data);
                 });
             }
         };
@@ -118,7 +122,7 @@ export const SnowOverlay = () => {
     return (
         <View style={styles.container} pointerEvents="none">
             {Array.from({ length: SNOWFLAKE_COUNT }).map((_, index) => (
-                <Snowflake key={index} index={index} gyroscopeData={gyroscopeData} />
+                <Snowflake key={index} index={index} sensorData={sensorData} />
             ))}
         </View>
     );
@@ -127,7 +131,7 @@ export const SnowOverlay = () => {
 const styles = StyleSheet.create({
     container: {
         ...StyleSheet.absoluteFillObject,
-        zIndex: 9999, // Ensure it sits on top
+        zIndex: 9999,
         elevation: 9999,
     },
 });
