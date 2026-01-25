@@ -99,18 +99,29 @@ export const SnowOverlay = () => {
     const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
 
     useEffect(() => {
-        // Accelerometer not supported on web in the same way, disable for now
-        if (Platform.OS === 'web') return;
-
         let subscription: any;
         const subscribe = async () => {
+            // On Web, isAvailableAsync might return false on some desktop browsers or strictly require HTTPS
             const available = await Accelerometer.isAvailableAsync();
             setIsAvailable(available);
+
             if (available) {
-                Accelerometer.setUpdateInterval(100);
+                // setUpdateInterval is not supported on web and throws an error
+                if (Platform.OS !== 'web') {
+                    Accelerometer.setUpdateInterval(100);
+                }
+
                 subscription = Accelerometer.addListener(data => {
                     setSensorData(data);
                 });
+            } else {
+                // Fallback for web if isAvailableAsync returns false initially (sometimes happens)
+                // We'll trust the listener might still fire if supported
+                if (Platform.OS === 'web') {
+                    subscription = Accelerometer.addListener(data => {
+                        setSensorData(data);
+                    });
+                }
             }
         };
 
