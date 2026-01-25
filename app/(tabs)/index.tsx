@@ -197,7 +197,7 @@ export default function HomeScreen() {
     setIsSheepPlaying(true);
     sheepRef.current?.play();
 
-    // Play sound after 1 second
+    // Play sound after 5 seconds
     setTimeout(async () => {
       try {
         const { sound } = await Audio.Sound.createAsync(
@@ -215,7 +215,7 @@ export default function HomeScreen() {
       } catch (error) {
         console.log('Error playing sheep sound:', error);
       }
-    }, 1000);
+    }, 5000);
   }, [isSheepPlaying]);
   const [isSnowing, setIsSnowing] = useState(false);
 
@@ -483,10 +483,6 @@ export default function HomeScreen() {
             style={styles.sheepContainer}
             disabled={isSheepPlaying} // Disable interaction while playing causes the "ignoring taps" behavior, but we also check inside handler.
           >
-            {/* Arrow pointing to sheep (Visual cue from image) */}
-            <View style={styles.arrowPointer}>
-              <Text style={{ fontSize: 24 }}>➡</Text>
-            </View>
             <LottieView
               ref={sheepRef}
               source={require('../../assets/lottie/Sheep.json')}
@@ -713,7 +709,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing.xl,
-    marginTop: Spacing.lg,
+    marginTop: Spacing.sm, // Reduced from lg to sm (approx half)
   },
   sheepContainer: {
     flexDirection: 'row',
