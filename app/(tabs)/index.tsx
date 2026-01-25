@@ -191,54 +191,41 @@ export default function HomeScreen() {
   const [isSheepPlaying, setIsSheepPlaying] = useState(false);
   const sheepRef = useRef<LottieView>(null);
 
-  // Initialize Idle Loop (1s - 3s => 30 - 90 frames @ 30fps)
+  // Handle Animation State Changes
   useEffect(() => {
-    console.log('Sheep: Effect triggered. isSheepPlaying:', isSheepPlaying, 'Ref:', !!sheepRef.current);
-    if (!isSheepPlaying) {
-      try {
-        sheepRef.current?.play(30, 90);
-      } catch (e) {
-        console.error('Sheep: Error playing idle animation:', e);
-      }
+    if (isSheepPlaying) {
+      // Interaction: 5s - 8s (150 - 240 frames)
+      sheepRef.current?.play(150, 240);
+    } else {
+      // Idle: 1s - 3s (30 - 90 frames)
+      sheepRef.current?.play(30, 90);
     }
   }, [isSheepPlaying]);
 
   const handleSheepPress = useCallback(async () => {
-    console.log('Sheep: Pressed! isSheepPlaying:', isSheepPlaying);
     if (isSheepPlaying) return;
 
     setIsSheepPlaying(true);
-    // Play Interaction (5s - 8s => 150 - 240 frames @ 30fps)
-    try {
-      sheepRef.current?.play(150, 240);
-      console.log('Sheep: Playing interaction frames 150-240');
-    } catch (e) {
-      console.error('Sheep: Error playing interaction:', e);
-    }
 
-    // Play sound after 20 seconds
-    console.log('Sheep: Scheduling sound for 20s later');
+    // Play sound after 0.5 seconds
     setTimeout(async () => {
       try {
-        console.log('Sheep: Loading sound...');
         const { sound } = await Audio.Sound.createAsync(
           require('../../assets/sounds/Sheep.mp3')
         );
-        console.log('Sheep: Sound loaded. Playing...');
 
         // Auto unload after finish
         sound.setOnPlaybackStatusUpdate(async (status) => {
           if (status.isLoaded && status.didJustFinish) {
-            console.log('Sheep: Sound finished. Unloading.');
             await sound.unloadAsync();
           }
         });
 
         await sound.playAsync();
       } catch (error) {
-        console.error('Error playing sheep sound:', error);
+        // Ignore sound errors
       }
-    }, 20000);
+    }, 500);
   }, [isSheepPlaying]);
   const [isSnowing, setIsSnowing] = useState(false);
 
