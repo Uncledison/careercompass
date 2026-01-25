@@ -51,6 +51,46 @@ export const InfiniteMarquee = ({
         }
     }, [contentWidth, speed]);
 
+    const resumeAnimation = () => {
+        // Resetting animation is tricky because `translateX` might be arbitrary.
+        // A common trick: Reset translateX to `translateX % contentWidth` (instant), then animate to `-contentWidth`.
+        // But need to be careful of sign.
+
+        // Let's defer to a simpler logic: 
+        // Just force a re-render or similar? No.
+
+        // Logic:
+        // 1. Normalize current X to range [0, -contentWidth]
+        // 2. Set translateX.value to that.
+        // 3. Start timing to -contentWidth.
+        // 4. Then loop 0 -> -contentWidth.
+
+        let current = translateX.value % contentWidth;
+        if (current > 0) current -= contentWidth; // Should be negative
+
+        translateX.value = current;
+
+        const distRemaining = -contentWidth - current; // negative number
+        const duration = (Math.abs(distRemaining) / speed) * 1000;
+
+        translateX.value = withTiming(-contentWidth, {
+            duration: duration,
+            easing: Easing.linear
+        }, (finished) => {
+            if (finished) {
+                translateX.value = 0;
+                translateX.value = withRepeat(
+                    withTiming(-contentWidth, {
+                        duration: (contentWidth / speed) * 1000,
+                        easing: Easing.linear
+                    }),
+                    -1,
+                    false
+                );
+            }
+        });
+    };
+
     const panGesture = Gesture.Pan()
         .onBegin(() => {
             isInteracting.value = true;
@@ -97,46 +137,6 @@ export const InfiniteMarquee = ({
             // On release, we need to restart the loop.
             runOnJS(resumeAnimation)();
         });
-
-    const resumeAnimation = () => {
-        // Resetting animation is tricky because `translateX` might be arbitrary.
-        // A common trick: Reset translateX to `translateX % contentWidth` (instant), then animate to `-contentWidth`.
-        // But need to be careful of sign.
-
-        // Let's defer to a simpler logic: 
-        // Just force a re-render or similar? No.
-
-        // Logic:
-        // 1. Normalize current X to range [0, -contentWidth]
-        // 2. Set translateX.value to that.
-        // 3. Start timing to -contentWidth.
-        // 4. Then loop 0 -> -contentWidth.
-
-        let current = translateX.value % contentWidth;
-        if (current > 0) current -= contentWidth; // Should be negative
-
-        translateX.value = current;
-
-        const distRemaining = -contentWidth - current; // negative number
-        const duration = (Math.abs(distRemaining) / speed) * 1000;
-
-        translateX.value = withTiming(-contentWidth, {
-            duration: duration,
-            easing: Easing.linear
-        }, (finished) => {
-            if (finished) {
-                translateX.value = 0;
-                translateX.value = withRepeat(
-                    withTiming(-contentWidth, {
-                        duration: (contentWidth / speed) * 1000,
-                        easing: Easing.linear
-                    }),
-                    -1,
-                    false
-                );
-            }
-        });
-    };
 
     const animatedStyle = useAnimatedStyle(() => {
         // We render two copies. 
