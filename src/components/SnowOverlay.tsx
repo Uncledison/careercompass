@@ -7,13 +7,16 @@ import Animated, {
     withTiming,
     Easing,
     withDelay,
+    useAnimatedReaction,
+    runOnJS,
 } from 'react-native-reanimated';
 import { Accelerometer } from 'expo-sensors';
 
 const { width, height } = Dimensions.get('window');
 const SNOWFLAKE_COUNT = 70;
 
-const Snowflake = ({ index, sensorData }: { index: number; sensorData: { x: number; y: number; z: number } }) => {
+// SharedValue passed as prop does not trigger re-render
+const Snowflake = React.memo(({ index, wind }: { index: number; wind: Animated.SharedValue<number> }) => {
     const startX = Math.random() * width;
     const startY = -50 - Math.random() * 500;
     const duration = 3000 + Math.random() * 5000;
@@ -46,18 +49,28 @@ const Snowflake = ({ index, sensorData }: { index: number; sensorData: { x: numb
         );
     }, []);
 
-    useEffect(() => {
-        if (!sensorData) return;
-        const drift = sensorData.x * 50;
-        translateX.value = withTiming(translateX.value - drift, { duration: 100 });
+    // Respond to wind changes on UI thread without React logic
+    useAnimatedReaction(
+        () => wind.value,
+        (currentWind) => {
+            if (currentWind !== 0) {
+                // Apply wind force
+                // We use a small factor because this runs every frame/update
+                // Actually, useAnimatedReaction runs when wind.value changes. 
+                // Since wind.value changes continuously from sensor, this is good.
 
-        if (translateX.value > width + 50) {
-            translateX.value = -50;
-        } else if (translateX.value < -50) {
-            translateX.value = width + 50;
+                const drift = currentWind * 5;
+                translateX.value = withTiming(translateX.value - drift, { duration: 100 });
+
+                // Wrap around
+                if (translateX.value > width + 50) {
+                    translateX.value = -50;
+                } else if (translateX.value < -50) {
+                    translateX.value = width + 50;
+                }
+            }
         }
-
-    }, [sensorData]);
+    );
 
     const style = useAnimatedStyle(() => {
         return {
@@ -74,58 +87,44 @@ const Snowflake = ({ index, sensorData }: { index: number; sensorData: { x: numb
     });
 
     return <Animated.View style={style} />;
-};
+});
 
 export const SnowOverlay = () => {
-    const [sensorData, setSensorData] = useState({ x: 0, y: 0, z: 0 });
-    const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
-    const [webRawX, setWebRawX] = useState<number>(0);
+    // We keep state only for Debug View (optional)
+    const [debugX, setDebugX] = useState(0);
+
+    // Core animation driver - bypasses React State for children
+    const wind = useSharedValue(0);
 
     useEffect(() => {
-        // Platform-specific sensor setup
         if (Platform.OS === 'web') {
-            // Direct Web API fallback because expo-sensors might be flaky on some android webViews
             const handleMotion = (event: any) => {
-                // Acceleration including gravity gives us what we want (tilt)
                 const acc = event.accelerationIncludingGravity;
                 if (acc) {
-                    // Normalize to approximately Gs (9.8 m/s^2 = 1G)
                     const x = acc.x ? acc.x / 9.8 : 0;
+                    // Update SharedValue (UI Thread accessible)
+                    wind.value = x * 2; // Multiplier
 
-                    // Update raw debug value
-                    setWebRawX(x);
-
-                    // Directly drive the effect for web
-                    // ANDROID CHROME: Positive X is often tilt Left/Right. 
-                    // Let's pass it as-is first.
-                    setSensorData({ x: -x, y: 0, z: 0 }); // Invert if needed, let's try standard mapping
+                    // Throttle debug updates to avoid flickering UI
+                    if (Math.random() > 0.95) setDebugX(x);
                 }
             };
-
             window.addEventListener('devicemotion', handleMotion);
-            setIsAvailable(true);
-
-            return () => {
-                window.removeEventListener('devicemotion', handleMotion);
-            };
+            return () => window.removeEventListener('devicemotion', handleMotion);
         } else {
-            // Native (iOS/Android App) logic remains same
             let subscription: any;
             const subscribe = async () => {
                 const available = await Accelerometer.isAvailableAsync();
-                setIsAvailable(available);
-
                 if (available) {
-                    Accelerometer.setUpdateInterval(100);
+                    Accelerometer.setUpdateInterval(50);
                     subscription = Accelerometer.addListener(data => {
-                        setSensorData(data);
+                        wind.value = data.x * 2;
+                        if (Math.random() > 0.95) setDebugX(data.x);
                     });
                 }
             };
             subscribe();
-            return () => {
-                subscription && subscription.remove();
-            };
+            return () => subscription && subscription.remove();
         }
     }, []);
 
@@ -136,20 +135,11 @@ export const SnowOverlay = () => {
                 try {
                     // @ts-ignore
                     const response = await DeviceMotionEvent.requestPermission();
-                    if (response === 'granted') {
-                        alert('Sensor permission granted!');
-                    } else {
-                        alert('Sensor permission denied');
-                    }
-                } catch (e: any) {
-                    alert(e.message);
-                }
-            } else {
-                alert('Standard Web API active (Android/PC). Check "Web Raw X" value.');
+                    if (response === 'granted') alert('Granted!');
+                } catch (e: any) { alert(e.message); }
             }
         } else {
-            const { status } = await Accelerometer.requestPermissionsAsync();
-            alert('Native Permission: ' + status);
+            Accelerometer.requestPermissionsAsync();
         }
     };
 
@@ -157,26 +147,13 @@ export const SnowOverlay = () => {
         <View style={styles.container} pointerEvents="box-none">
             <View pointerEvents="none" style={StyleSheet.absoluteFill}>
                 {Array.from({ length: SNOWFLAKE_COUNT }).map((_, index) => (
-                    <Snowflake key={index} index={index} sensorData={sensorData} />
+                    <Snowflake key={index} index={index} wind={wind} />
                 ))}
             </View>
 
-            {/* Debug Overlay - Temporary */}
-            <View style={{ position: 'absolute', top: 120, left: 20, backgroundColor: 'rgba(0,0,0,0.7)', padding: 15, borderRadius: 8 }}>
-                <Text style={{ color: 'white', fontSize: 14, marginBottom: 4 }}>
-                    Avail: {isAvailable === null ? 'Checking...' : isAvailable.toString()}
-                </Text>
-                <Text style={{ color: 'white', fontSize: 14, marginBottom: 4 }}>
-                    Native X: {sensorData.x.toFixed(2)}
-                </Text>
-                <Text style={{ color: 'orange', fontSize: 14, marginBottom: 10 }}>
-                    Web Raw X: {webRawX.toFixed(2)}
-                </Text>
-
-                <Pressable onPress={requestPermissions} style={{ backgroundColor: '#007AFF', padding: 8, borderRadius: 4 }}>
-                    <Text style={{ color: 'white', textAlign: 'center', fontWeight: 'bold' }}>
-                        [Enable Sensors]
-                    </Text>
+            {/* Debug Overlay - Minimal */}
+            <View style={{ position: 'absolute', top: 120, left: 20, pointerEvents: 'auto' }}>
+                <Pressable onPress={requestPermissions} style={{ opacity: 0.1, width: 50, height: 50, backgroundColor: 'blue' }}>
                 </Pressable>
             </View>
         </View>
