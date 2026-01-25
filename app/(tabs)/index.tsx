@@ -21,6 +21,7 @@ import { useProfileStore } from '../../src/stores/profileStore';
 import { ModelViewer3D } from '../../src/components/character/ModelViewer3D';
 import { SnowOverlay } from '../../src/components/SnowOverlay';
 import { InfiniteMarquee } from '../../src/components/InfiniteMarquee';
+import { Audio } from 'expo-av';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_WIDTH = SCREEN_WIDTH - Spacing.lg * 2;
@@ -186,6 +187,36 @@ export default function HomeScreen() {
   const [savedProgress, setSavedProgress] = useState<SavedAssessmentState | null>(null);
   const { loadSavedProgress, resumeAssessment, clearSavedProgress, resetAssessment } = useAssessmentStore();
   const { profile, loadProfile } = useProfileStore();
+  // Sheep Animation State
+  const [isSheepPlaying, setIsSheepPlaying] = useState(false);
+  const sheepRef = useRef<LottieView>(null);
+
+  const handleSheepPress = useCallback(async () => {
+    if (isSheepPlaying) return;
+
+    setIsSheepPlaying(true);
+    sheepRef.current?.play();
+
+    // Play sound after 1 second
+    setTimeout(async () => {
+      try {
+        const { sound } = await Audio.Sound.createAsync(
+          require('../../assets/sounds/Sheep.mp3')
+        );
+
+        // Auto unload after finish
+        sound.setOnPlaybackStatusUpdate(async (status) => {
+          if (status.isLoaded && status.didJustFinish) {
+            await sound.unloadAsync();
+          }
+        });
+
+        await sound.playAsync();
+      } catch (error) {
+        console.log('Error playing sheep sound:', error);
+      }
+    }, 1000);
+  }, [isSheepPlaying]);
   const [isSnowing, setIsSnowing] = useState(false);
 
   // 저장된 진행 상태 확인 (화면 포커스 시마다)
@@ -445,8 +476,30 @@ export default function HomeScreen() {
           </InfiniteMarquee>
         </View>
 
+        {/* Sheep Animation Container */}
+        <View style={styles.sheepSection}>
+          <Pressable
+            onPress={handleSheepPress}
+            style={styles.sheepContainer}
+            disabled={isSheepPlaying} // Disable interaction while playing causes the "ignoring taps" behavior, but we also check inside handler.
+          >
+            {/* Arrow pointing to sheep (Visual cue from image) */}
+            <View style={styles.arrowPointer}>
+              <Text style={{ fontSize: 24 }}>➡</Text>
+            </View>
+            <LottieView
+              ref={sheepRef}
+              source={require('../../assets/lottie/Sheep.json')}
+              style={styles.sheepLottie}
+              loop={false}
+              autoPlay={false}
+              onAnimationFinish={() => setIsSheepPlaying(false)}
+            />
+          </Pressable>
+        </View>
 
       </ScrollView>
+
       {isSnowing && <SnowOverlay />}
     </SafeAreaView>
   );
@@ -654,6 +707,25 @@ const styles = StyleSheet.create({
   cardPressed: {
     transform: [{ scale: 0.98 }],
     opacity: 0.9,
+  },
+  // Sheep Styles
+  sheepSection: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.xl,
+    marginTop: Spacing.lg,
+  },
+  sheepContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  arrowPointer: {
+    marginRight: 10,
+  },
+  sheepLottie: {
+    width: 100,
+    height: 100,
   },
   quickActions: {
     flexDirection: 'row',
