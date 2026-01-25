@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, Dimensions, Platform } from 'react-native';
+import { StyleSheet, View, Dimensions, Platform, Text } from 'react-native';
 import Animated, {
     useSharedValue,
     useAnimatedStyle,
@@ -63,7 +63,7 @@ const Snowflake = ({ index, sensorData }: { index: number; sensorData: { x: numb
         // Let's assume drift proportional to X.
 
         // Accumulate drift:
-        const drift = sensorData.x * 20; // 20px per update (~100ms)
+        const drift = sensorData.x * 50; // Increased sensitivity for visibility
 
         // We update translateX slightly.
         translateX.value = withTiming(translateX.value - drift, { duration: 100 });
@@ -124,6 +124,13 @@ export const SnowOverlay = () => {
             {Array.from({ length: SNOWFLAKE_COUNT }).map((_, index) => (
                 <Snowflake key={index} index={index} sensorData={sensorData} />
             ))}
+
+            {/* Debug Overlay - Temporary */}
+            <View style={{ position: 'absolute', top: 100, left: 20, backgroundColor: 'rgba(0,0,0,0.5)', padding: 10 }}>
+                <Text style={{ color: 'red', fontSize: 16 }}>
+                    Sensor X: {sensorData.x.toFixed(2)}
+                </Text>
+            </View>
         </View>
     );
 };
