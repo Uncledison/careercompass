@@ -191,13 +191,21 @@ export default function HomeScreen() {
   const [isSheepPlaying, setIsSheepPlaying] = useState(false);
   const sheepRef = useRef<LottieView>(null);
 
+  // Initialize Idle Loop (1s - 5s => 30 - 150 frames @ 30fps)
+  useEffect(() => {
+    if (!isSheepPlaying) {
+      sheepRef.current?.play(30, 150);
+    }
+  }, [isSheepPlaying]);
+
   const handleSheepPress = useCallback(async () => {
     if (isSheepPlaying) return;
 
     setIsSheepPlaying(true);
-    sheepRef.current?.play();
+    // Play Interaction (5s - 8s => 150 - 240 frames @ 30fps)
+    sheepRef.current?.play(150, 240);
 
-    // Play sound after 5 seconds
+    // Play sound after 20 seconds
     setTimeout(async () => {
       try {
         const { sound } = await Audio.Sound.createAsync(
@@ -215,7 +223,7 @@ export default function HomeScreen() {
       } catch (error) {
         console.log('Error playing sheep sound:', error);
       }
-    }, 5000);
+    }, 20000);
   }, [isSheepPlaying]);
   const [isSnowing, setIsSnowing] = useState(false);
 
@@ -487,9 +495,14 @@ export default function HomeScreen() {
               ref={sheepRef}
               source={require('../../assets/lottie/Sheep.json')}
               style={styles.sheepLottie}
-              loop={false}
+              loop={false} // We handle looping manually via useEffect for Idle state
               autoPlay={false}
-              onAnimationFinish={() => setIsSheepPlaying(false)}
+              onAnimationFinish={() => {
+                // If interaction finished, go back to idle
+                if (isSheepPlaying) {
+                  setIsSheepPlaying(false);
+                }
+              }}
             />
           </Pressable>
         </View>
