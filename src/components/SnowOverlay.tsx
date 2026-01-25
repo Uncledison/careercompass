@@ -55,10 +55,6 @@ const Snowflake = React.memo(({ index, wind }: { index: number; wind: Animated.S
         (currentWind) => {
             if (currentWind !== 0) {
                 // Apply wind force
-                // We use a small factor because this runs every frame/update
-                // Actually, useAnimatedReaction runs when wind.value changes. 
-                // Since wind.value changes continuously from sensor, this is good.
-
                 const drift = currentWind * 5;
                 translateX.value = withTiming(translateX.value - drift, { duration: 100 });
 
@@ -90,9 +86,6 @@ const Snowflake = React.memo(({ index, wind }: { index: number; wind: Animated.S
 });
 
 export const SnowOverlay = () => {
-    // We keep state only for Debug View (optional)
-    const [debugX, setDebugX] = useState(0);
-
     // Core animation driver - bypasses React State for children
     const wind = useSharedValue(0);
 
@@ -102,11 +95,9 @@ export const SnowOverlay = () => {
                 const acc = event.accelerationIncludingGravity;
                 if (acc) {
                     const x = acc.x ? acc.x / 9.8 : 0;
-                    // Update SharedValue (UI Thread accessible)
-                    wind.value = x * 2; // Multiplier
-
-                    // Throttle debug updates to avoid flickering UI
-                    if (Math.random() > 0.95) setDebugX(x);
+                    // Extreme High sensitivity: x (approx 0 to 1) * 30
+                    // This means tilting phone 45 degrees might send snowflakes flying sideways fast
+                    wind.value = x * 30;
                 }
             };
             window.addEventListener('devicemotion', handleMotion);
@@ -116,10 +107,10 @@ export const SnowOverlay = () => {
             const subscribe = async () => {
                 const available = await Accelerometer.isAvailableAsync();
                 if (available) {
-                    Accelerometer.setUpdateInterval(50);
+                    Accelerometer.setUpdateInterval(20); // Very fast updates
                     subscription = Accelerometer.addListener(data => {
-                        wind.value = data.x * 2;
-                        if (Math.random() > 0.95) setDebugX(data.x);
+                        // Extreme High sensitivity for Native
+                        wind.value = data.x * 30;
                     });
                 }
             };
@@ -128,33 +119,12 @@ export const SnowOverlay = () => {
         }
     }, []);
 
-    const requestPermissions = async () => {
-        if (Platform.OS === 'web') {
-            // @ts-ignore
-            if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
-                try {
-                    // @ts-ignore
-                    const response = await DeviceMotionEvent.requestPermission();
-                    if (response === 'granted') alert('Granted!');
-                } catch (e: any) { alert(e.message); }
-            }
-        } else {
-            Accelerometer.requestPermissionsAsync();
-        }
-    };
-
     return (
-        <View style={styles.container} pointerEvents="box-none">
+        <View style={styles.container} pointerEvents="none">
             <View pointerEvents="none" style={StyleSheet.absoluteFill}>
                 {Array.from({ length: SNOWFLAKE_COUNT }).map((_, index) => (
                     <Snowflake key={index} index={index} wind={wind} />
                 ))}
-            </View>
-
-            {/* Debug Overlay - Minimal */}
-            <View style={{ position: 'absolute', top: 120, left: 20, pointerEvents: 'auto' }}>
-                <Pressable onPress={requestPermissions} style={{ opacity: 0.1, width: 50, height: 50, backgroundColor: 'blue' }}>
-                </Pressable>
             </View>
         </View>
     );
