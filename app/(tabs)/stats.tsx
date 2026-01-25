@@ -16,9 +16,9 @@ import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Line, Circle, G, Text as SvgText, Rect } from 'react-native-svg';
 import Animated, { FadeInDown } from 'react-native-reanimated';
-import { Colors, Spacing, BorderRadius, Shadow, TextStyle } from '../src/constants';
-import { useHistoryStore, SavedResult, formatDate, getLevelLabel } from '../src/stores/historyStore';
-import { CareerField, GradeLevel } from '../src/types';
+import { Colors, Spacing, BorderRadius, Shadow, TextStyle } from '../../src/constants';
+import { useHistoryStore, SavedResult, formatDate, getLevelLabel } from '../../src/stores/historyStore';
+import { CareerField, GradeLevel } from '../../src/types';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CHART_WIDTH = SCREEN_WIDTH - Spacing.md * 4;
