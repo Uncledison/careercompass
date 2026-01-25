@@ -96,6 +96,7 @@ const Snowflake = ({ index, sensorData }: { index: number; sensorData: { x: numb
 
 export const SnowOverlay = () => {
     const [sensorData, setSensorData] = useState({ x: 0, y: 0, z: 0 });
+    const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
 
     useEffect(() => {
         // Accelerometer not supported on web in the same way, disable for now
@@ -103,8 +104,9 @@ export const SnowOverlay = () => {
 
         let subscription: any;
         const subscribe = async () => {
-            const isAvailable = await Accelerometer.isAvailableAsync();
-            if (isAvailable) {
+            const available = await Accelerometer.isAvailableAsync();
+            setIsAvailable(available);
+            if (available) {
                 Accelerometer.setUpdateInterval(100);
                 subscription = Accelerometer.addListener(data => {
                     setSensorData(data);
@@ -127,6 +129,9 @@ export const SnowOverlay = () => {
 
             {/* Debug Overlay - Temporary */}
             <View style={{ position: 'absolute', top: 100, left: 20, backgroundColor: 'rgba(0,0,0,0.5)', padding: 10 }}>
+                <Text style={{ color: 'red', fontSize: 16 }}>
+                    Avail: {isAvailable === null ? 'Checking...' : isAvailable.toString()}
+                </Text>
                 <Text style={{ color: 'red', fontSize: 16 }}>
                     Sensor X: {sensorData.x.toFixed(2)}
                 </Text>
