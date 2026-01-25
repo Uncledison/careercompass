@@ -596,7 +596,7 @@ const styles = StyleSheet.create({
     ...TextStyle.headline,
     color: Colors.text.primary,
     marginBottom: Spacing.xs,
-    marginLeft: 6, // 1글자 들여쓰기
+    marginLeft: Spacing.sm, // Indent by 1 character (approx 8px)
   },
   sectionSubtitle: {
     ...TextStyle.caption1,
