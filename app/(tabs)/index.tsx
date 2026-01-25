@@ -189,81 +189,14 @@ export default function HomeScreen() {
   const { profile, loadProfile } = useProfileStore();
   // Sheep Animation State
   const [isInteractionLocked, setInteractionLocked] = useState(false);
-  const animationMode = useRef<'idle' | 'active'>('idle');
   const sheepRef = useRef<LottieView>(null);
-  const animationTimer = useRef<any>(null);
-
-  // Helper to start animations
-  const playAnimation = useCallback((mode: 'idle' | 'active') => {
-    animationMode.current = mode;
-    // console.log(`[Sheep] Playing mode: ${mode}`);
-
-    // Clear any existing timer
-    if (animationTimer.current) {
-      clearTimeout(animationTimer.current);
-      animationTimer.current = null;
-    }
-
-    if (mode === 'idle') {
-      try {
-        sheepRef.current?.play(30, 90); // Idle loop 1s-3s (60 frames @ 30fps = 2s duration)
-
-        // Fallback loop if onAnimationFinish doesn't fire
-        animationTimer.current = setTimeout(() => {
-          if (animationMode.current === 'idle') {
-            playAnimation('idle');
-          }
-        }, 2000); // 2 seconds + buffer? Actually play(30,90) is exactly 2s. 
-        // If we loop manually via timeout, we don't need onAnimationFinish for idle.
-      } catch (err) {
-        console.error('[Sheep] Error playing idle:', err);
-      }
-    } else {
-      // Active
-      try {
-        sheepRef.current?.play(150, 240); // Interaction 5s-8s (90 frames @ 30fps = 3s duration)
-
-        // Force unlock after duration
-        animationTimer.current = setTimeout(() => {
-          handleInteractionFinish();
-        }, 3000);
-      } catch (err) {
-        console.error('[Sheep] Error playing active:', err);
-        handleInteractionFinish();
-      }
-    }
-  }, []);
-
-  const handleInteractionFinish = () => {
-    // console.log('[Sheep] Interaction finished. Resetting to Idle.');
-    setInteractionLocked(false);
-    playAnimation('idle');
-  };
-
-  // Initial Start
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      playAnimation('idle');
-    }, 500); // Increased delay for Web readiness
-    return () => {
-      clearTimeout(timer);
-      if (animationTimer.current) clearTimeout(animationTimer.current);
-    };
-  }, []);
-
-  // We rely on Timeouts now, so onAnimationFinish is optional or backup
-  // But strictly, let's ignore onAnimationFinish to avoid double-triggers with our timeouts
-  // OR use it to clear timeout? 
-  // Let's use Timeouts purely for reliability on Web.
 
   const handleSheepPress = useCallback(async () => {
-    // console.log(`[Sheep] Pressed. Locked: ${isInteractionLocked}`);
     if (isInteractionLocked) return;
 
     setInteractionLocked(true);
-    playAnimation('active');
 
-    // Play sound after 0.5 seconds
+    // Play sound after 0.3 seconds
     setTimeout(async () => {
       try {
         const { sound } = await Audio.Sound.createAsync(
@@ -280,8 +213,13 @@ export default function HomeScreen() {
       } catch (error) {
         // Ignore sound errors
       }
-    }, 500);
-  }, [isInteractionLocked, playAnimation]);
+    }, 300);
+  }, [isInteractionLocked]);
+
+  const handleAnimationFinish = useCallback(() => {
+    // interaction finished
+    setInteractionLocked(false);
+  }, []);
   const [isSnowing, setIsSnowing] = useState(false);
 
   // 저장된 진행 상태 확인 (화면 포커스 시마다)
@@ -548,13 +486,22 @@ export default function HomeScreen() {
             style={styles.sheepContainer}
             disabled={isInteractionLocked}
           >
-            <LottieView
-              ref={sheepRef}
-              source={require('../../assets/lottie/Sheep.json')}
-              style={styles.sheepLottie}
-              loop={false}
-              autoPlay={false}
-            />
+            {isInteractionLocked ? (
+              <LottieView
+                source={require('../../assets/lottie/SheepActive.json')}
+                style={styles.sheepLottie}
+                loop={false}
+                autoPlay={true}
+                onAnimationFinish={handleAnimationFinish}
+              />
+            ) : (
+              <LottieView
+                source={require('../../assets/lottie/SheepIdle.json')}
+                style={styles.sheepLottie}
+                loop={true}
+                autoPlay={true}
+              />
+            )}
           </Pressable>
         </View>
 
