@@ -414,7 +414,6 @@ export default function HomeScreen() {
         {/* 6대 계열 소개 */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>6대 진로 계열</Text>
-          <Text style={styles.sectionSubtitle}>탭하여 자세히 알아보세요</Text>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -596,12 +595,7 @@ const styles = StyleSheet.create({
     ...TextStyle.headline,
     color: Colors.text.primary,
     marginBottom: Spacing.xs,
-    marginLeft: Spacing.sm, // Indent by 1 character (approx 8px)
-  },
-  sectionSubtitle: {
-    ...TextStyle.caption1,
-    color: Colors.text.secondary,
-    marginBottom: Spacing.md,
+    marginLeft: 24, // Indent past rounded corners (approx 24px)
   },
   gradeLevelCards: {
     gap: Spacing.sm,
