@@ -185,7 +185,7 @@ export default function HomeScreen() {
   const [savedProgress, setSavedProgress] = useState<SavedAssessmentState | null>(null);
   const { loadSavedProgress, resumeAssessment, clearSavedProgress, resetAssessment } = useAssessmentStore();
   const { profile, loadProfile } = useProfileStore();
-  const [isSnowing, setIsSnowing] = useState(false);
+  const [snowMode, setSnowMode] = useState<'off' | 'normal' | 'heavy'>('off');
 
   // 저장된 진행 상태 확인 (화면 포커스 시마다)
   useFocusEffect(
@@ -353,7 +353,11 @@ export default function HomeScreen() {
               <Pressable
                 onPress={(e) => {
                   e.stopPropagation();
-                  setIsSnowing(prev => !prev);
+                  setSnowMode(prev => {
+                    if (prev === 'off') return 'normal';
+                    if (prev === 'normal') return 'heavy';
+                    return 'off';
+                  });
                 }}
                 style={{
                   position: 'absolute',
@@ -491,7 +495,7 @@ export default function HomeScreen() {
           </View>
         </Pressable>
       </ScrollView>
-      {isSnowing && <SnowOverlay />}
+      {snowMode !== 'off' && <SnowOverlay mode={snowMode} />}
     </SafeAreaView>
   );
 }

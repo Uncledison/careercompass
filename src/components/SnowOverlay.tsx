@@ -9,17 +9,17 @@ import Animated, {
     withDelay,
     useAnimatedReaction,
     runOnJS,
+    SharedValue,
 } from 'react-native-reanimated';
 import { Accelerometer } from 'expo-sensors';
 
 const { width, height } = Dimensions.get('window');
-const SNOWFLAKE_COUNT = 70;
 
-// SharedValue passed as prop does not trigger re-render
-const Snowflake = React.memo(({ index, wind }: { index: number; wind: Animated.SharedValue<number> }) => {
+const Snowflake = React.memo(({ index, wind }: { index: number; wind: SharedValue<number> }) => {
     const startX = Math.random() * width;
     const startY = -50 - Math.random() * 500;
-    const duration = 3000 + Math.random() * 5000;
+    // Slower speed: 6000ms base + 5000ms random variation
+    const duration = 6000 + Math.random() * 5000;
     const size = 3 + Math.random() * 5;
     const opacity = 0.5 + Math.random() * 0.5;
 
@@ -49,16 +49,15 @@ const Snowflake = React.memo(({ index, wind }: { index: number; wind: Animated.S
         );
     }, []);
 
-    // Respond to wind changes on UI thread without React logic
     useAnimatedReaction(
         () => wind.value,
         (currentWind) => {
             if (currentWind !== 0) {
-                // Apply wind force
-                const drift = currentWind * 5;
+                // Reduced sensitivity factor (was 5 in reaction, driven by 30 in sensor)
+                // Now driving factor is 12, keep reaction factor same or tweak.
+                const drift = currentWind * 3;
                 translateX.value = withTiming(translateX.value - drift, { duration: 100 });
 
-                // Wrap around
                 if (translateX.value > width + 50) {
                     translateX.value = -50;
                 } else if (translateX.value < -50) {
@@ -85,9 +84,9 @@ const Snowflake = React.memo(({ index, wind }: { index: number; wind: Animated.S
     return <Animated.View style={style} />;
 });
 
-export const SnowOverlay = () => {
-    // Core animation driver - bypasses React State for children
+export const SnowOverlay = ({ mode = 'normal' }: { mode?: 'normal' | 'heavy' }) => {
     const wind = useSharedValue(0);
+    const snowflakeCount = mode === 'heavy' ? 150 : 50;
 
     useEffect(() => {
         if (Platform.OS === 'web') {
@@ -95,9 +94,8 @@ export const SnowOverlay = () => {
                 const acc = event.accelerationIncludingGravity;
                 if (acc) {
                     const x = acc.x ? acc.x / 9.8 : 0;
-                    // Extreme High sensitivity: x (approx 0 to 1) * 30
-                    // This means tilting phone 45 degrees might send snowflakes flying sideways fast
-                    wind.value = x * 30;
+                    // Moderate sensitivity: x * 12 (Use to be 30)
+                    wind.value = x * 12;
                 }
             };
             window.addEventListener('devicemotion', handleMotion);
@@ -107,10 +105,10 @@ export const SnowOverlay = () => {
             const subscribe = async () => {
                 const available = await Accelerometer.isAvailableAsync();
                 if (available) {
-                    Accelerometer.setUpdateInterval(20); // Very fast updates
+                    Accelerometer.setUpdateInterval(30);
                     subscription = Accelerometer.addListener(data => {
-                        // Extreme High sensitivity for Native
-                        wind.value = data.x * 30;
+                        // Moderate sensitivity for Native
+                        wind.value = data.x * 12;
                     });
                 }
             };
@@ -122,7 +120,7 @@ export const SnowOverlay = () => {
     return (
         <View style={styles.container} pointerEvents="none">
             <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-                {Array.from({ length: SNOWFLAKE_COUNT }).map((_, index) => (
+                {Array.from({ length: snowflakeCount }).map((_, index) => (
                     <Snowflake key={index} index={index} wind={wind} />
                 ))}
             </View>
