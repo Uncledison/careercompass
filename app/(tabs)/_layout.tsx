@@ -80,6 +80,36 @@ const ProfileIcon = ({ focused }: { focused: boolean }) => (
   </Svg>
 );
 
+const StatsIcon = ({ focused }: { focused: boolean }) => (
+  <Svg width={24} height={24} viewBox="0 0 24 24">
+    <Path
+      d="M3 3v18h18"
+      stroke={focused ? Colors.gray[400] : Colors.gray[400]}
+      strokeWidth={2}
+      strokeLinecap="round"
+      fill="none"
+    />
+    <Path
+      d="M18 17V9"
+      stroke={focused ? Colors.primary.main : Colors.gray[400]}
+      strokeWidth={2}
+      strokeLinecap="round"
+    />
+    <Path
+      d="M13 17V5"
+      stroke={focused ? Colors.primary.main : Colors.gray[400]}
+      strokeWidth={2}
+      strokeLinecap="round"
+    />
+    <Path
+      d="M8 17v-5"
+      stroke={focused ? Colors.primary.main : Colors.gray[400]}
+      strokeWidth={2}
+      strokeLinecap="round"
+    />
+  </Svg>
+);
+
 export default function TabLayout() {
   return (
     <Tabs
@@ -102,7 +132,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="assessment"
         options={{
-          title: '검사하기',
+          title: '검사',
           tabBarIcon: ({ focused }) => <AssessmentIcon focused={focused} />,
         }}
       />
@@ -111,6 +141,13 @@ export default function TabLayout() {
         options={{
           title: '기록',
           tabBarIcon: ({ focused }) => <HistoryIcon focused={focused} />,
+        }}
+      />
+      <Tabs.Screen
+        name="stats"
+        options={{
+          title: '분석',
+          tabBarIcon: ({ focused }) => <StatsIcon focused={focused} />,
         }}
       />
       <Tabs.Screen

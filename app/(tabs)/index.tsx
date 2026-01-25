@@ -409,28 +409,7 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* 퀵 액션 */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>빠른 메뉴</Text>
-          <View style={styles.quickActions}>
-            <QuickAction
-              icon="📋"
-              label="지난 결과"
-              onPress={() => router.push('/(tabs)/history')}
-            />
-            {/* 가족 연동 Removed */}
-            <QuickAction
-              icon="📈"
-              label="통계 분석"
-              onPress={() => router.push('/stats')}
-            />
-            <QuickAction
-              icon="❓"
-              label="도움말"
-              onPress={() => router.push('/help')}
-            />
-          </View>
-        </View>
+
 
         {/* 6대 계열 소개 */}
         <View style={styles.section}>

@@ -17,6 +17,7 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import LottieView from 'lottie-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors, Spacing, BorderRadius, Shadow, TextStyle } from '../../src/constants';
@@ -211,6 +212,7 @@ const GradeButton = ({
 };
 
 export default function ProfileScreen() {
+  const router = useRouter();
   const { profile, loadProfile, updateProfile, clearProfile } = useProfileStore();
   const { results, loadHistory } = useHistoryStore();
   const { colors, isDarkMode } = useTheme();
@@ -353,6 +355,12 @@ export default function ProfileScreen() {
               label="앱 버전"
               value="1.0.0"
               onPress={() => { }}
+              colors={colors}
+            />
+            <MenuItem
+              icon="❓"
+              label="도움말"
+              onPress={() => router.push('/help')}
               colors={colors}
             />
           </View>
