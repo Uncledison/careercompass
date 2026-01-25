@@ -191,10 +191,10 @@ export default function HomeScreen() {
   const [isSheepPlaying, setIsSheepPlaying] = useState(false);
   const sheepRef = useRef<LottieView>(null);
 
-  // Initialize Idle Loop (1s - 5s => 30 - 150 frames @ 30fps)
+  // Initialize Idle Loop (1s - 3s => 30 - 90 frames @ 30fps)
   useEffect(() => {
     if (!isSheepPlaying) {
-      sheepRef.current?.play(30, 150);
+      sheepRef.current?.play(30, 90);
     }
   }, [isSheepPlaying]);
 
