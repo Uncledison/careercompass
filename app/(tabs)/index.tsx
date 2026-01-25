@@ -20,6 +20,7 @@ import { useAssessmentStore, SavedAssessmentState } from '../../src/stores/asses
 import { useProfileStore } from '../../src/stores/profileStore';
 import { ModelViewer3D } from '../../src/components/character/ModelViewer3D';
 import { SnowOverlay } from '../../src/components/SnowOverlay';
+import { InfiniteMarquee } from '../../src/components/InfiniteMarquee';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_WIDTH = SCREEN_WIDTH - Spacing.lg * 2;
@@ -414,11 +415,7 @@ export default function HomeScreen() {
         {/* 6대 계열 소개 */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>6대 진로 계열</Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.careerFieldsScroll}
-          >
+          <InfiniteMarquee speed={40}>
             {[
               { emoji: '📚', name: '인문', field: 'humanities', color: Colors.career.humanities.main },
               { emoji: '🌍', name: '사회', field: 'social', color: Colors.career.social.main },
@@ -426,12 +423,15 @@ export default function HomeScreen() {
               { emoji: '🤖', name: '공학', field: 'engineering', color: Colors.career.engineering.main },
               { emoji: '🏥', name: '의학', field: 'medicine', color: Colors.career.medicine.main },
               { emoji: '🎨', name: '예체능', field: 'arts', color: Colors.career.arts.main },
-            ].map((item) => (
+            ].map((item, index) => (
               <Pressable
-                key={item.name}
+                key={`${item.name}-${index}`}
                 style={({ pressed }) => [
                   styles.careerFieldChip,
-                  { backgroundColor: item.color + '20' },
+                  {
+                    backgroundColor: item.color + '20',
+                    marginRight: 12, // Add explicit margin for spacing in marquee
+                  },
                   pressed && styles.careerFieldChipPressed,
                 ]}
                 onPress={() => router.push(`/career/${item.field}`)}
@@ -442,35 +442,10 @@ export default function HomeScreen() {
                 </Text>
               </Pressable>
             ))}
-          </ScrollView>
+          </InfiniteMarquee>
         </View>
 
-        {/* 미니 게임 카드 (하단으로 이동) */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>미니 게임</Text>
-          <Pressable
-            style={({ pressed }) => [
-              styles.gameCard,
-              pressed && styles.cardPressed
-            ]}
-            onPress={() => router.push('/game/memory')}
-          >
-            <View style={styles.gameCardContent}>
-              <View style={[styles.gameIconContainer, { backgroundColor: 'transparent', padding: 0, overflow: 'hidden' }]}>
-                <Image
-                  source={require('../../assets/images/game/card_back_final.png')}
-                  style={{ width: '100%', height: '100%' }}
-                  resizeMode="cover"
-                />
-              </View>
-              <View style={styles.gameTextContainer}>
-                <Text style={styles.gameTitle}>쉬어가기</Text>
-                <Text style={styles.gameDescription}>획득한 배지로 즐기는 카드 뒤집기!</Text>
-              </View>
-              <Text style={styles.arrowIcon}>›</Text>
-            </View>
-          </Pressable>
-        </View>
+
       </ScrollView>
       {isSnowing && <SnowOverlay />}
     </SafeAreaView>
@@ -497,7 +472,7 @@ const styles = StyleSheet.create({
   },
   headerLeft: {
     gap: 2,
-    marginLeft: 6, // 1글자 들여쓰기
+    marginLeft: 24, // Indent to match section headers
   },
   greeting: {
     ...TextStyle.subhead,
