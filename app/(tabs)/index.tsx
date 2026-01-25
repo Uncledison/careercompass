@@ -446,28 +446,31 @@ export default function HomeScreen() {
         </View>
 
         {/* 미니 게임 카드 (하단으로 이동) */}
-        <Pressable
-          style={({ pressed }) => [
-            styles.gameCard,
-            pressed && styles.cardPressed
-          ]}
-          onPress={() => router.push('/game/memory')}
-        >
-          <View style={styles.gameCardContent}>
-            <View style={[styles.gameIconContainer, { backgroundColor: 'transparent', padding: 0, overflow: 'hidden' }]}>
-              <Image
-                source={require('../../assets/images/game/card_back_final.png')}
-                style={{ width: '100%', height: '100%' }}
-                resizeMode="cover"
-              />
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>미니 게임</Text>
+          <Pressable
+            style={({ pressed }) => [
+              styles.gameCard,
+              pressed && styles.cardPressed
+            ]}
+            onPress={() => router.push('/game/memory')}
+          >
+            <View style={styles.gameCardContent}>
+              <View style={[styles.gameIconContainer, { backgroundColor: 'transparent', padding: 0, overflow: 'hidden' }]}>
+                <Image
+                  source={require('../../assets/images/game/card_back_final.png')}
+                  style={{ width: '100%', height: '100%' }}
+                  resizeMode="cover"
+                />
+              </View>
+              <View style={styles.gameTextContainer}>
+                <Text style={styles.gameTitle}>쉬어가기</Text>
+                <Text style={styles.gameDescription}>획득한 배지로 즐기는 카드 뒤집기!</Text>
+              </View>
+              <Text style={styles.arrowIcon}>›</Text>
             </View>
-            <View style={styles.gameTextContainer}>
-              <Text style={styles.gameTitle}>미니 게임</Text>
-              <Text style={styles.gameDescription}>획득한 배지로 즐기는 카드 뒤집기!</Text>
-            </View>
-            <Text style={styles.arrowIcon}>›</Text>
-          </View>
-        </Pressable>
+          </Pressable>
+        </View>
       </ScrollView>
       {isSnowing && <SnowOverlay />}
     </SafeAreaView>
