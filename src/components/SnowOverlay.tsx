@@ -93,6 +93,9 @@ export const SnowOverlay = () => {
     const [gyroscopeData, setGyroscopeData] = useState({ x: 0, y: 0, z: 0 });
 
     useEffect(() => {
+        // Gyroscope not supported on web
+        if (Platform.OS === 'web') return;
+
         // Subscribe to gyroscope
         let subscription: any;
         const subscribe = async () => {
