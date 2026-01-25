@@ -193,35 +193,50 @@ export default function HomeScreen() {
 
   // Initialize Idle Loop (1s - 3s => 30 - 90 frames @ 30fps)
   useEffect(() => {
+    console.log('Sheep: Effect triggered. isSheepPlaying:', isSheepPlaying, 'Ref:', !!sheepRef.current);
     if (!isSheepPlaying) {
-      sheepRef.current?.play(30, 90);
+      try {
+        sheepRef.current?.play(30, 90);
+      } catch (e) {
+        console.error('Sheep: Error playing idle animation:', e);
+      }
     }
   }, [isSheepPlaying]);
 
   const handleSheepPress = useCallback(async () => {
+    console.log('Sheep: Pressed! isSheepPlaying:', isSheepPlaying);
     if (isSheepPlaying) return;
 
     setIsSheepPlaying(true);
     // Play Interaction (5s - 8s => 150 - 240 frames @ 30fps)
-    sheepRef.current?.play(150, 240);
+    try {
+      sheepRef.current?.play(150, 240);
+      console.log('Sheep: Playing interaction frames 150-240');
+    } catch (e) {
+      console.error('Sheep: Error playing interaction:', e);
+    }
 
     // Play sound after 20 seconds
+    console.log('Sheep: Scheduling sound for 20s later');
     setTimeout(async () => {
       try {
+        console.log('Sheep: Loading sound...');
         const { sound } = await Audio.Sound.createAsync(
           require('../../assets/sounds/Sheep.mp3')
         );
+        console.log('Sheep: Sound loaded. Playing...');
 
         // Auto unload after finish
         sound.setOnPlaybackStatusUpdate(async (status) => {
           if (status.isLoaded && status.didJustFinish) {
+            console.log('Sheep: Sound finished. Unloading.');
             await sound.unloadAsync();
           }
         });
 
         await sound.playAsync();
       } catch (error) {
-        console.log('Error playing sheep sound:', error);
+        console.error('Error playing sheep sound:', error);
       }
     }, 20000);
   }, [isSheepPlaying]);
