@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, Dimensions, Platform, Text } from 'react-native';
+import { StyleSheet, View, Dimensions, Platform, Text, Pressable } from 'react-native';
 import Animated, {
     useSharedValue,
     useAnimatedStyle,
@@ -20,7 +20,6 @@ const Snowflake = ({ index, sensorData }: { index: number; sensorData: { x: numb
     const size = 3 + Math.random() * 5;
     const opacity = 0.5 + Math.random() * 0.5;
 
-    // Use shared values for high performance loop
     const translateY = useSharedValue(startY);
     const translateX = useSharedValue(startX);
 
@@ -34,7 +33,6 @@ const Snowflake = ({ index, sensorData }: { index: number; sensorData: { x: numb
     });
 
     useEffect(() => {
-        // Continuous falling animation
         translateY.value = withDelay(
             Math.random() * 2000,
             withRepeat(
@@ -48,27 +46,11 @@ const Snowflake = ({ index, sensorData }: { index: number; sensorData: { x: numb
         );
     }, []);
 
-    // Effect to handle drift (Wind/Gravity)
     useEffect(() => {
         if (!sensorData) return;
-
-        // Accelerometer X:
-        // 0 = Flat
-        // >0 = Tilted Right (in some frames, but let's test. Usually tilting phone left/down makes X change).
-        // On Android/iOS:
-        // Holding portrait upright: X ~ 0.
-        // Tilting Left (top goes left): X becomes positive (gravity vector projection).
-        // We want snow to fall LEFT when tilted LEFT.
-        // So we SUBTRACT X from Position? or ADD?
-        // Let's assume drift proportional to X.
-
-        // Accumulate drift:
-        const drift = sensorData.x * 50; // Increased sensitivity for visibility
-
-        // We update translateX slightly.
+        const drift = sensorData.x * 50;
         translateX.value = withTiming(translateX.value - drift, { duration: 100 });
 
-        // Wrap around logic handled by visual clipping usually, but we can reset if way off screen
         if (translateX.value > width + 50) {
             translateX.value = -50;
         } else if (translateX.value < -50) {
@@ -101,12 +83,10 @@ export const SnowOverlay = () => {
     useEffect(() => {
         let subscription: any;
         const subscribe = async () => {
-            // On Web, isAvailableAsync might return false on some desktop browsers or strictly require HTTPS
             const available = await Accelerometer.isAvailableAsync();
             setIsAvailable(available);
 
             if (available) {
-                // setUpdateInterval is not supported on web and throws an error
                 if (Platform.OS !== 'web') {
                     Accelerometer.setUpdateInterval(100);
                 }
@@ -115,8 +95,6 @@ export const SnowOverlay = () => {
                     setSensorData(data);
                 });
             } else {
-                // Fallback for web if isAvailableAsync returns false initially (sometimes happens)
-                // We'll trust the listener might still fire if supported
                 if (Platform.OS === 'web') {
                     subscription = Accelerometer.addListener(data => {
                         setSensorData(data);
@@ -132,20 +110,59 @@ export const SnowOverlay = () => {
         };
     }, []);
 
+    const requestPermissions = async () => {
+        if (Platform.OS === 'web') {
+            // @ts-ignore
+            if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+                try {
+                    // @ts-ignore
+                    const response = await DeviceMotionEvent.requestPermission();
+                    if (response === 'granted') {
+                        alert('Sensor permission granted! Accelerometer should work now.');
+                    } else {
+                        alert('Sensor permission denied');
+                    }
+                } catch (e: any) {
+                    alert('Error calling requestPermission: ' + e.message);
+                }
+            } else {
+                alert('DeviceMotionEvent.requestPermission is not a function. Check browser settings or https.');
+            }
+        } else {
+            const { status } = await Accelerometer.requestPermissionsAsync();
+            alert('Native Permission: ' + status);
+        }
+    };
+
     return (
-        <View style={styles.container} pointerEvents="none">
-            {Array.from({ length: SNOWFLAKE_COUNT }).map((_, index) => (
-                <Snowflake key={index} index={index} sensorData={sensorData} />
-            ))}
+        <View style={styles.container} pointerEvents="box-none">
+            {/* Pointer events 'box-none' allows clicking through to underlying views, 
+                BUT we need to capture clicks for our debug button. 
+                So the container should technically let clicks pass through (none) 
+                but the debug button needs to catch them. 
+                'box-none' means "I don't catch clicks, but my children do". 
+            */}
+
+            <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+                {Array.from({ length: SNOWFLAKE_COUNT }).map((_, index) => (
+                    <Snowflake key={index} index={index} sensorData={sensorData} />
+                ))}
+            </View>
 
             {/* Debug Overlay - Temporary */}
-            <View style={{ position: 'absolute', top: 100, left: 20, backgroundColor: 'rgba(0,0,0,0.5)', padding: 10 }}>
-                <Text style={{ color: 'red', fontSize: 16 }}>
+            <View style={{ position: 'absolute', top: 120, left: 20, backgroundColor: 'rgba(0,0,0,0.7)', padding: 15, borderRadius: 8 }}>
+                <Text style={{ color: 'white', fontSize: 14, marginBottom: 4 }}>
                     Avail: {isAvailable === null ? 'Checking...' : isAvailable.toString()}
                 </Text>
-                <Text style={{ color: 'red', fontSize: 16 }}>
+                <Text style={{ color: 'white', fontSize: 14, marginBottom: 10 }}>
                     Sensor X: {sensorData.x.toFixed(2)}
                 </Text>
+
+                <Pressable onPress={requestPermissions} style={{ backgroundColor: '#007AFF', padding: 8, borderRadius: 4 }}>
+                    <Text style={{ color: 'white', textAlign: 'center', fontWeight: 'bold' }}>
+                        [Enable Sensors]
+                    </Text>
+                </Pressable>
             </View>
         </View>
     );
