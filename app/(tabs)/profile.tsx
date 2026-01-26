@@ -340,15 +340,9 @@ export default function ProfileScreen() {
           <Text style={[styles.menuGroupTitle, { color: colors.text.secondary }]}>정보</Text>
           <View style={[styles.menuCard, { backgroundColor: colors.background.primary }]}>
             <MenuItem
-              icon="📜"
-              label="이용약관"
-              onPress={() => setShowTermsModal(true)}
-              colors={colors}
-            />
-            <MenuItem
-              icon="🔒"
-              label="개인정보처리방침"
-              onPress={() => setShowPrivacyModal(true)}
+              icon="❓"
+              label="도움말"
+              onPress={() => router.push('/help')}
               colors={colors}
             />
             <MenuItem
@@ -358,7 +352,6 @@ export default function ProfileScreen() {
               onPress={() => Alert.alert('Career Compass', '버전 1.0.0\nbuild 2026.01.01')}
               colors={colors}
             />
-
             <MenuItem
               icon="🌐"
               label="웹사이트 방문"
@@ -367,9 +360,15 @@ export default function ProfileScreen() {
               colors={colors}
             />
             <MenuItem
-              icon="❓"
-              label="도움말"
-              onPress={() => router.push('/help')}
+              icon="📜"
+              label="이용약관"
+              onPress={() => setShowTermsModal(true)}
+              colors={colors}
+            />
+            <MenuItem
+              icon="🔒"
+              label="개인정보처리방침"
+              onPress={() => setShowPrivacyModal(true)}
               colors={colors}
             />
           </View>

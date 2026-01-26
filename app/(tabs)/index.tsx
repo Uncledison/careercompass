@@ -495,10 +495,18 @@ export default function HomeScreen() {
         </View>
 
         {/* Sheep Animation Container */}
-        <View style={styles.sheepSection}>
+        {/* Bottom Landscape with Grass and Sheep */}
+        <View style={styles.bottomLandscape}>
+          <LottieView
+            source={require('../../assets/lottie/Grass.json')}
+            style={styles.grassLottie}
+            autoPlay
+            loop
+            resizeMode="cover"
+          />
           <Pressable
             onPress={handleSheepPress}
-            style={styles.sheepContainer}
+            style={styles.sheepContainerOnGrass}
             disabled={isInteractionLocked}
           >
             <LottieView
@@ -529,7 +537,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    paddingBottom: 0,
   },
   header: {
     flexDirection: 'row',
@@ -723,24 +732,31 @@ const styles = StyleSheet.create({
     opacity: 0.9,
   },
   // Sheep Styles
-  sheepSection: {
+  // Bottom Landscape Styles
+  bottomLandscape: {
+    width: SCREEN_WIDTH, // Ensure full width
+    height: 220, // Allocate space for grass and sheep
+    marginLeft: -Spacing.md, // Counteract scrollContent padding
+    marginTop: Spacing.lg,
+    justifyContent: 'flex-end',
     alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 0,
-    marginTop: 0,
+    position: 'relative',
   },
-  sheepContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+  grassLottie: {
+    position: 'absolute',
+    bottom: -5, // Slight overlap to ensure no gap
+    width: '100%',
+    height: '100%',
   },
-  arrowPointer: {
-    marginRight: 10,
+  sheepContainerOnGrass: {
+    marginBottom: 40, // Position sheep relative to the bottom of the grass
+    zIndex: 10,
   },
   sheepLottie: {
     width: 100,
     height: 100,
   },
+
   quickActions: {
     flexDirection: 'row',
     justifyContent: 'flex-start',
