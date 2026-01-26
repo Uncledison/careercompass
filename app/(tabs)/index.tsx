@@ -741,7 +741,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.md,
     justifyContent: 'flex-end',
     alignItems: 'center',
-    overflow: 'hidden', // Prevent overlapping with content above
+    // overflow: 'hidden', removed to prevent clipping if the lottie content is out of bounds
   },
   grassLottie: {
     position: 'absolute',
