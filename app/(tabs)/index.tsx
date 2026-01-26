@@ -196,24 +196,21 @@ export default function HomeScreen() {
 
     setInteractionLocked(true);
 
-    // Play sound after 0.3 seconds
-    setTimeout(async () => {
-      try {
-        const { sound } = await Audio.Sound.createAsync(
-          require('../../assets/sounds/Sheep.mp3')
-        );
+    try {
+      const { sound } = await Audio.Sound.createAsync(
+        require('../../assets/sounds/Sheep.mp3')
+      );
 
-        sound.setOnPlaybackStatusUpdate(async (status) => {
-          if (status.isLoaded && status.didJustFinish) {
-            await sound.unloadAsync();
-          }
-        });
+      sound.setOnPlaybackStatusUpdate(async (status) => {
+        if (status.isLoaded && status.didJustFinish) {
+          await sound.unloadAsync();
+        }
+      });
 
-        await sound.playAsync();
-      } catch (error) {
-        // Ignore sound errors
-      }
-    }, 300);
+      await sound.playAsync();
+    } catch (error) {
+      // Ignore sound errors
+    }
   }, [isInteractionLocked]);
 
   const handleAnimationFinish = useCallback(() => {
@@ -486,22 +483,15 @@ export default function HomeScreen() {
             style={styles.sheepContainer}
             disabled={isInteractionLocked}
           >
-            {isInteractionLocked ? (
-              <LottieView
-                source={require('../../assets/lottie/SheepActive.json')}
-                style={styles.sheepLottie}
-                loop={false}
-                autoPlay={true}
-                onAnimationFinish={handleAnimationFinish}
-              />
-            ) : (
-              <LottieView
-                source={require('../../assets/lottie/SheepIdle.json')}
-                style={styles.sheepLottie}
-                loop={true}
-                autoPlay={true}
-              />
-            )}
+            <LottieView
+              source={isInteractionLocked
+                ? require('../../assets/lottie/SheepActive.json')
+                : require('../../assets/lottie/SheepIdle.json')}
+              style={styles.sheepLottie}
+              loop={!isInteractionLocked}
+              autoPlay={true}
+              onAnimationFinish={isInteractionLocked ? handleAnimationFinish : undefined}
+            />
           </Pressable>
         </View>
 
@@ -632,7 +622,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     ...TextStyle.headline,
     color: Colors.text.primary,
-    marginBottom: Spacing.xs,
+    marginBottom: Spacing.md,
     marginLeft: 24, // Indent past rounded corners (approx 24px)
   },
   gradeLevelCards: {
@@ -719,8 +709,8 @@ const styles = StyleSheet.create({
   sheepSection: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: Spacing.xl,
-    marginTop: Spacing.sm, // Reduced from lg to sm (approx half)
+    marginBottom: Spacing.md,
+    marginTop: Spacing.sm,
   },
   sheepContainer: {
     flexDirection: 'row',
