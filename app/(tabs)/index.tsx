@@ -733,23 +733,25 @@ const styles = StyleSheet.create({
   },
   // Sheep Styles
   // Bottom Landscape Styles
+  // Bottom Landscape Styles
   bottomLandscape: {
-    width: SCREEN_WIDTH, // Ensure full width
-    height: 220, // Allocate space for grass and sheep
-    marginLeft: -Spacing.md, // Counteract scrollContent padding
-    marginTop: Spacing.lg,
+    width: SCREEN_WIDTH,
+    height: 250, // Increase height to give enough space
+    marginLeft: -Spacing.md,
+    marginTop: Spacing.md,
     justifyContent: 'flex-end',
     alignItems: 'center',
-    position: 'relative',
+    overflow: 'hidden', // Prevent overlapping with content above
   },
   grassLottie: {
     position: 'absolute',
-    bottom: -5, // Slight overlap to ensure no gap
-    width: '100%',
+    bottom: 0,
+    left: 0,
+    width: SCREEN_WIDTH, // Explicit full width
     height: '100%',
   },
   sheepContainerOnGrass: {
-    marginBottom: 40, // Position sheep relative to the bottom of the grass
+    marginBottom: 50, // Adjust sheep position on the grass
     zIndex: 10,
   },
   sheepLottie: {
