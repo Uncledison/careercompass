@@ -191,27 +191,45 @@ export default function HomeScreen() {
   const [isInteractionLocked, setInteractionLocked] = useState(false);
   const sheepRef = useRef<LottieView>(null);
 
+  // Preload sound
+  const [sound, setSound] = useState<Audio.Sound | null>(null);
+
+  useEffect(() => {
+    async function loadSound() {
+      try {
+        const { sound } = await Audio.Sound.createAsync(
+          require('../../assets/sounds/Sheep.mp3')
+        );
+        setSound(sound);
+      } catch (error) {
+        console.log('Error loading sound', error);
+      }
+    }
+    loadSound();
+
+    return () => {
+      if (sound) {
+        sound.unloadAsync();
+      }
+    };
+  }, []);
+
   const handleSheepPress = useCallback(async () => {
     if (isInteractionLocked) return;
 
     setInteractionLocked(true);
 
-    try {
-      const { sound } = await Audio.Sound.createAsync(
-        require('../../assets/sounds/Sheep.mp3')
-      );
-
-      sound.setOnPlaybackStatusUpdate(async (status) => {
-        if (status.isLoaded && status.didJustFinish) {
-          await sound.unloadAsync();
+    // Play sound after 0.2 seconds delay for sync
+    if (sound) {
+      setTimeout(async () => {
+        try {
+          await sound.replayAsync();
+        } catch (error) {
+          // Ignore play errors
         }
-      });
-
-      await sound.playAsync();
-    } catch (error) {
-      // Ignore sound errors
+      }, 200);
     }
-  }, [isInteractionLocked]);
+  }, [isInteractionLocked, sound]);
 
   const handleAnimationFinish = useCallback(() => {
     // interaction finished
@@ -511,8 +529,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: Spacing.md,
-    paddingBottom: Spacing.xxl,
+    paddingBottom: Spacing.sm,
   },
   header: {
     flexDirection: 'row',
@@ -709,8 +726,8 @@ const styles = StyleSheet.create({
   sheepSection: {
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: Spacing.md,
-    marginTop: Spacing.sm,
+    marginBottom: 0,
+    marginTop: 0,
   },
   sheepContainer: {
     flexDirection: 'row',
