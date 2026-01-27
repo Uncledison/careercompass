@@ -300,8 +300,8 @@ export default function ProfileScreen() {
             style={{
               position: 'absolute',
               right: -10,
-              width: 90,
-              height: 90,
+              width: 135,
+              height: 135,
               justifyContent: 'center',
               alignItems: 'center',
             }}
@@ -583,7 +583,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerTitle: {
-    ...TextStyle.largeTitle,
+    ...TextStyle.title2,
+    marginLeft: 24,
     color: Colors.text.primary,
   },
   profileCard: {

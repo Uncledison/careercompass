@@ -348,7 +348,6 @@ export default function StatsScreen() {
           </Svg>
         </Pressable>
         <Text style={styles.headerTitle}>통계 분석</Text>
-        <View style={{ width: 24 }} />
       </View>
 
       <ScrollView
@@ -583,7 +582,6 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
   },
@@ -591,7 +589,8 @@ const styles = StyleSheet.create({
     padding: Spacing.xs,
   },
   headerTitle: {
-    ...TextStyle.headline,
+    ...TextStyle.title2,
+    marginLeft: 8,
     color: Colors.text.primary,
   },
   scrollView: {

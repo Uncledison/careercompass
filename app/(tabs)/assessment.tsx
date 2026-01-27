@@ -182,7 +182,8 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.lg,
   },
   headerTitle: {
-    ...TextStyle.largeTitle,
+    ...TextStyle.title2,
+    marginLeft: 24,
     color: Colors.text.primary,
   },
   headerSubtitle: {

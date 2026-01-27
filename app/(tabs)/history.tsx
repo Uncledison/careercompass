@@ -296,7 +296,8 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.lg,
   },
   headerTitle: {
-    ...TextStyle.largeTitle,
+    ...TextStyle.title2,
+    marginLeft: 24,
     color: Colors.text.primary,
   },
   clearButton: {
@@ -308,7 +309,7 @@ const styles = StyleSheet.create({
   },
   clearButtonText: {
     ...TextStyle.callout,
-    color: Colors.error,
+    color: Colors.semantic.error,
   },
   countContainer: {
     paddingHorizontal: Spacing.md,
