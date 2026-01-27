@@ -223,6 +223,11 @@ export default function HomeScreen() {
 
     setInteractionLocked(true);
 
+    // Fallback: Auto-unlock after 2 seconds in case onAnimationFinish doesn't fire (Web issue)
+    setTimeout(() => {
+      setInteractionLocked(false);
+    }, 2000);
+
     // Play sound after 0.2 seconds delay for sync
     if (sound) {
       setTimeout(async () => {

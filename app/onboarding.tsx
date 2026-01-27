@@ -245,7 +245,7 @@ const styles = StyleSheet.create({
   illustrationContainer: {
     width: 240,
     height: 240,
-    marginBottom: Spacing.xxl,
+    marginBottom: Spacing.lg,
     backgroundColor: Colors.gray[100],
     borderRadius: BorderRadius.xxl,
     alignItems: 'center',
