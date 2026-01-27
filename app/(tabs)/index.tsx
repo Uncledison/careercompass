@@ -440,12 +440,12 @@ export default function HomeScreen() {
                   style={{ width: '100%', height: '100%' }}
                 />
                 <InteractionHint
-                  text="눈이 올까? 눌러봐!"
+                  text="Snow ?"
                   visible={showCloudHint && !isSnowing}
                   delay={2000}
                   direction="right" // Cloud is on right, hint should be left? No, cloud is right, hint to the left of it?
                   // Actually `direction` determines pointer position. `right` means pointer is on the right (bubble on left).
-                  style={{ position: 'absolute', top: 60, right: 70, width: 120 }}
+                  style={{ position: 'absolute', top: 60, right: 75, width: 80 }}
                 />
               </Pressable>
             </View>
@@ -548,11 +548,11 @@ export default function HomeScreen() {
               onAnimationFinish={isInteractionLocked ? handleAnimationFinish : undefined}
             />
             <InteractionHint
-              text="움직일까? 눌러봐"
+              text="Jump ?"
               visible={showSheepHint && !isInteractionLocked}
               delay={3000} // Shear appears a bit later
               direction="bottom" // Pointer on bottom, bubble above sheep
-              style={{ position: 'absolute', top: -40, left: 10, width: 110 }}
+              style={{ position: 'absolute', top: -35, left: 15, width: 80 }}
             />
           </Pressable>
         </View>

@@ -2,7 +2,6 @@ import React, { useEffect } from 'react';
 import { StyleSheet, Text, View, ViewStyle } from 'react-native';
 import Animated, {
     useSharedValue,
-    useAnimatedStyle,
     withRepeat,
     withSequence,
     withTiming,
@@ -10,6 +9,7 @@ import Animated, {
     ZoomIn,
     FadeOut,
     Easing,
+    useAnimatedStyle,
 } from 'react-native-reanimated';
 import { Colors, Spacing, BorderRadius, Shadow, TextStyle } from '../constants';
 
@@ -28,35 +28,17 @@ export const InteractionHint = ({
     style,
     direction = 'left',
 }: InteractionHintProps) => {
-    const rotation = useSharedValue(0);
-    const translateY = useSharedValue(0);
+    const scale = useSharedValue(1);
 
     useEffect(() => {
         if (visible) {
-            // Wiggle/Shake animation
-            rotation.value = withDelay(
-                delay + 500, // Start shaking slightly after appearing
-                withRepeat(
-                    withSequence(
-                        withTiming(-5, { duration: 100 }),
-                        withTiming(5, { duration: 100 }),
-                        withTiming(-3, { duration: 100 }),
-                        withTiming(3, { duration: 100 }),
-                        withTiming(0, { duration: 100 }),
-                        withDelay(2000, withTiming(0, { duration: 0 })) // Pause between shakes
-                    ),
-                    -1, // Infinite repeat
-                    false // No reverse
-                )
-            );
-
-            // Gentle float/bobbing
-            translateY.value = withDelay(
+            // Pulse / Breathing animation (Apple style)
+            scale.value = withDelay(
                 delay,
                 withRepeat(
                     withSequence(
-                        withTiming(-4, { duration: 1000, easing: Easing.inOut(Easing.quad) }),
-                        withTiming(0, { duration: 1000, easing: Easing.inOut(Easing.quad) })
+                        withTiming(1.05, { duration: 1000, easing: Easing.inOut(Easing.quad) }),
+                        withTiming(1, { duration: 1000, easing: Easing.inOut(Easing.quad) })
                     ),
                     -1,
                     true
@@ -66,10 +48,7 @@ export const InteractionHint = ({
     }, [visible, delay]);
 
     const animatedStyle = useAnimatedStyle(() => ({
-        transform: [
-            { rotateZ: `${rotation.value}deg` },
-            { translateY: translateY.value }
-        ],
+        transform: [{ scale: scale.value }],
     }));
 
     if (!visible) return null;
@@ -85,8 +64,6 @@ export const InteractionHint = ({
             ]}
         >
             <Text style={styles.text}>{text}</Text>
-            {/* Little triangle pointer based on direction could be added here, 
-          but keeping it simple (pill shape) for now as requested "Bubble" */}
             <View style={[
                 styles.pointer,
                 direction === 'left' ? styles.pointerLeft :
@@ -101,16 +78,26 @@ export const InteractionHint = ({
 const styles = StyleSheet.create({
     container: {
         position: 'absolute',
-        backgroundColor: Colors.primary.main,
-        paddingHorizontal: Spacing.sm,
-        paddingVertical: 6,
+        backgroundColor: 'rgba(255, 255, 255, 0.9)', // Apple-like translucent white
+        paddingHorizontal: Spacing.md, // Slightly more padding
+        paddingVertical: Spacing.sm, // Slightly more padding
         borderRadius: BorderRadius.full,
         zIndex: 100,
-        ...Shadow.sm,
+        borderWidth: 1, // Subtle border
+        borderColor: 'rgba(255, 255, 255, 0.5)', // Lighter border
+        // Shadow.sm removed for a flatter, modern look
+        shadowColor: "#000",
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 2,
     },
     text: {
         ...TextStyle.caption2,
-        color: '#FFFFFF', // Keeping it white for contrast on Primary Blue
+        color: Colors.text.primary, // Darker text for contrast on light background
         fontWeight: 'bold',
     },
     pointer: {
@@ -121,55 +108,55 @@ const styles = StyleSheet.create({
         borderStyle: 'solid',
     },
     pointerLeft: {
-        right: -6,
+        right: -5,
         top: '50%',
-        marginTop: -4,
-        borderTopWidth: 4,
+        marginTop: -3,
+        borderTopWidth: 3,
         borderRightWidth: 0,
-        borderBottomWidth: 4,
-        borderLeftWidth: 6,
+        borderBottomWidth: 3,
+        borderLeftWidth: 5,
         borderTopColor: 'transparent',
         borderRightColor: 'transparent',
         borderBottomColor: 'transparent',
-        borderLeftColor: Colors.primary.main,
+        borderLeftColor: 'rgba(255, 255, 255, 0.9)',
     },
     pointerRight: {
-        left: -6,
+        left: -5,
         top: '50%',
-        marginTop: -4,
-        borderTopWidth: 4,
-        borderRightWidth: 6,
-        borderBottomWidth: 4,
+        marginTop: -3,
+        borderTopWidth: 3,
+        borderRightWidth: 5,
+        borderBottomWidth: 3,
         borderLeftWidth: 0,
         borderTopColor: 'transparent',
-        borderRightColor: Colors.primary.main,
+        borderRightColor: 'rgba(255, 255, 255, 0.9)',
         borderBottomColor: 'transparent',
         borderLeftColor: 'transparent',
     },
     pointerBottom: {
-        bottom: -6,
+        bottom: -5,
         left: '50%',
-        marginLeft: -4,
-        borderTopWidth: 6,
-        borderRightWidth: 4,
+        marginLeft: -3,
+        borderTopWidth: 5,
+        borderRightWidth: 3,
         borderBottomWidth: 0,
-        borderLeftWidth: 4,
-        borderTopColor: Colors.primary.main,
+        borderLeftWidth: 3,
+        borderTopColor: 'rgba(255, 255, 255, 0.9)',
         borderRightColor: 'transparent',
         borderBottomColor: 'transparent',
         borderLeftColor: 'transparent',
     },
     pointerTop: {
-        top: -6,
+        top: -5,
         left: '50%',
-        marginLeft: -4,
+        marginLeft: -3,
         borderTopWidth: 0,
-        borderRightWidth: 4,
-        borderBottomWidth: 6,
-        borderLeftWidth: 4,
+        borderRightWidth: 3,
+        borderBottomWidth: 5,
+        borderLeftWidth: 3,
         borderTopColor: 'transparent',
         borderRightColor: 'transparent',
-        borderBottomColor: Colors.primary.main,
+        borderBottomColor: 'rgba(255, 255, 255, 0.9)',
         borderLeftColor: 'transparent',
     }
 });
