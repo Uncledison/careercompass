@@ -271,9 +271,11 @@ const styles = StyleSheet.create({
     lineHeight: 26,
   },
   footer: {
+    position: 'absolute',
+    bottom: 80,
+    left: 0,
+    right: 0,
     paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.lg,
-    marginBottom: Spacing.xxl,
     gap: Spacing.md,
   },
   pagination: {
