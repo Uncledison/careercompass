@@ -159,30 +159,32 @@ export default function OnboardingScreen() {
           </Pressable>
         </View>
 
-        {/* 슬라이드 */}
-        <Animated.FlatList
-          ref={flatListRef}
-          data={slides}
-          renderItem={renderSlide}
-          keyExtractor={(item) => item.id}
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          getItemLayout={(_, index) => ({
-            length: SCREEN_WIDTH,
-            offset: SCREEN_WIDTH * index,
-            index,
-          })}
-          onScroll={Animated.event(
-            [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-            { useNativeDriver: true }
-          )}
-          onMomentumScrollEnd={(e) => {
-            const index = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
-            setCurrentIndex(index);
-          }}
-          scrollEventThrottle={16}
-        />
+        {/* 슬라이드 - flex: 1로 제한된 공간 사용 */}
+        <View style={styles.slideContainer}>
+          <Animated.FlatList
+            ref={flatListRef}
+            data={slides}
+            renderItem={renderSlide}
+            keyExtractor={(item) => item.id}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            getItemLayout={(_, index) => ({
+              length: SCREEN_WIDTH,
+              offset: SCREEN_WIDTH * index,
+              index,
+            })}
+            onScroll={Animated.event(
+              [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+              { useNativeDriver: true }
+            )}
+            onMomentumScrollEnd={(e) => {
+              const index = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
+              setCurrentIndex(index);
+            }}
+            scrollEventThrottle={16}
+          />
+        </View>
 
         {/* 하단 영역 */}
         <View style={styles.footer}>
@@ -221,6 +223,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   safeArea: {
+    flex: 1,
+  },
+  slideContainer: {
     flex: 1,
   },
   header: {
@@ -268,6 +273,7 @@ const styles = StyleSheet.create({
   footer: {
     paddingHorizontal: Spacing.lg,
     paddingBottom: Spacing.lg,
+    marginBottom: Spacing.xxl,
     gap: Spacing.md,
   },
   pagination: {
