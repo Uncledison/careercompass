@@ -227,7 +227,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'flex-end',
     paddingHorizontal: Spacing.md,
-    paddingTop: Spacing.sm,
+    paddingTop: Spacing.lg,
   },
   skipButton: {
     padding: Spacing.sm,
@@ -267,8 +267,8 @@ const styles = StyleSheet.create({
   },
   footer: {
     paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.xl,
-    gap: Spacing.lg,
+    paddingBottom: Spacing.lg,
+    gap: Spacing.md,
   },
   pagination: {
     flexDirection: 'row',
