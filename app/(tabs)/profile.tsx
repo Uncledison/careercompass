@@ -299,9 +299,9 @@ export default function ProfileScreen() {
             hitSlop={10}
             style={{
               position: 'absolute',
-              right: 0,
-              width: 50,
-              height: 50,
+              right: -10,
+              width: 90,
+              height: 90,
               justifyContent: 'center',
               alignItems: 'center',
             }}
