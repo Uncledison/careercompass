@@ -3,7 +3,7 @@
  * 사용자 정보 표시 및 편집
  */
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -15,11 +15,13 @@ import {
   Platform,
   Switch,
   Alert,
+  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import * as Linking from 'expo-linking';
 import LottieView from 'lottie-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Colors, Spacing, BorderRadius, Shadow, TextStyle } from '../../src/constants';
 import {
@@ -168,6 +170,15 @@ export default function ProfileScreen() {
 
   // Snow Effect State
   const [isSnowing, setIsSnowing] = useState(false);
+  const darkBgOpacity = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(darkBgOpacity, {
+      toValue: isSnowing ? 1 : 0,
+      duration: 1500,
+      useNativeDriver: true,
+    }).start();
+  }, [isSnowing]);
 
   const [editNickname, setEditNickname] = useState('');
   const [editSchoolType, setEditSchoolType] = useState<SchoolType>('elementary');
@@ -246,6 +257,23 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background.secondary }]} edges={['top']}>
+      {/* Dark Gradient Overlay */}
+      <Animated.View
+        style={[
+          StyleSheet.absoluteFill,
+          {
+            opacity: darkBgOpacity,
+            zIndex: 0,
+          }
+        ]}
+        pointerEvents="none"
+      >
+        <LinearGradient
+          colors={['#1a1f35', '#0b0e17']}
+          style={{ flex: 1 }}
+        />
+      </Animated.View>
+
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -253,6 +281,25 @@ export default function ProfileScreen() {
       >
         <View style={styles.header}>
           <Text style={[styles.headerTitle, { color: colors.text.primary }]}>내 정보</Text>
+          <Pressable
+            onPress={() => setIsSnowing(!isSnowing)}
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 22,
+              backgroundColor: '#E0F2F7',
+              justifyContent: 'center',
+              alignItems: 'center',
+              ...Shadow.sm
+            }}
+          >
+            <LottieView
+              source={require('../../assets/lottie/cloud-blue-snow.json')}
+              style={{ width: 36, height: 36 }}
+              autoPlay
+              loop
+            />
+          </Pressable>
         </View>
 
         {/* 프로필 카드 */}
@@ -264,19 +311,6 @@ export default function ProfileScreen() {
               {profile ? getFullGradeLabel(profile.schoolType, profile.grade) : '초등학교 5학년'}
             </Text>
           </View>
-
-          {/* Snow Toggle Button */}
-          <Pressable
-            onPress={() => setIsSnowing(!isSnowing)}
-            style={{ marginRight: Spacing.sm }}
-          >
-            <LottieView
-              source={require('../../assets/lottie/cloud-snow.json')}
-              style={{ width: 40, height: 40 }}
-              autoPlay
-              loop
-            />
-          </Pressable>
 
           <Pressable style={styles.editButton} onPress={openEditModal}>
             <Text style={styles.editButtonText}>수정</Text>
@@ -526,6 +560,9 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingVertical: Spacing.lg,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   headerTitle: {
     ...TextStyle.largeTitle,
