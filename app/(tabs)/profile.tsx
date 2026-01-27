@@ -33,6 +33,7 @@ import {
 import { useHistoryStore, formatDate } from '../../src/stores/historyStore';
 import { ModelViewer3D } from '../../src/components/character/ModelViewer3D';
 import { SnowOverlay } from '../../src/components/SnowOverlay';
+import { InteractionHint } from '../../src/components/InteractionHint';
 
 import { useTheme } from '../../src/context/ThemeContext';
 
@@ -185,7 +186,14 @@ export default function ProfileScreen() {
   const [editGrade, setEditGrade] = useState<GradeNumber>(5);
   const [editCharacter, setEditCharacter] = useState('Female_1');
 
-  // 데이터 로드
+  // Interaction Hints
+  const [showCloudHint, setShowCloudHint] = useState(true);
+
+  // 눈 내림 토글
+  const handleSnowToggle = () => {
+    setShowCloudHint(false); // Dismiss hint on first interact
+    setIsSnowing(!isSnowing);
+  };
   useEffect(() => {
     loadProfile();
     loadHistory();
@@ -295,7 +303,7 @@ export default function ProfileScreen() {
             내 정보
           </Animated.Text>
           <Pressable
-            onPress={() => setIsSnowing(!isSnowing)}
+            onPress={handleSnowToggle}
             hitSlop={10}
             style={{
               position: 'absolute',
@@ -312,6 +320,13 @@ export default function ProfileScreen() {
               resizeMode="contain"
               autoPlay
               loop
+            />
+            <InteractionHint
+              text="눈이 올까? 눌러봐!"
+              visible={showCloudHint && !isSnowing}
+              delay={2000}
+              direction="left"
+              style={{ position: 'absolute', top: 60, right: 90, width: 120 }}
             />
           </Pressable>
         </View>

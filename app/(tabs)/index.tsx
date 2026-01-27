@@ -12,6 +12,8 @@ import {
   Image,
 } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
+import { InteractionHint } from '../../src/components/InteractionHint';
+import { useNavigation } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LottieView from 'lottie-react-native';
@@ -22,6 +24,7 @@ import { ModelViewer3D } from '../../src/components/character/ModelViewer3D';
 import { SnowOverlay } from '../../src/components/SnowOverlay';
 import { InfiniteMarquee } from '../../src/components/InfiniteMarquee';
 import { Audio } from 'expo-av';
+
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_WIDTH = SCREEN_WIDTH - Spacing.lg * 2;
@@ -198,6 +201,10 @@ export default function HomeScreen() {
   // Preload sound
   const [sound, setSound] = useState<Audio.Sound | null>(null);
 
+  // Interaction Hints
+  const [showCloudHint, setShowCloudHint] = useState(true);
+  const [showSheepHint, setShowSheepHint] = useState(true);
+
   useEffect(() => {
     async function loadSound() {
       try {
@@ -218,8 +225,16 @@ export default function HomeScreen() {
     };
   }, []);
 
+  // 눈 내림 토글
+  const handleSnowToggle = (e: any) => {
+    e.stopPropagation();
+    setShowCloudHint(false);
+    setIsSnowing(prev => !prev);
+  }
+
   const handleSheepPress = useCallback(async () => {
     if (isInteractionLocked) return;
+    setShowSheepHint(false);
 
     setInteractionLocked(true);
 
@@ -408,10 +423,7 @@ export default function HomeScreen() {
 
               {/* Snow Cloud Trigger */}
               <Pressable
-                onPress={(e) => {
-                  e.stopPropagation();
-                  setIsSnowing(prev => !prev);
-                }}
+                onPress={handleSnowToggle}
                 style={{
                   position: 'absolute',
                   top: 20,
@@ -426,6 +438,14 @@ export default function HomeScreen() {
                   autoPlay
                   loop
                   style={{ width: '100%', height: '100%' }}
+                />
+                <InteractionHint
+                  text="눈이 올까? 눌러봐!"
+                  visible={showCloudHint && !isSnowing}
+                  delay={2000}
+                  direction="right" // Cloud is on right, hint should be left? No, cloud is right, hint to the left of it?
+                  // Actually `direction` determines pointer position. `right` means pointer is on the right (bubble on left).
+                  style={{ position: 'absolute', top: 60, right: 70, width: 120 }}
                 />
               </Pressable>
             </View>
@@ -526,6 +546,13 @@ export default function HomeScreen() {
               loop={!isInteractionLocked}
               autoPlay={true}
               onAnimationFinish={isInteractionLocked ? handleAnimationFinish : undefined}
+            />
+            <InteractionHint
+              text="움직일까? 눌러봐"
+              visible={showSheepHint && !isInteractionLocked}
+              delay={3000} // Shear appears a bit later
+              direction="bottom" // Pointer on bottom, bubble above sheep
+              style={{ position: 'absolute', top: -40, left: 10, width: 110 }}
             />
           </Pressable>
         </View>
