@@ -191,176 +191,57 @@ export default function HomeScreen() {
   const [savedProgress, setSavedProgress] = useState<SavedAssessmentState | null>(null);
   const { loadSavedProgress, resumeAssessment, clearSavedProgress, resetAssessment } = useAssessmentStore();
   const { profile, loadProfile } = useProfileStore();
-  // Sheep Game State
-  const [gameState, setGameState] = useState<'idle' | 'playing' | 'gameover'>('idle');
-  const [score, setScore] = useState(0);
+  // Sheep Animation State
   const [isInteractionLocked, setInteractionLocked] = useState(false);
-  const mouseAnim = useRef(new Animated.Value(SCREEN_WIDTH)).current;
-  const gameLoopRef = useRef<number | null>(null);
-  const startTimeRef = useRef<number>(0);
-  const scoreRef = useRef(0);
+  const sheepRef = useRef<LottieView>(null);
 
   // Preload sound
-  const [jumpSound, setJumpSound] = useState<Audio.Sound | null>(null);
-  const [collisionSound, setCollisionSound] = useState<Audio.Sound | null>(null);
+  const [sound, setSound] = useState<Audio.Sound | null>(null);
 
   useEffect(() => {
-    async function loadSounds() {
+    async function loadSound() {
       try {
-        const { sound: jump } = await Audio.Sound.createAsync(
+        const { sound } = await Audio.Sound.createAsync(
           require('../../assets/sounds/Sheep.mp3')
         );
-        setJumpSound(jump);
-
-        const { sound: collision } = await Audio.Sound.createAsync(
-          require('../../assets/sounds/boing-01.mp3') // Used for collision/gameover as requested
-        );
-        setCollisionSound(collision);
+        setSound(sound);
       } catch (error) {
-        console.log('Error loading sounds', error);
+        console.log('Error loading sound', error);
       }
     }
-    loadSounds();
+    loadSound();
 
     return () => {
-      if (jumpSound) jumpSound.unloadAsync();
-      if (collisionSound) collisionSound.unloadAsync();
+      if (sound) {
+        sound.unloadAsync();
+      }
     };
   }, []);
 
-  // Game Loop
-  useEffect(() => {
-    if (gameState === 'playing') {
-      const loop = () => {
-        if (gameState !== 'playing') return;
-
-        // Mouse movement simulation (simple linear interpolation via Animated, but we need position for collision)
-        // Actually, let's use standard Animated.loop for visual, but we need to track X for collision.
-        // Better: Use requestAnimationFrame for both movement logic and collision to align them.
-
-        // However, mixing Animated and JS loop is tricky.
-        // Let's use listener on Animated Value.
-        // But Animated.Value doesn't support reading value synchronously easily without listener.
-
-        // Alternative: Use JS-driven animation for game logic
-        const now = Date.now();
-        const timeElapsed = now - startTimeRef.current;
-        const duration = 2000; // Mouse takes 2s to cross screen (adjust for difficulty)
-
-        // Calculate position: ScreenWidth -> -100
-        // Progress 0 -> 1 over duration
-        const progress = (timeElapsed % duration) / duration;
-        const position = SCREEN_WIDTH - (progress * (SCREEN_WIDTH + 100));
-
-        mouseAnim.setValue(position);
-
-        // Check if new cycle (score increment)
-        // If position jumps from negative to positive, we passed a cycle.
-        // Simplified: Check if mouse is near sheep (Screen Center roughly)
-
-        // Sheep is approximately at center? No, sheep position depends on layout.
-        // Sheep is centered in 'sheepOnGrass'. 
-        // Let's assume Sheep is around X = 50 to 150 (relative to container? No, it's absolute in bottomLandscape).
-        // bottomLandscape is width=SCREEN_WIDTH. Sheep is centered.
-        // So Sheep X range is roughly (SCREEN_WIDTH/2 - 40) to (SCREEN_WIDTH/2 + 40).
-
-        const sheepLeft = SCREEN_WIDTH / 2 - 50;
-        const sheepRight = SCREEN_WIDTH / 2 + 50;
-
-        // Mouse width ~80
-        const mouseLeft = position;
-        const mouseRight = position + 80;
-
-        // Collision Check
-        if (mouseRight > sheepLeft && mouseLeft < sheepRight) {
-          // Overlapping horizontally
-          if (!isInteractionLocked) {
-            // Sheep NOT jumping -> Collision!
-            handleGameOver();
-            return;
-          }
-        }
-
-        // Score Logic: If mouse passes sheep safely
-        // We can just count successful jumps? Or continuous survival?
-        // Let's increment score when mouse passes sheep.
-        // Trigger once per cycle.
-        if (mouseRight < sheepLeft && mouseRight > sheepLeft - 20) {
-          // Just passed
-          // Need a flag to avoid double counting per frame
-          // For now, simpler: Score on Jump? Or survival. Survival is better.
-          // We'll update score based on time or cycles.
-          // Let's increment score every time `progress` wraps? 
-          // Or just use `Math.floor(timeElapsed / duration)`
-        }
-
-        // Let's use integer score based on cycles
-        const newScore = Math.floor(timeElapsed / duration);
-        if (newScore > scoreRef.current) {
-          scoreRef.current = newScore;
-          setScore(newScore);
-        }
-
-        gameLoopRef.current = requestAnimationFrame(loop);
-      };
-
-      startTimeRef.current = Date.now();
-      gameLoopRef.current = requestAnimationFrame(loop);
-    }
-
-    return () => {
-      if (gameLoopRef.current) cancelAnimationFrame(gameLoopRef.current);
-    }
-  }, [gameState, isInteractionLocked]);
-
-
-  const startGame = () => {
-    setScore(0);
-    scoreRef.current = 0;
-    setGameState('playing');
-    setInteractionLocked(false);
-  };
-
-  const handleGameOver = async () => {
-    setGameState('gameover');
-    if (gameLoopRef.current) cancelAnimationFrame(gameLoopRef.current);
-
-    // Play Boing sound
-    if (collisionSound) {
-      try { await collisionSound.replayAsync(); } catch (e) { }
-    }
-  };
-
-  const handleSheepJump = useCallback(async () => {
-    if (gameState === 'idle') {
-      startGame();
-      return;
-    }
-
-    if (isInteractionLocked || gameState !== 'playing') return;
+  const handleSheepPress = useCallback(async () => {
+    if (isInteractionLocked) return;
 
     setInteractionLocked(true);
 
-    // Fallback: Auto-unlock after 1.5 seconds (Sheep-Jump-only.json duration)
-    // Adjusted: Sheep-Jump-only might be shorter/longer.
+    // Fallback: Auto-unlock after 1.5 seconds (Sheep-Jump.json is short)
     setTimeout(() => {
       setInteractionLocked(false);
-    }, 1000); // 1.0s jump duration
+    }, 1500);
 
-    // Play Jump sound (Sheep.mp3)
-    if (jumpSound) {
+    // Play sound immediately
+    if (sound) {
       try {
-        await jumpSound.replayAsync();
+        await sound.replayAsync();
       } catch (error) {
         // Ignore play errors
       }
     }
-  }, [isInteractionLocked, gameState, jumpSound]);
+  }, [isInteractionLocked, sound]);
 
   const handleAnimationFinish = useCallback(() => {
+    // interaction finished
     setInteractionLocked(false);
   }, []);
-
   const [isSnowing, setIsSnowing] = useState(false);
 
   // 저장된 진행 상태 확인 (화면 포커스 시마다)
@@ -622,22 +503,9 @@ export default function HomeScreen() {
 
         {/* Sheep Animation Container */}
         {/* Bottom Landscape with Grass and Sheep */}
-        {/* Game UI Overlay */}
-        {gameState !== 'idle' && (
-          <View style={styles.gameOverlay}>
-            <Text style={styles.scoreText}>{score}</Text>
-            {gameState === 'gameover' && (
-              <View style={styles.gameOverContainer}>
-                <Text style={styles.gameOverText}>GAME OVER</Text>
-                <Pressable onPress={startGame} style={styles.restartButton}>
-                  <Text style={styles.restartButtonText}>다시 하기</Text>
-                </Pressable>
-              </View>
-            )}
-          </View>
-        )}
-
-        <View style={styles.bottomLandscape}>
+        <View
+          style={styles.bottomLandscape}
+        >
           <LottieView
             source={require('../../assets/lottie/Grass.json')}
             style={styles.grassLottie}
@@ -645,42 +513,17 @@ export default function HomeScreen() {
             loop
             resizeMode="cover"
           />
-
-          {/* Mouse Obstacle */}
-          {gameState !== 'idle' && (
-            <Animated.View
-              style={[
-                styles.mouseContainer,
-                {
-                  transform: [{ translateX: mouseAnim }]
-                }
-              ]}
-            >
-              <LottieView
-                source={require('../../assets/lottie/Mouse-only.json')}
-                style={styles.mouseLottie}
-                autoPlay
-                loop
-              />
-            </Animated.View>
-          )}
-
-          {/* Sheep Character */}
           <Pressable
-            onPress={handleSheepJump}
+            onPress={handleSheepPress}
             style={styles.sheepOnGrass}
-            disabled={isInteractionLocked || gameState === 'gameover'}
+            disabled={isInteractionLocked}
           >
             <LottieView
-              source={
-                gameState === 'gameover'
-                  ? require('../../assets/lottie/SheepDead.json')
-                  : isInteractionLocked
-                    ? require('../../assets/lottie/Sheep-Jump.json')
-                    : require('../../assets/lottie/SheepIdle.json')
-              }
+              source={isInteractionLocked
+                ? require('../../assets/lottie/Sheep-Jump.json')
+                : require('../../assets/lottie/SheepIdle.json')}
               style={styles.sheepLottie}
-              loop={gameState === 'gameover' ? false : !isInteractionLocked}
+              loop={!isInteractionLocked}
               autoPlay={true}
               onAnimationFinish={isInteractionLocked ? handleAnimationFinish : undefined}
             />
@@ -755,87 +598,6 @@ const styles = StyleSheet.create({
     ...TextStyle.callout,
     color: Colors.text.inverse,
     opacity: 0.9,
-  },
-  bottomLandscape: {
-    height: 200,
-    width: SCREEN_WIDTH,
-    position: 'relative',
-    marginTop: Spacing.xl,
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-  },
-  grassLottie: {
-    width: GRASS_WIDTH,
-    height: GRASS_HEIGHT,
-    position: 'absolute',
-    bottom: -50,
-  },
-  sheepOnGrass: {
-    position: 'absolute',
-    bottom: 20,
-    width: 150,
-    height: 150,
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 10,
-  },
-  sheepLottie: {
-    width: '100%',
-    height: '100%',
-  },
-  // Game Styles
-  gameOverlay: {
-    position: 'absolute',
-    top: Spacing.xl,
-    left: 0,
-    right: 0,
-    zIndex: 100,
-    alignItems: 'center',
-  },
-  scoreText: {
-    ...TextStyle.title1,
-    fontSize: 48,
-    color: Colors.text.primary,
-    textShadowColor: 'rgba(0,0,0,0.2)',
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 3,
-  },
-  gameOverContainer: {
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.9)',
-    padding: Spacing.lg,
-    borderRadius: BorderRadius.xl,
-    ...Shadow.lg,
-    marginTop: Spacing.md,
-  },
-  gameOverText: {
-    ...TextStyle.title2,
-    color: Colors.semantic.error,
-    fontWeight: 'bold',
-    marginBottom: Spacing.md,
-  },
-  restartButton: {
-    backgroundColor: Colors.primary.main,
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.lg,
-    borderRadius: BorderRadius.full,
-  },
-  restartButtonText: {
-    ...TextStyle.callout,
-    color: Colors.text.inverse,
-    fontWeight: '600',
-  },
-  mouseContainer: {
-    position: 'absolute',
-    bottom: 30, // Aligned with grass/sheep feet
-    left: 0,
-    width: 80,
-    height: 60,
-    zIndex: 5,
-  },
-  mouseLottie: {
-    width: '100%',
-    height: '100%',
   },
   mainCardIcon: {
     width: 56,
@@ -978,7 +740,32 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.98 }],
     opacity: 0.9,
   },
-
+  // Bottom Landscape Styles
+  bottomLandscape: {
+    width: GRASS_WIDTH,
+    height: GRASS_HEIGHT,
+    marginTop: Spacing.xl,
+    alignSelf: 'center',
+    borderRadius: BorderRadius.xl,
+    overflow: 'hidden',
+  },
+  grassLottie: {
+    width: GRASS_WIDTH,
+    height: GRASS_HEIGHT,
+  },
+  sheepOnGrass: {
+    position: 'absolute',
+    bottom: 20,
+    alignSelf: 'center',
+  },
+  sheepContainerOnGrass: {
+    marginBottom: 5,
+    zIndex: 10,
+  },
+  sheepLottie: {
+    width: 100,
+    height: 100,
+  },
 
   quickActions: {
     flexDirection: 'row',
