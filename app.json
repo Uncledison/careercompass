@@ -28,7 +28,15 @@
     },
     "web": {
       "favicon": "./assets/favicon.png",
-      "bundler": "metro"
+      "bundler": "metro",
+      "display": "standalone",
+      "startUrl": "/",
+      "shortName": "CareerCompass",
+      "name": "Career Compass - 진로 탐험",
+      "backgroundColor": "#F2F2F7",
+      "themeColor": "#667eea",
+      "orientation": "portrait",
+      "lang": "ko"
     },
     "plugins": [
       "expo-router",

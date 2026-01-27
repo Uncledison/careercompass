@@ -1,12 +1,29 @@
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
+import { useEffect } from 'react';
+import { Stack, usePathname } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { Colors } from '../src/constants';
 
 import { ThemeProvider } from '../src/context/ThemeContext';
 
+declare global {
+  interface Window {
+    gtag: any;
+  }
+}
+
 export default function RootLayout() {
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined' && window.gtag) {
+      window.gtag('config', 'G-XXXXXXXXXX', {
+        page_path: pathname,
+      });
+    }
+  }, [pathname]);
+
   return (
     <ThemeProvider>
       <GestureHandlerRootView style={styles.container}>
