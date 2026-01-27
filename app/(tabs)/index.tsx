@@ -736,7 +736,7 @@ const styles = StyleSheet.create({
   // Bottom Landscape Styles
   bottomLandscape: {
     width: '100%',
-    height: 250, // Hardcoded height for Web compatibility
+    height: 270, // Matches aspect ratio: ~360 * (2000/2650)
     marginTop: Spacing.xl,
     justifyContent: 'flex-end',
     alignItems: 'center',
@@ -744,8 +744,10 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   grassLottie: {
-    width: SCREEN_WIDTH - Spacing.md * 2, // Match button width
-    height: 250, // Hardcoded: approx (width * 2000/2650)
+    position: 'absolute',
+    bottom: 0,
+    width: SCREEN_WIDTH - Spacing.md * 2,
+    height: 270, // Matches container for full coverage
   },
   sheepContainerOnGrass: {
     marginBottom: 5,
