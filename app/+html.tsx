@@ -35,14 +35,13 @@ export default function Root({ children }: PropsWithChildren) {
                 <style dangerouslySetInnerHTML={{ __html: `body { background-color: #F2F2F7; }` }} />
 
                 {/* Google Analytics (GA4) Script */}
-                {/* Replace 'G-XXXXXXXXXX' with your actual Measurement ID */}
-                <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+                <script async src="https://www.googletagmanager.com/gtag/js?id=G-V9WBTTWR46"></script>
                 <script dangerouslySetInnerHTML={{
                     __html: `
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-            gtag('config', 'G-XXXXXXXXXX', {
+            gtag('config', 'G-V9WBTTWR46', {
               send_page_view: false // We will manually track page views via router if needed, or let GA auto-track history changes
             });
           `

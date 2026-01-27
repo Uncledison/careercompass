@@ -18,7 +18,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (Platform.OS === 'web' && typeof window !== 'undefined' && window.gtag) {
-      window.gtag('config', 'G-XXXXXXXXXX', {
+      window.gtag('config', 'G-V9WBTTWR46', {
         page_path: pathname,
       });
     }
