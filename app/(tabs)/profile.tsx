@@ -281,9 +281,11 @@ export default function ProfileScreen() {
       >
         <View style={styles.header}>
           <Animated.Text
+            numberOfLines={1}
             style={[
               styles.headerTitle,
               {
+                flex: 1, // Allow text to take available space
                 color: darkBgOpacity.interpolate({
                   inputRange: [0, 0.5, 1],
                   outputRange: [colors.text.primary, colors.text.primary, '#ffffff']
@@ -295,14 +297,16 @@ export default function ProfileScreen() {
           </Animated.Text>
           <Pressable
             onPress={() => setIsSnowing(!isSnowing)}
+            hitSlop={10} // Easier to press
             style={{
               justifyContent: 'center',
               alignItems: 'center',
+              marginLeft: Spacing.sm, // Add spacing between text and cloud
             }}
           >
             <LottieView
               source={require('../../assets/lottie/cloud-blue-snow.json')}
-              style={{ width: 80, height: 80 }}
+              style={{ width: 60, height: 60 }} // Reduced size
               autoPlay
               loop
             />
