@@ -302,7 +302,7 @@ export default function ProfileScreen() {
               width: 40,
               height: 40,
               borderRadius: 20,
-              backgroundColor: isSnowing ? '#E0F2F7' : colors.gray[200], // Visible circle
+              backgroundColor: isSnowing ? '#4da6ff' : colors.gray[200], // Vivid Sky Blue
               justifyContent: 'center',
               alignItems: 'center',
             }}
