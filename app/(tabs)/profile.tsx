@@ -299,16 +299,15 @@ export default function ProfileScreen() {
             onPress={() => setIsSnowing(!isSnowing)}
             hitSlop={10}
             style={{
+              width: 40,
+              height: 40,
+              borderRadius: 20,
+              backgroundColor: isSnowing ? '#E0F2F7' : colors.gray[200], // Visible circle
               justifyContent: 'center',
               alignItems: 'center',
             }}
           >
-            <LottieView
-              source={require('../../assets/lottie/cloud-blue-snow.json')}
-              style={{ width: 48, height: 48 }}
-              autoPlay
-              loop
-            />
+            <Text style={{ fontSize: 20 }}>{isSnowing ? '❄️' : '☁️'}</Text>
           </Pressable>
         </View>
 
