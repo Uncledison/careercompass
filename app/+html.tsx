@@ -39,10 +39,10 @@ export default function Root({ children }: PropsWithChildren) {
                 <script dangerouslySetInnerHTML={{
                     __html: `
             window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-V9WBTTWR46', {
-              send_page_view: false // We will manually track page views via router if needed, or let GA auto-track history changes
+            window.gtag = function gtag(){window.dataLayer.push(arguments);}
+            window.gtag('js', new Date());
+            window.gtag('config', 'G-V9WBTTWR46', {
+              send_page_view: false
             });
           `
                 }} />

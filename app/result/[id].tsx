@@ -366,7 +366,7 @@ const SummaryCard = ({
 
           {/* 10. URL Footer */}
           <Text style={[styles.urlFooter, { color: 'rgba(255,255,255,0.75)' }]}>
-            http://ai-careercompass.vercel.app
+            https://ai-careercompass.vercel.app
           </Text>
 
         </LinearGradient>

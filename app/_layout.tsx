@@ -18,8 +18,10 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (Platform.OS === 'web' && typeof window !== 'undefined' && window.gtag) {
-      window.gtag('config', 'G-V9WBTTWR46', {
+      window.gtag('event', 'page_view', {
         page_path: pathname,
+        page_location: window.location.href,
+        page_title: document.title,
       });
     }
   }, [pathname]);
