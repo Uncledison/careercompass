@@ -26,6 +26,10 @@ import { Audio } from 'expo-av';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_WIDTH = SCREEN_WIDTH - Spacing.lg * 2;
 
+// Grass Lottie dimensions (matches button width, auto-calculated height)
+const GRASS_WIDTH = SCREEN_WIDTH - Spacing.md * 2;
+const GRASS_HEIGHT = GRASS_WIDTH * (2000 / 2650); // Original ratio preserved
+
 
 
 // 학년 선택 카드
@@ -508,7 +512,7 @@ export default function HomeScreen() {
           />
           <Pressable
             onPress={handleSheepPress}
-            style={styles.sheepContainerOnGrass}
+            style={styles.sheepOnGrass}
             disabled={isInteractionLocked}
           >
             <LottieView
@@ -735,19 +739,21 @@ const styles = StyleSheet.create({
   },
   // Bottom Landscape Styles
   bottomLandscape: {
-    width: '100%',
-    height: 270, // Matches aspect ratio: ~360 * (2000/2650)
+    width: GRASS_WIDTH,
+    height: GRASS_HEIGHT,
     marginTop: Spacing.xl,
-    justifyContent: 'flex-end',
-    alignItems: 'center',
+    alignSelf: 'center',
     borderRadius: BorderRadius.xl,
     overflow: 'hidden',
   },
   grassLottie: {
+    width: GRASS_WIDTH,
+    height: GRASS_HEIGHT,
+  },
+  sheepOnGrass: {
     position: 'absolute',
-    bottom: 0,
-    width: SCREEN_WIDTH - Spacing.md * 2,
-    height: 270, // Matches container for full coverage
+    bottom: 20,
+    alignSelf: 'center',
   },
   sheepContainerOnGrass: {
     marginBottom: 5,
