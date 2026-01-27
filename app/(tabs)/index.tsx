@@ -731,27 +731,24 @@ const styles = StyleSheet.create({
     transform: [{ scale: 0.98 }],
     opacity: 0.9,
   },
-  // Sheep Styles
-  // Bottom Landscape Styles
   // Bottom Landscape Styles
   bottomLandscape: {
-    width: SCREEN_WIDTH,
-    height: 250, // Increase height to give enough space
-    marginLeft: -Spacing.md,
-    marginTop: Spacing.md,
+    width: '100%', // Match card width inside padding
+    height: 200,   // Sufficient height for visual
+    marginTop: Spacing.xl, // Space from sections above
     justifyContent: 'flex-end',
     alignItems: 'center',
-    // overflow: 'hidden', removed to prevent clipping if the lottie content is out of bounds
+    borderRadius: BorderRadius.xl, // Match card rounding
+    overflow: 'hidden', // Prevent overlap
   },
   grassLottie: {
     position: 'absolute',
     bottom: 0,
-    left: 0,
-    width: SCREEN_WIDTH, // Explicit full width
+    width: '100%',
     height: '100%',
   },
   sheepContainerOnGrass: {
-    marginBottom: 50, // Adjust sheep position on the grass
+    marginBottom: 30, // Adjust sheep position
     zIndex: 10,
   },
   sheepLottie: {
