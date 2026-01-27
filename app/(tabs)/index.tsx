@@ -527,6 +527,7 @@ export default function HomeScreen() {
               style={styles.sheepLottie}
               loop={!isInteractionLocked}
               autoPlay={true}
+              progress={isInteractionLocked ? 0.68 : undefined}
               onAnimationFinish={isInteractionLocked ? handleAnimationFinish : undefined}
             />
           </Pressable>

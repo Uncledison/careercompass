@@ -239,7 +239,8 @@ const styles = StyleSheet.create({
   slide: {
     width: SCREEN_WIDTH,
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
+    paddingTop: Spacing.xxl,
     paddingHorizontal: Spacing.xl,
   },
   illustrationContainer: {
