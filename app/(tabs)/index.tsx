@@ -223,20 +223,18 @@ export default function HomeScreen() {
 
     setInteractionLocked(true);
 
-    // Fallback: Auto-unlock after 3 seconds in case onAnimationFinish doesn't fire (Web issue)
+    // Fallback: Auto-unlock after 1.5 seconds (Sheep-Jump.json is short)
     setTimeout(() => {
       setInteractionLocked(false);
-    }, 3000);
+    }, 1500);
 
-    // Play sound after 0.2 seconds delay for sync
+    // Play sound immediately
     if (sound) {
-      setTimeout(async () => {
-        try {
-          await sound.replayAsync();
-        } catch (error) {
-          // Ignore play errors
-        }
-      }, 200);
+      try {
+        await sound.replayAsync();
+      } catch (error) {
+        // Ignore play errors
+      }
     }
   }, [isInteractionLocked, sound]);
 
@@ -522,7 +520,7 @@ export default function HomeScreen() {
           >
             <LottieView
               source={isInteractionLocked
-                ? require('../../assets/lottie/SheepActive.json')
+                ? require('../../assets/lottie/Sheep-Jump.json')
                 : require('../../assets/lottie/SheepIdle.json')}
               style={styles.sheepLottie}
               loop={!isInteractionLocked}
