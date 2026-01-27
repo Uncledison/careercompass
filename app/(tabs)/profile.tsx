@@ -285,7 +285,6 @@ export default function ProfileScreen() {
             style={[
               styles.headerTitle,
               {
-                flex: 1,
                 color: darkBgOpacity.interpolate({
                   inputRange: [0, 0.5, 1],
                   outputRange: [colors.text.primary, colors.text.primary, '#ffffff']
@@ -299,13 +298,18 @@ export default function ProfileScreen() {
             onPress={() => setIsSnowing(!isSnowing)}
             hitSlop={10}
             style={{
+              position: 'absolute',
+              right: 0,
+              width: 50,
+              height: 50,
               justifyContent: 'center',
               alignItems: 'center',
             }}
           >
             <LottieView
               source={require('../../assets/lottie/cloud-blue-snow.json')}
-              style={{ width: 44, height: 44 }}
+              style={{ width: '100%', height: '100%' }}
+              resizeMode="contain"
               autoPlay
               loop
             />
