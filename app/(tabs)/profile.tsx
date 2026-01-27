@@ -325,7 +325,7 @@ export default function ProfileScreen() {
               text="Snow?"
               visible={showCloudHint && !isSnowing}
               delay={2000}
-              direction="right"
+              direction="left"
               style={{ position: 'absolute', top: 35, right: 80, width: 60 }}
             />
           </Pressable>
