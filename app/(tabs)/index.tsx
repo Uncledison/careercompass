@@ -745,10 +745,11 @@ const styles = StyleSheet.create({
   },
   grassLottie: {
     position: 'absolute',
-    bottom: -20, // Nudge down slightly to hide any bottom gap
-    width: SCREEN_WIDTH * 3.5, // 3.5x zoom to make grass features visible
-    height: SCREEN_WIDTH * 3.5 * (2000 / 2650), // Maintain aspect ratio
-    left: -(SCREEN_WIDTH * 3.5 - SCREEN_WIDTH) / 2, // Center horizontally
+    bottom: -40, // Pull down further to hide bottom gap
+    width: SCREEN_WIDTH * 3.5,
+    height: SCREEN_WIDTH * 3.5 * (2000 / 2650),
+    left: '50%',
+    marginLeft: -(SCREEN_WIDTH * 3.5) / 2, // Perfect centering
   },
   sheepContainerOnGrass: {
     marginBottom: 5, // Position sheep lower
