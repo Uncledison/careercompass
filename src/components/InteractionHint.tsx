@@ -78,27 +78,27 @@ export const InteractionHint = ({
 const styles = StyleSheet.create({
     container: {
         position: 'absolute',
-        backgroundColor: 'rgba(255, 255, 255, 0.9)', // Apple-like translucent white
-        paddingHorizontal: Spacing.md, // Slightly more padding
-        paddingVertical: Spacing.sm, // Slightly more padding
+        backgroundColor: 'rgba(255, 255, 255, 0.95)', // Almost opaque for crispness
+        paddingHorizontal: 12, // Slimmer horizontal
+        paddingVertical: 6,  // Slimmer vertical
         borderRadius: BorderRadius.full,
         zIndex: 100,
-        borderWidth: 1, // Subtle border
-        borderColor: 'rgba(255, 255, 255, 0.5)', // Lighter border
-        // Shadow.sm removed for a flatter, modern look
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.8)',
         shadowColor: "#000",
         shadowOffset: {
             width: 0,
             height: 2,
         },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
+        shadowOpacity: 0.05, // Very subtle shadow
+        shadowRadius: 3,
         elevation: 2,
     },
     text: {
         ...TextStyle.caption2,
-        color: Colors.text.primary, // Darker text for contrast on light background
+        color: Colors.text.primary,
         fontWeight: 'bold',
+        fontSize: 11, // Slightly smaller text for slim look
     },
     pointer: {
         position: 'absolute',
@@ -107,56 +107,57 @@ const styles = StyleSheet.create({
         backgroundColor: 'transparent',
         borderStyle: 'solid',
     },
+    // Sharp Long Pointers
     pointerLeft: {
-        right: -5,
+        right: -8, // Longer reach
         top: '50%',
-        marginTop: -3,
-        borderTopWidth: 3,
+        marginTop: -4,
+        borderTopWidth: 4,     // Narrower base
         borderRightWidth: 0,
-        borderBottomWidth: 3,
-        borderLeftWidth: 5,
+        borderBottomWidth: 4,  // Narrower base
+        borderLeftWidth: 8,    // Longer tip
         borderTopColor: 'transparent',
         borderRightColor: 'transparent',
         borderBottomColor: 'transparent',
-        borderLeftColor: 'rgba(255, 255, 255, 0.9)',
+        borderLeftColor: 'rgba(255, 255, 255, 0.95)',
     },
     pointerRight: {
-        left: -5,
+        left: -8,
         top: '50%',
-        marginTop: -3,
-        borderTopWidth: 3,
-        borderRightWidth: 5,
-        borderBottomWidth: 3,
+        marginTop: -4,
+        borderTopWidth: 4,
+        borderRightWidth: 8,
+        borderBottomWidth: 4,
         borderLeftWidth: 0,
         borderTopColor: 'transparent',
-        borderRightColor: 'rgba(255, 255, 255, 0.9)',
+        borderRightColor: 'rgba(255, 255, 255, 0.95)',
         borderBottomColor: 'transparent',
         borderLeftColor: 'transparent',
     },
     pointerBottom: {
-        bottom: -5,
+        bottom: -8,
         left: '50%',
-        marginLeft: -3,
-        borderTopWidth: 5,
-        borderRightWidth: 3,
+        marginLeft: -4,
+        borderTopWidth: 8,    // Longer tip
+        borderRightWidth: 4,  // Narrower base
         borderBottomWidth: 0,
-        borderLeftWidth: 3,
-        borderTopColor: 'rgba(255, 255, 255, 0.9)',
+        borderLeftWidth: 4,   // Narrower base
+        borderTopColor: 'rgba(255, 255, 255, 0.95)',
         borderRightColor: 'transparent',
         borderBottomColor: 'transparent',
         borderLeftColor: 'transparent',
     },
     pointerTop: {
-        top: -5,
+        top: -8,
         left: '50%',
-        marginLeft: -3,
+        marginLeft: -4,
         borderTopWidth: 0,
-        borderRightWidth: 3,
-        borderBottomWidth: 5,
-        borderLeftWidth: 3,
+        borderRightWidth: 4,
+        borderBottomWidth: 8,
+        borderLeftWidth: 4,
         borderTopColor: 'transparent',
         borderRightColor: 'transparent',
-        borderBottomColor: 'rgba(255, 255, 255, 0.9)',
+        borderBottomColor: 'rgba(255, 255, 255, 0.95)',
         borderLeftColor: 'transparent',
     }
 });

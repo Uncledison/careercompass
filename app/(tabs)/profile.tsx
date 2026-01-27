@@ -322,11 +322,11 @@ export default function ProfileScreen() {
               loop
             />
             <InteractionHint
-              text="Snow ?"
+              text="Snow?"
               visible={showCloudHint && !isSnowing}
               delay={2000}
-              direction="left"
-              style={{ position: 'absolute', top: 60, right: 90, width: 80 }}
+              direction="right"
+              style={{ position: 'absolute', top: 55, right: 100, width: 60 }}
             />
           </Pressable>
         </View>
