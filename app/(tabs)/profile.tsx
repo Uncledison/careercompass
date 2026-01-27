@@ -280,22 +280,29 @@ export default function ProfileScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <Text style={[styles.headerTitle, { color: colors.text.primary }]}>내 정보</Text>
+          <Animated.Text
+            style={[
+              styles.headerTitle,
+              {
+                color: darkBgOpacity.interpolate({
+                  inputRange: [0, 0.5, 1],
+                  outputRange: [colors.text.primary, colors.text.primary, '#ffffff']
+                })
+              }
+            ]}
+          >
+            내 정보
+          </Animated.Text>
           <Pressable
             onPress={() => setIsSnowing(!isSnowing)}
             style={{
-              width: 44,
-              height: 44,
-              borderRadius: 22,
-              backgroundColor: '#E0F2F7',
               justifyContent: 'center',
               alignItems: 'center',
-              ...Shadow.sm
             }}
           >
             <LottieView
               source={require('../../assets/lottie/cloud-blue-snow.json')}
-              style={{ width: 36, height: 36 }}
+              style={{ width: 80, height: 80 }}
               autoPlay
               loop
             />
@@ -389,7 +396,11 @@ export default function ProfileScreen() {
       </ScrollView>
 
       {/* Snow Overlay */}
-      {isSnowing && <SnowOverlay />}
+      {isSnowing && (
+        <View style={[StyleSheet.absoluteFill, { zIndex: 100 }]} pointerEvents="none">
+          <SnowOverlay />
+        </View>
+      )}
 
       {/* 편집 모달 */}
       <Modal
