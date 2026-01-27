@@ -503,6 +503,7 @@ export default function HomeScreen() {
             autoPlay
             loop
             resizeMode="cover"
+            onLayout={(e) => console.log('Grass Lottie Layout:', e.nativeEvent.layout)}
           />
           <Pressable
             onPress={handleSheepPress}
@@ -738,8 +739,11 @@ const styles = StyleSheet.create({
     marginTop: Spacing.xl, // Space from sections above
     justifyContent: 'flex-end',
     alignItems: 'center',
-    borderRadius: BorderRadius.xl, // Match card rounding
-    overflow: 'hidden', // Prevent overlap
+    borderRadius: BorderRadius.xl,
+    overflow: 'hidden', // Re-enabled to show clipping
+    backgroundColor: '#E8F5E9', // Light green background to debug container visibility
+    borderWidth: 1,
+    borderColor: '#4CAF50', // Border to show boundaries
   },
   grassLottie: {
     position: 'absolute',
