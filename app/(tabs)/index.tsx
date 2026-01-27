@@ -191,10 +191,6 @@ export default function HomeScreen() {
   const [isInteractionLocked, setInteractionLocked] = useState(false);
   const sheepRef = useRef<LottieView>(null);
 
-  // Debug State
-  const [containerLayout, setContainerLayout] = useState({ width: 0, height: 0 });
-  const [lottieLayout, setLottieLayout] = useState({ width: 0, height: 0 });
-
   // Preload sound
   const [sound, setSound] = useState<Audio.Sound | null>(null);
 
@@ -502,7 +498,6 @@ export default function HomeScreen() {
         {/* Bottom Landscape with Grass and Sheep */}
         <View
           style={styles.bottomLandscape}
-          onLayout={(e) => setContainerLayout(e.nativeEvent.layout)}
         >
           <LottieView
             source={require('../../assets/lottie/Grass.json')}
@@ -510,17 +505,7 @@ export default function HomeScreen() {
             autoPlay
             loop
             resizeMode="cover"
-            onLayout={(e) => setLottieLayout(e.nativeEvent.layout)}
           />
-          {/* Visual Debug Overlay */}
-          <View style={{ position: 'absolute', top: 0, left: 0, zIndex: 100, backgroundColor: 'rgba(0,0,0,0.5)', padding: 4 }}>
-            <Text style={{ color: 'white', fontSize: 10 }}>
-              Container: {Math.round(containerLayout.width)}x{Math.round(containerLayout.height)}
-            </Text>
-            <Text style={{ color: 'cyan', fontSize: 10 }}>
-              Lottie: {Math.round(lottieLayout.width)}x{Math.round(lottieLayout.height)}
-            </Text>
-          </View>
           <Pressable
             onPress={handleSheepPress}
             style={styles.sheepContainerOnGrass}
@@ -757,16 +742,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: BorderRadius.xl,
     overflow: 'hidden',
-    borderWidth: 2,
-    borderColor: 'green',
   },
   grassLottie: {
     position: 'absolute',
     bottom: 0,
-    width: '100%',
-    height: '100%',
-    borderWidth: 2,
-    borderColor: 'blue',
+    width: SCREEN_WIDTH,
+    height: SCREEN_WIDTH * (2000 / 2650), // Maintain aspect ratio (2650x2000)
   },
   sheepContainerOnGrass: {
     marginBottom: 5, // Position sheep lower
