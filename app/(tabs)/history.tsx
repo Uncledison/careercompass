@@ -318,6 +318,7 @@ const styles = StyleSheet.create({
   countText: {
     ...TextStyle.caption1,
     color: Colors.text.secondary,
+    marginLeft: 24,
   },
   listContent: {
     paddingHorizontal: Spacing.md,

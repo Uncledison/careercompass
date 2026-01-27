@@ -190,6 +190,7 @@ const styles = StyleSheet.create({
     ...TextStyle.body,
     color: Colors.text.secondary,
     marginTop: Spacing.xs,
+    marginLeft: 24,
   },
   optionCard: {
     backgroundColor: Colors.background.primary,
