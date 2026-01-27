@@ -30,6 +30,7 @@ import {
 } from '../../src/stores/profileStore';
 import { useHistoryStore, formatDate } from '../../src/stores/historyStore';
 import { ModelViewer3D } from '../../src/components/character/ModelViewer3D';
+import { SnowOverlay } from '../../src/components/SnowOverlay';
 
 import { useTheme } from '../../src/context/ThemeContext';
 
@@ -41,63 +42,6 @@ const CHARACTER_OPTIONS = [
 ];
 
 const THEME_STORAGE_KEY = 'careercompass_theme';
-
-// 이용약관 내용
-const TERMS_OF_SERVICE = `
-Career Compass 이용약관
-
-제1조 (목적)
-본 약관은 Career Compass(이하 "앱")가 제공하는 진로탐색 서비스의 이용조건 및 절차에 관한 사항을 규정합니다.
-
-제2조 (서비스 내용)
-1. 본 앱은 HOLLAND 직업흥미이론, 다중지능이론, 진로발달이론에 기반한 진로적성검사를 제공합니다.
-2. 검사 결과는 참고용이며, 전문 상담사의 조언을 대체하지 않습니다.
-
-제3조 (이용자의 의무)
-1. 이용자는 본인의 정보를 정확하게 입력해야 합니다.
-2. 검사는 솔직하게 응답해야 정확한 결과를 얻을 수 있습니다.
-
-제4조 (서비스 변경 및 중단)
-앱은 서비스 개선을 위해 사전 공지 후 서비스를 변경하거나 중단할 수 있습니다.
-
-제5조 (면책조항)
-1. 검사 결과에 따른 진로 결정은 이용자 본인의 책임입니다.
-2. 앱은 검사 결과의 정확성을 보장하지 않습니다.
-
-시행일: 2026년 1월 1일
-`;
-
-// 개인정보처리방침 내용
-const PRIVACY_POLICY = `
-Career Compass 개인정보처리방침
-
-1. 수집하는 개인정보
-- 닉네임, 학교급, 학년
-- 검사 응답 및 결과 데이터
-- 앱 사용 기록
-
-2. 개인정보 수집 목적
-- 맞춤형 진로 검사 서비스 제공
-- 검사 결과 저장 및 히스토리 관리
-- 서비스 개선을 위한 통계 분석
-
-3. 개인정보 보관 기간
-- 모든 데이터는 사용자 기기에만 저장됩니다.
-- 앱 삭제 시 모든 데이터가 삭제됩니다.
-- 데이터 초기화 기능으로 언제든 삭제 가능합니다.
-
-4. 개인정보의 제3자 제공
-- 사용자 동의 없이 개인정보를 외부에 제공하지 않습니다.
-
-5. 개인정보 보호책임자
-- 이메일: support@careercompass.app
-
-6. 정보주체의 권리
-- 개인정보 열람, 정정, 삭제를 요청할 수 있습니다.
-- 앱 내 '데이터 초기화' 기능으로 직접 삭제 가능합니다.
-
-시행일: 2026년 1월 1일
-`;
 
 const ProfileAvatar = ({ character }: { character: string }) => (
   <View style={profileAvatarStyles.container}>
@@ -134,7 +78,7 @@ interface MenuItemProps {
   value?: string;
   onPress: () => void;
   danger?: boolean;
-  colors?: any; // Temporarily any to avoid import cycles or complex types
+  colors?: any;
 }
 
 const MenuItem = ({ icon, label, value, onPress, danger, colors }: MenuItemProps) => (
@@ -222,6 +166,9 @@ export default function ProfileScreen() {
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
 
+  // Snow Effect State
+  const [isSnowing, setIsSnowing] = useState(false);
+
   const [editNickname, setEditNickname] = useState('');
   const [editSchoolType, setEditSchoolType] = useState<SchoolType>('elementary');
   const [editGrade, setEditGrade] = useState<GradeNumber>(5);
@@ -262,7 +209,14 @@ export default function ProfileScreen() {
         clearProfile();
       }
     } else {
-      // Native alert
+      Alert.alert(
+        '데이터 초기화',
+        '모든 데이터를 초기화하시겠습니까?\n프로필과 검사 기록이 모두 삭제됩니다.',
+        [
+          { text: '취소', style: 'cancel' },
+          { text: '초기화', style: 'destructive', onPress: clearProfile }
+        ]
+      );
     }
   };
 
@@ -310,6 +264,20 @@ export default function ProfileScreen() {
               {profile ? getFullGradeLabel(profile.schoolType, profile.grade) : '초등학교 5학년'}
             </Text>
           </View>
+
+          {/* Snow Toggle Button */}
+          <Pressable
+            onPress={() => setIsSnowing(!isSnowing)}
+            style={{ marginRight: Spacing.sm }}
+          >
+            <LottieView
+              source={require('../../assets/lottie/cloud-snow.json')}
+              style={{ width: 40, height: 40 }}
+              autoPlay
+              loop
+            />
+          </Pressable>
+
           <Pressable style={styles.editButton} onPress={openEditModal}>
             <Text style={styles.editButtonText}>수정</Text>
           </Pressable>
@@ -332,8 +300,6 @@ export default function ProfileScreen() {
             <Text style={[styles.statLabel, { color: colors.text.secondary }]}>최근 검사</Text>
           </View>
         </View>
-
-
 
         {/* 메뉴 그룹 2 */}
         <View style={styles.menuGroup}>
@@ -388,7 +354,8 @@ export default function ProfileScreen() {
         </View>
       </ScrollView>
 
-
+      {/* Snow Overlay */}
+      {isSnowing && <SnowOverlay />}
 
       {/* 편집 모달 */}
       <Modal
@@ -489,8 +456,6 @@ export default function ProfileScreen() {
                 ))}
               </View>
             </View>
-
-
 
             <View style={styles.modalButtons}>
               <Pressable style={styles.cancelButton} onPress={() => setShowEditModal(false)}>
@@ -917,3 +882,60 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
+
+// 이용약관 내용
+const TERMS_OF_SERVICE = `
+Career Compass 이용약관
+
+제1조 (목적)
+본 약관은 Career Compass(이하 "앱")가 제공하는 진로탐색 서비스의 이용조건 및 절차에 관한 사항을 규정합니다.
+
+제2조 (서비스 내용)
+1. 본 앱은 HOLLAND 직업흥미이론, 다중지능이론, 진로발달이론에 기반한 진로적성검사를 제공합니다.
+2. 검사 결과는 참고용이며, 전문 상담사의 조언을 대체하지 않습니다.
+
+제3조 (이용자의 의무)
+1. 이용자는 본인의 정보를 정확하게 입력해야 합니다.
+2. 검사는 솔직하게 응답해야 정확한 결과를 얻을 수 있습니다.
+
+제4조 (서비스 변경 및 중단)
+앱은 서비스 개선을 위해 사전 공지 후 서비스를 변경하거나 중단할 수 있습니다.
+
+제5조 (면책조항)
+1. 검사 결과에 따른 진로 결정은 이용자 본인의 책임입니다.
+2. 앱은 검사 결과의 정확성을 보장하지 않습니다.
+
+시행일: 2026년 1월 1일
+`;
+
+// 개인정보처리방침 내용
+const PRIVACY_POLICY = `
+Career Compass 개인정보처리방침
+
+1. 수집하는 개인정보
+- 닉네임, 학교급, 학년
+- 검사 응답 및 결과 데이터
+- 앱 사용 기록
+
+2. 개인정보 수집 목적
+- 맞춤형 진로 검사 서비스 제공
+- 검사 결과 저장 및 히스토리 관리
+- 서비스 개선을 위한 통계 분석
+
+3. 개인정보 보관 기간
+- 모든 데이터는 사용자 기기에만 저장됩니다.
+- 앱 삭제 시 모든 데이터가 삭제됩니다.
+- 데이터 초기화 기능으로 언제든 삭제 가능합니다.
+
+4. 개인정보의 제3자 제공
+- 사용자 동의 없이 개인정보를 외부에 제공하지 않습니다.
+
+5. 개인정보 보호책임자
+- 이메일: support@careercompass.app
+
+6. 정보주체의 권리
+- 개인정보 열람, 정정, 삭제를 요청할 수 있습니다.
+- 앱 내 '데이터 초기화' 기능으로 직접 삭제 가능합니다.
+
+시행일: 2026년 1월 1일
+`;
