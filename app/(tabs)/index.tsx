@@ -551,7 +551,7 @@ export default function HomeScreen() {
               visible={showSheepHint && !isInteractionLocked}
               delay={3000}
               direction="bottom"
-              style={{ position: 'absolute', top: -35, alignSelf: 'center', width: 60 }}
+              style={{ position: 'absolute', top: -15, alignSelf: 'center', width: 60 }}
             />
           </Pressable>
         </View>

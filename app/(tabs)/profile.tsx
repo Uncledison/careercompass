@@ -308,8 +308,8 @@ export default function ProfileScreen() {
             style={{
               position: 'absolute',
               right: -10,
-              width: 135,
-              height: 135,
+              width: 95,
+              height: 95,
               justifyContent: 'center',
               alignItems: 'center',
             }}
@@ -326,7 +326,7 @@ export default function ProfileScreen() {
               visible={showCloudHint && !isSnowing}
               delay={2000}
               direction="right"
-              style={{ position: 'absolute', top: 55, right: 100, width: 60 }}
+              style={{ position: 'absolute', top: 35, right: 80, width: 60 }}
             />
           </Pressable>
         </View>
