@@ -735,24 +735,20 @@ const styles = StyleSheet.create({
   },
   // Bottom Landscape Styles
   bottomLandscape: {
-    width: '100%', // Match card width inside padding
-    height: 200,   // Sufficient height for visual
-    marginTop: Spacing.xl, // Space from sections above
+    width: '100%',
+    height: 250, // Hardcoded height for Web compatibility
+    marginTop: Spacing.xl,
     justifyContent: 'flex-end',
     alignItems: 'center',
     borderRadius: BorderRadius.xl,
     overflow: 'hidden',
   },
   grassLottie: {
-    position: 'absolute',
-    bottom: -40, // Pull down further to hide bottom gap
-    width: SCREEN_WIDTH * 3.5,
-    height: SCREEN_WIDTH * 3.5 * (2000 / 2650),
-    left: '50%',
-    marginLeft: -(SCREEN_WIDTH * 3.5) / 2, // Perfect centering
+    width: SCREEN_WIDTH - Spacing.md * 2, // Match button width
+    height: 250, // Hardcoded: approx (width * 2000/2650)
   },
   sheepContainerOnGrass: {
-    marginBottom: 5, // Position sheep lower
+    marginBottom: 5,
     zIndex: 10,
   },
   sheepLottie: {
