@@ -155,12 +155,18 @@ export const ModelViewer3D: React.FC<ModelViewer3DProps> = ({
         }
       };
 
+      const handleError = (error: any) => {
+        console.error('3D Model Load Error:', error);
+      };
+
       viewer.addEventListener('load', handleLoad);
       viewer.addEventListener('finished', handleFinished);
+      viewer.addEventListener('error', handleError);
 
       return () => {
         viewer.removeEventListener('load', handleLoad);
         viewer.removeEventListener('finished', handleFinished);
+        viewer.removeEventListener('error', handleError);
       };
     }
   }, [animations, modelPath]);
@@ -197,6 +203,7 @@ export const ModelViewer3D: React.FC<ModelViewer3DProps> = ({
           reveal="auto"
           shadow-intensity="0"
           environment-image="neutral"
+          draco-decoder-path="https://www.gstatic.com/draco/versioned/decoders/1.5.7/"
         />
       </View>
     );
