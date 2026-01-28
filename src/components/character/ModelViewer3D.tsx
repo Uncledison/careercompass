@@ -67,7 +67,7 @@ export const ModelViewer3D: React.FC<ModelViewer3DProps> = ({
   </style>
 </head>
 <body>
-  <model-viewer
+    <model-viewer
     id="viewer"
     src="${modelPath}"
     ${autoRotate ? 'auto-rotate' : ''}
@@ -80,6 +80,8 @@ export const ModelViewer3D: React.FC<ModelViewer3DProps> = ({
     max-camera-orbit="auto auto auto"
     interaction-prompt="none"
     autoplay
+    loading="eager"
+    reveal="auto"
     shadow-intensity="0"
     environment-image="neutral"
   ></model-viewer>
