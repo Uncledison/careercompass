@@ -479,17 +479,15 @@ export default function ProfileScreen() {
               const actualScale = canvas.width / (element as unknown as HTMLElement).offsetWidth;
 
               // Target size (adjust to match ModelViewer3D size roughly)
-              // ModelViewer is 280x280, but static image might be different aspect.
-              // We assume standard square-ish framing.
-              const targetWidth = 280 * actualScale;
-              const targetHeight = 280 * actualScale;
+              // Reduced size to prevent covering text
+              const targetWidth = 200 * actualScale;
+              const targetHeight = 200 * actualScale;
 
               const canvasCenterX = canvas.width / 2;
               const x = canvasCenterX - (targetWidth / 2);
 
-              // Vertical position: Card Header is roughly 50-60px. 
-              // We offset y to match ModelViewer position.
-              const y = 60 * actualScale;
+              // Vertical position: Adjusted to fit better
+              const y = 80 * actualScale;
 
               ctx.drawImage(characterImg, x, y, targetWidth, targetHeight);
               resolve(null);
