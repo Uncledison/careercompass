@@ -429,7 +429,7 @@ export default function ProfileScreen() {
   };
 
   // 캡처용 Ref for Web
-  const captureViewRef = useRef<View>(null);
+  const captureViewRef = useRef<any>(null);
 
   // 포토카드 공유 함수
   const sharePhotoCard = async () => {
