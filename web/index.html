@@ -11,10 +11,10 @@
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-V9WBTTWR46"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
-        function gtag() { dataLayer.push(arguments); }
-        gtag('js', new Date());
-        gtag('config', 'G-V9WBTTWR46', {
-            send_page_view: true // Set to true here because index.html is the initial load
+        window.gtag = function () { dataLayer.push(arguments); }
+        window.gtag('js', new Date());
+        window.gtag('config', 'G-V9WBTTWR46', {
+            send_page_view: true
         });
     </script>
     <style>

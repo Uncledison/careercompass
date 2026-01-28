@@ -39,7 +39,7 @@ export default function Root({ children }: PropsWithChildren) {
                 <script dangerouslySetInnerHTML={{
                     __html: `
             window.dataLayer = window.dataLayer || [];
-            window.gtag = function gtag(){window.dataLayer.push(arguments);}
+            window.gtag = function(){ window.dataLayer.push(arguments); }
             window.gtag('js', new Date());
             window.gtag('config', 'G-V9WBTTWR46', {
               send_page_view: false
