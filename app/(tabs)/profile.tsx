@@ -472,12 +472,15 @@ export default function ProfileScreen() {
             characterImg.onload = () => {
               const actualScale = canvas.width / (element as unknown as HTMLElement).offsetWidth;
 
+              // 캔버스 중앙 기준으로 계산 (화면 좌표 대신)
+              const canvasCenterX = canvas.width / 2;
+
               // 1. Calculate aspect ratio and fit to box
               const imgAspectRatio = characterImg.width / characterImg.height;
 
               // Define a safe box for the character in the top half of the card
-              // Allow larger box to fit full body
-              const maxBoxWidth = 260 * actualScale;
+              // Profile Card is 320x480. We want character in the top ~250px area.
+              const maxBoxWidth = 260 * actualScale; // slightly less than 320 full width
               const maxBoxHeight = 280 * actualScale;
 
               let targetWidth = maxBoxWidth;
@@ -488,11 +491,24 @@ export default function ProfileScreen() {
                 targetWidth = maxBoxHeight * imgAspectRatio;
               }
 
-              const canvasCenterX = canvas.width / 2;
               const x = canvasCenterX - (targetWidth / 2);
+              // Position y: Place it below header. 
+              // Header ~60px. Let's start at 70px * scale.
+              const y = 70 * actualScale;
 
-              // Position y: Place it comfortably below the header
-              const y = 50 * actualScale;
+              // IMPORTANT: Reset transform to ensure drawing in consistent pixel coordinates
+              // html2canvas might have applied transforms relative to the element
+              ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+              console.log('--- Web Share Debug Info ---');
+              console.log('Canvas Size:', canvas.width, 'x', canvas.height);
+              console.log('Element Width:', (element as unknown as HTMLElement).offsetWidth);
+              console.log('Actual Scale:', actualScale);
+              console.log('Image Aspect Ratio:', imgAspectRatio);
+              console.log('Target Size:', targetWidth, 'x', targetHeight);
+              console.log('Calculated Position (x, y):', x, y);
+              console.log('Canvas Center X:', canvasCenterX);
+              console.log('----------------------------');
 
               ctx.drawImage(characterImg, x, y, targetWidth, targetHeight);
 
