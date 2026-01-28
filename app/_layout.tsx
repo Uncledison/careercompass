@@ -69,7 +69,6 @@ export default function RootLayout() {
           <Stack.Screen name="onboarding" />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="help" />
-          <Stack.Screen name="stats" />
           <Stack.Screen name="career/[field]" />
           <Stack.Screen name="history/[id]" />
           <Stack.Screen
@@ -80,14 +79,6 @@ export default function RootLayout() {
             }}
           />
           <Stack.Screen name="result/[id]" />
-          <Stack.Screen
-            name="game/memory"
-            options={{
-              headerShown: false,
-              presentation: 'fullScreenModal',
-              animation: 'fade_from_bottom'
-            }}
-          />
         </Stack>
       </GestureHandlerRootView>
     </ThemeProvider>

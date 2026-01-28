@@ -129,8 +129,43 @@ export const ModelViewer3D: React.FC<ModelViewer3DProps> = ({
 </html>
   `;
 
+  const viewerRef = React.useRef<any>(null);
+
+  // 웹 애니메이션 처리
+  React.useEffect(() => {
+    if (Platform.OS === 'web' && viewerRef.current) {
+      const viewer = viewerRef.current;
+      let currentIndex = 0;
+
+      const handleLoad = () => {
+        const availableAnimations = viewer.availableAnimations;
+        if (animations.length > 0 && availableAnimations.includes(animations[0])) {
+          viewer.animationName = animations[0];
+          viewer.play();
+        }
+      };
+
+      const handleFinished = () => {
+        const availableAnimations = viewer.availableAnimations;
+        const nextIndex = Math.floor(Math.random() * animations.length);
+        const nextAnimation = animations[nextIndex];
+        if (availableAnimations.includes(nextAnimation)) {
+          viewer.animationName = nextAnimation;
+          viewer.play();
+        }
+      };
+
+      viewer.addEventListener('load', handleLoad);
+      viewer.addEventListener('finished', handleFinished);
+
+      return () => {
+        viewer.removeEventListener('load', handleLoad);
+        viewer.removeEventListener('finished', handleFinished);
+      };
+    }
+  }, [animations, modelPath]);
+
   if (Platform.OS === 'web') {
-    // 웹에서는 iframe 없이 직접 model-viewer 커스텀 엘리먼트 사용 (성능 극대화)
     return (
       <View style={[styles.container, { width, height, borderRadius }]}>
         <style dangerouslySetInnerHTML={{
@@ -140,17 +175,20 @@ export const ModelViewer3D: React.FC<ModelViewer3DProps> = ({
             height: 100%;
             --poster-color: transparent;
             --progress-bar-color: transparent;
+            display: block;
           }
           model-viewer::part(default-progress-bar) {
             display: none;
           }
         `}} />
+        {/* @ts-ignore */}
         <model-viewer
+          ref={viewerRef}
           src={modelPath}
           auto-rotate={autoRotate ? '' : undefined}
           auto-rotate-delay="0"
           rotation-per-second="30deg"
-          camera-controls={disableControls ? undefined : true}
+          camera-controls={disableControls ? '' : undefined}
           camera-orbit={cameraOrbit || `0deg 75deg ${cameraDistance || '2.5m'}`}
           camera-target={cameraTarget || 'auto auto auto'}
           interaction-prompt="none"
@@ -159,24 +197,6 @@ export const ModelViewer3D: React.FC<ModelViewer3DProps> = ({
           reveal="auto"
           shadow-intensity="0"
           environment-image="neutral"
-          onLoad={(e: any) => {
-            const viewer = e.target;
-            const availableAnimations = viewer.availableAnimations;
-            if (animations.length > 0 && availableAnimations.includes(animations[0])) {
-              viewer.animationName = animations[0];
-              viewer.play();
-            }
-          }}
-          onFinished={(e: any) => {
-            const viewer = e.target;
-            const availableAnimations = viewer.availableAnimations;
-            const nextIndex = Math.floor(Math.random() * animations.length);
-            const nextAnimation = animations[nextIndex];
-            if (availableAnimations.includes(nextAnimation)) {
-              viewer.animationName = nextAnimation;
-              viewer.play();
-            }
-          }}
         />
       </View>
     );
