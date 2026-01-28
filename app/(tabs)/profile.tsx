@@ -1023,7 +1023,7 @@ export default function ProfileScreen() {
                 <Text style={styles.closeShareButtonText}>닫기</Text>
               </Pressable>
               <Pressable style={styles.doShareButton} onPress={sharePhotoCard}>
-                <Text style={styles.doShareButtonText}>{isSharing ? '생성 중...' : '공유하기'}</Text>
+                <Text style={styles.doShareButtonText}>{isSharing ? '생성 중...' : '저장하기'}</Text>
               </Pressable>
             </View>
           </View>
