@@ -448,7 +448,7 @@ export default function ProfileScreen() {
         }
 
         // 1. Capture Card Background & Text
-        const canvas = await html2canvas(element as any, {
+        let canvas = await html2canvas(element as any, {
           backgroundColor: null,
           scale: 2, // High resolution
           logging: false,
@@ -464,37 +464,60 @@ export default function ProfileScreen() {
           characterImg.crossOrigin = 'anonymous';
 
           const charId = profile?.character || 'Female_1';
-          // Ensure clean ID if needed (though profile usually stores just ID)
           const characterBase = charId.replace('.glb', '').replace('.gltf', '');
 
           characterImg.src = `/character-screenshots/${characterBase}.png?t=${new Date().getTime()}`;
 
           await new Promise((resolve, reject) => {
             characterImg.onload = () => {
-              // Calculate Position
-              // Original Card: 320x480
-              // Character Container: height 250, top area
-              // We estimate visual center based on design
-
               const actualScale = canvas.width / (element as unknown as HTMLElement).offsetWidth;
 
-              // Target size (adjust to match ModelViewer3D size roughly)
-              // Reduced size to prevent covering text
-              const targetWidth = 200 * actualScale;
-              const targetHeight = 200 * actualScale;
+              // 1. Calculate aspect ratio and fit to box
+              const imgAspectRatio = characterImg.width / characterImg.height;
+
+              // Define a safe box for the character in the top half of the card
+              // Allow larger box to fit full body
+              const maxBoxWidth = 260 * actualScale;
+              const maxBoxHeight = 280 * actualScale;
+
+              let targetWidth = maxBoxWidth;
+              let targetHeight = maxBoxWidth / imgAspectRatio;
+
+              if (targetHeight > maxBoxHeight) {
+                targetHeight = maxBoxHeight;
+                targetWidth = maxBoxHeight * imgAspectRatio;
+              }
 
               const canvasCenterX = canvas.width / 2;
               const x = canvasCenterX - (targetWidth / 2);
 
-              // Vertical position: Adjusted to fit better
-              const y = 80 * actualScale;
+              // Position y: Place it comfortably below the header
+              const y = 50 * actualScale;
 
               ctx.drawImage(characterImg, x, y, targetWidth, targetHeight);
+
+              // 2. Apply Rounded Corners (Clipping)
+              const finalCanvas = document.createElement('canvas');
+              finalCanvas.width = canvas.width;
+              finalCanvas.height = canvas.height;
+              const fctx = finalCanvas.getContext('2d');
+
+              if (fctx) {
+                const radius = 24 * actualScale;
+                fctx.beginPath();
+                fctx.roundRect(0, 0, finalCanvas.width, finalCanvas.height, radius);
+                fctx.clip();
+                fctx.drawImage(canvas, 0, 0);
+
+                // Use finalCanvas for download
+                canvas = finalCanvas as any;
+              }
+
               resolve(null);
             };
             characterImg.onerror = () => {
-              console.warn('Character image load failed, saving without character.');
-              resolve(null); // Proceed without character
+              console.warn('Character image load failed.');
+              resolve(null);
             };
           });
         }
