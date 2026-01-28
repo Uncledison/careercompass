@@ -31,7 +31,7 @@ const RandomPairCharacter = () => {
     <View style={styles.characterDuoContainer}>
       <View style={styles.characterWrapper}>
         <ModelViewer3D
-          modelPath={`/models/characters/${characters[0]}.glb`}
+          modelPath={`/models/characters/${characters[0]}.gltf`}
           animations={['Wave']}
           width={140}
           height={180}
@@ -43,7 +43,7 @@ const RandomPairCharacter = () => {
       </View>
       <View style={styles.characterWrapper}>
         <ModelViewer3D
-          modelPath={`/models/characters/${characters[1]}.glb`}
+          modelPath={`/models/characters/${characters[1]}.gltf`}
           animations={['Wave']}
           width={140}
           height={180}
