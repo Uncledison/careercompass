@@ -18,6 +18,7 @@ export interface UserProfile {
   schoolType: SchoolType;
   grade: GradeNumber;
   character: string;
+  heartCount: number;
   createdAt: number;
   updatedAt: number;
 }
@@ -31,6 +32,8 @@ interface ProfileState {
   saveProfile: (profile: Omit<UserProfile, 'createdAt' | 'updatedAt'>) => Promise<void>;
   updateProfile: (updates: Partial<Omit<UserProfile, 'createdAt' | 'updatedAt'>>) => Promise<void>;
   clearProfile: () => Promise<void>;
+  incrementHeartCount: () => Promise<void>;
+  resetHeartCount: () => Promise<void>;
   getGradeLevel: () => GradeLevel;
 }
 
@@ -80,6 +83,7 @@ const defaultProfile: UserProfile = {
   schoolType: 'elementary',
   grade: 5,
   character: 'Female_1',
+  heartCount: 0,
   createdAt: Date.now(),
   updatedAt: Date.now(),
 };
@@ -153,6 +157,45 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
     } catch (error) {
       console.error('Failed to clear profile:', error);
       throw error;
+    }
+  },
+
+  // 하트 개수 증가
+  incrementHeartCount: async () => {
+    const { profile } = get();
+    if (!profile) return;
+
+    const updatedProfile: UserProfile = {
+      ...profile,
+      heartCount: (profile.heartCount || 0) + 1,
+      updatedAt: Date.now(),
+    };
+
+    try {
+      // 비동기로 저장하지만 상태는 즉시 업데이트하여 반응성 높임
+      set({ profile: updatedProfile });
+      await storage.setItem(STORAGE_KEY, JSON.stringify(updatedProfile));
+    } catch (error) {
+      console.error('Failed to increment heart count:', error);
+    }
+  },
+
+  // 하트 개수 초기화 (테스트용)
+  resetHeartCount: async () => {
+    const { profile } = get();
+    if (!profile) return;
+
+    const updatedProfile: UserProfile = {
+      ...profile,
+      heartCount: 0,
+      updatedAt: Date.now(),
+    };
+
+    try {
+      set({ profile: updatedProfile });
+      await storage.setItem(STORAGE_KEY, JSON.stringify(updatedProfile));
+    } catch (error) {
+      console.error('Failed to reset heart count:', error);
     }
   },
 

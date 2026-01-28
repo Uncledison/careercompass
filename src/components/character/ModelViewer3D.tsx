@@ -82,7 +82,8 @@ export const ModelViewer3D: React.FC<ModelViewer3DProps> = ({
     autoplay
     loading="eager"
     reveal="auto"
-    shadow-intensity="0"
+    draco-decoder-path="https://www.gstatic.com/draco/versioned/decoders/1.5.7/"
+    shadow-intensity="1"
     environment-image="neutral"
   ></model-viewer>
 
@@ -92,19 +93,19 @@ export const ModelViewer3D: React.FC<ModelViewer3DProps> = ({
     let currentIndex = 0;
 
     viewer.addEventListener('load', () => {
-      // 사용 가능한 애니메이션 목록 확인
+      console.log('3D Model loaded successfully:', '${modelPath}');
       const availableAnimations = viewer.availableAnimations;
-      console.log('Available animations:', availableAnimations);
-
-      // 첫 번째 애니메이션 재생
       if (animations.length > 0 && availableAnimations.includes(animations[0])) {
         viewer.animationName = animations[0];
         viewer.play();
       } else if (availableAnimations.length > 0) {
-        // 지정된 애니메이션이 없으면 첫 번째 애니메이션 재생
         viewer.animationName = availableAnimations[0];
         viewer.play();
       }
+    });
+
+    viewer.addEventListener('error', (e) => {
+      console.error('3D Model Error:', e.detail || e);
     });
 
     // 애니메이션 종료 시 다음 애니메이션으로 전환
@@ -129,10 +130,20 @@ export const ModelViewer3D: React.FC<ModelViewer3DProps> = ({
 </html>
   `;
 
+  // 웹/네이티브 공통으로 htmlContent를 소스로 하는 뷰를 반환합니다.
+
   if (Platform.OS === 'web') {
-    // 웹에서는 iframe 사용
     return (
-      <View style={[styles.container, { width, height, borderRadius }]}>
+      <View
+        style={[
+          styles.container,
+          {
+            width,
+            height,
+            borderRadius,
+          }
+        ]}
+      >
         <iframe
           srcDoc={htmlContent}
           style={{
@@ -141,6 +152,7 @@ export const ModelViewer3D: React.FC<ModelViewer3DProps> = ({
             border: 'none',
             borderRadius,
             overflow: 'hidden',
+            backgroundColor: 'transparent',
           }}
           title="3D Model Viewer"
         />

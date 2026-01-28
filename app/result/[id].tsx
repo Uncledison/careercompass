@@ -248,7 +248,7 @@ const SummaryCard = ({
         >
           {/* 랜덤 폭죽 효과 */}
           {fireworkSource && (
-            <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+            <View style={[StyleSheet.absoluteFill, { pointerEvents: 'none' }]}>
               <LottieView
                 source={fireworkSource}
                 autoPlay
@@ -270,13 +270,13 @@ const SummaryCard = ({
           <View style={styles.characterSection}>
             <View style={styles.characterCircle}>
               <ModelViewer3D
-                modelPath={`/models/characters/${character}.gltf`}
+                modelPath={`/models/characters/${character}.glb`}
                 animations={['Wave', 'Yes']}
                 width={160}
                 height={160}
                 autoRotate={false}
-                cameraDistance="14m"
-                cameraTarget="0m 1.55m 0m"
+                cameraDistance="10m"
+                cameraTarget="0m 1.0m 0m"
                 borderRadius={80}
                 backgroundColor="transparent"
               />

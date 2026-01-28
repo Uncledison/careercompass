@@ -22,11 +22,22 @@
         });
     </script>
     <style>
+        html,
         body {
-            /* Disable pull-to-refresh on mobile */
-            overscroll-behavior-y: none;
-            /* Disable double-tap to zoom */
-            touch-action: manipulation;
+            /* Disable pull-to-refresh and bounce */
+            overscroll-behavior: none;
+            /* Block all native browser gestures for zooming/panning at the root */
+            touch-action: none;
+            /* Prevent font scaling on orientation change */
+            -webkit-text-size-adjust: 100%;
+            /* Prevent text selection */
+            user-select: none;
+            /* Prevent body scrolling */
+            overflow: hidden;
+            height: 100%;
+            width: 100%;
+            position: fixed;
+            background-color: #F2F2F7;
         }
 
         #root {
@@ -34,7 +45,48 @@
             height: 100%;
             display: flex;
         }
+
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
     </style>
+    <script>
+        // 1. Prevent Multi-touch zoom
+        document.addEventListener('touchstart', function (event) {
+            if (event.touches.length > 1) {
+                event.preventDefault();
+            }
+        }, { passive: false });
+
+        // 2. Prevent iOS Gesture Zoom
+        document.addEventListener('gesturestart', function (event) {
+            event.preventDefault();
+        });
+
+        // 3. Prevent Double Tap Zoom
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function (event) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+
+        // 4. Prevent Mouse Wheel Zoom (Ctrl + Wheel)
+        document.addEventListener('wheel', function (event) {
+            if (event.ctrlKey) {
+                event.preventDefault();
+            }
+        }, { passive: false });
+
+        // 5. Prevent Keyboard Zoom (Ctrl + +/-)
+        document.addEventListener('keydown', function (event) {
+            if (event.ctrlKey && (event.key === '+' || event.key === '=' || event.key === '-' || event.key === '_')) {
+                event.preventDefault();
+            }
+        });
+    </script>
 </head>
 
 <body>

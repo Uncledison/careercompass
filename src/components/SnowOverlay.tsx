@@ -135,8 +135,8 @@ export const SnowOverlay = () => {
     }, []);
 
     return (
-        <View style={styles.container} pointerEvents="none">
-            <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+        <View style={[styles.container, { pointerEvents: 'none' }]}>
+            <View style={[StyleSheet.absoluteFill, { pointerEvents: 'none' }]}>
                 {Array.from({ length: SNOWFLAKE_COUNT }).map((_, index) => (
                     <Snowflake key={index} index={index} wind={wind} />
                 ))}

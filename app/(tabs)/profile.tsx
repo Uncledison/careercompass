@@ -21,9 +21,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import * as Linking from 'expo-linking';
 import LottieView from 'lottie-react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Audio } from 'expo-av';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Colors, Spacing, BorderRadius, Shadow, TextStyle } from '../../src/constants';
+import * as Sharing from 'expo-sharing';
+import ViewShot from 'react-native-view-shot';
 import {
   useProfileStore,
   SchoolType,
@@ -46,16 +49,43 @@ const CHARACTER_OPTIONS = [
 
 const THEME_STORAGE_KEY = 'careercompass_theme';
 
+// Lottie 색상 변경 헬퍼 (JSON 데이터 직접 수정)
+const colorizeLottie = (json: any, hex: string) => {
+  try {
+    const data = JSON.parse(JSON.stringify(json));
+    const r = parseInt(hex.slice(1, 3), 16) / 255;
+    const g = parseInt(hex.slice(3, 5), 16) / 255;
+    const b = parseInt(hex.slice(5, 7), 16) / 255;
+
+    const traverse = (obj: any) => {
+      if (!obj || typeof obj !== 'object') return;
+      // 'fl'은 채우기(Fill) 타입이며, 'c'는 색상 속성입니다.
+      if (obj.ty === 'fl' && obj.c && Array.isArray(obj.c.k)) {
+        // 단일 색상(k가 배열인 경우)만 처리
+        if (typeof obj.c.k[0] === 'number') {
+          obj.c.k = [r, g, b, 1];
+        }
+      }
+      Object.keys(obj).forEach(key => traverse(obj[key]));
+    };
+
+    traverse(data);
+    return data;
+  } catch (e) {
+    return json;
+  }
+};
+
 const ProfileAvatar = ({ character }: { character: string }) => (
   <View style={profileAvatarStyles.container}>
     <ModelViewer3D
-      modelPath={`/models/characters/${character}.gltf`}
+      modelPath={`/models/characters/${character}.glb`}
       animations={['Wave', 'Yes']}
       width={100}
       height={100}
       autoRotate={false}
-      cameraDistance="13.5m"
-      cameraTarget="0.5m 1m 0m"
+      cameraDistance="9m"
+      cameraTarget="0m 1.0m 0m"
       borderRadius={50}
     />
   </View>
@@ -161,13 +191,26 @@ const GradeButton = ({
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { profile, loadProfile, updateProfile, clearProfile } = useProfileStore();
+  const { profile, loadProfile, updateProfile, clearProfile, incrementHeartCount, resetHeartCount } = useProfileStore();
   const { results, loadHistory } = useHistoryStore();
   const { colors, isDarkMode } = useTheme();
+
+  // Heart Interaction State
+  const [isHeartPopping, setIsHeartPopping] = useState(false);
+  const [showBravo, setShowBravo] = useState(false); // Bravo! 메시지 상태
+  const bravoOpacity = useRef(new Animated.Value(0)).current;
+  const bravoScale = useRef(new Animated.Value(0.5)).current;
+  const heartAnimationRef = useRef<LottieView>(null);
+  const lastHeartPressRef = useRef<number>(0);
 
   const [showEditModal, setShowEditModal] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+
+  // Share Feature State
+  const [showShareModal, setShowShareModal] = useState(false);
+  const viewShotRef = useRef<ViewShot>(null);
+  const [isSharing, setIsSharing] = useState(false);
 
   // Snow Effect State
   const [isSnowing, setIsSnowing] = useState(false);
@@ -185,6 +228,8 @@ export default function ProfileScreen() {
   const [editSchoolType, setEditSchoolType] = useState<SchoolType>('elementary');
   const [editGrade, setEditGrade] = useState<GradeNumber>(5);
   const [editCharacter, setEditCharacter] = useState('Female_1');
+
+
 
   // Interaction Hints
   const [showCloudHint, setShowCloudHint] = useState(true);
@@ -249,6 +294,167 @@ export default function ProfileScreen() {
     }
   };
 
+  // HSL to Hex 변환 헬퍼
+  const hslToHex = (h: number, s: number, l: number) => {
+    l /= 100;
+    const a = s * Math.min(l, 1 - l) / 100;
+    const f = (n: number) => {
+      const k = (n + h / 30) % 12;
+      const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+      return Math.round(255 * color).toString(16).padStart(2, '0');
+    };
+    return `#${f(0)}${f(8)}${f(4)}`;
+  };
+
+  // 하트 색상 가져오기
+  const getHeartColor = (count: number) => {
+    // 1000회 미만: 기존 단계별 색상
+    if (count < 300) return '#FF7E9D';   // Soft Pink
+    if (count < 600) return '#FF2B55';   // Apple Red
+    if (count < 1000) return '#A10E25';  // Deep Ruby
+
+    // 1000회 이상: 무한 'Living Ember' 스펙트럼 (붉은 계열 순환)
+    // Hue 범위: -15(Deep Rose) ~ 45(Golden Orange)
+    // 200 클릭마다 색상이 한 번 순환하여 생동감을 줌
+    const phase = (count - 1000) * 0.05;
+    const hueOscillation = Math.sin(phase); // -1 ~ 1
+
+    // Map -1..1 to -15..45
+    // 중심값 15, 진폭 30
+    const hue = 15 + (hueOscillation * 30);
+
+    // 음수 Hue 처리 (예: -10 -> 350)
+    const normalizedHue = hue < 0 ? 360 + hue : hue;
+
+    // Saturation 95% (선명함), Lightness 55% (너무 어둡지 않게)
+    return hslToHex(normalizedHue, 95, 55);
+  };
+
+  const heartColor = getHeartColor(profile?.heartCount || 0);
+
+  // Lottie 소스 데이터 (색상 적용) - 웹 호환성을 위해 직접 수정
+  const heartIdleData = colorizeLottie(require('../../assets/lottie/HeartIdle.json'), heartColor);
+  const heartPopData = colorizeLottie(require('../../assets/lottie/HeartPop.json'), heartColor);
+
+  // 하트 애니메이션 리셋 및 재생 통합 함수
+  const playHeartPop = () => {
+    setIsHeartPopping(true);
+    heartAnimationRef.current?.reset();
+    heartAnimationRef.current?.play();
+  };
+
+  // Bravo! 애니메이션 재생
+  const playBravoAnimation = () => {
+    setShowBravo(true);
+    bravoOpacity.setValue(0);
+    bravoScale.setValue(0.5);
+
+    Animated.parallel([
+      Animated.timing(bravoOpacity, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+      Animated.spring(bravoScale, {
+        toValue: 1.2,
+        friction: 4,
+        useNativeDriver: true,
+      })
+    ]).start(() => {
+      setTimeout(() => {
+        Animated.timing(bravoOpacity, {
+          toValue: 0,
+          duration: 1000,
+          useNativeDriver: true,
+        }).start(() => setShowBravo(false));
+      }, 1500);
+    });
+  };
+
+  // 하트 클릭 핸들러
+  const handleHeartPress = async () => {
+    const now = Date.now();
+    if (now - lastHeartPressRef.current < 50) return;
+    lastHeartPressRef.current = now;
+
+    // 1. 애니메이션 재생
+    playHeartPop();
+
+    // 2. 1000회 도달 이벤트 (서프라이즈)
+    const currentCount = profile?.heartCount || 0;
+    if (currentCount === 999) {
+      // 1000회 도달 시 배경 다크 + 눈내리기 자동 실행
+      if (!isSnowing) {
+        setIsSnowing(true);
+        Animated.timing(darkBgOpacity, {
+          toValue: 1,
+          duration: 1500,
+          useNativeDriver: true,
+        }).start();
+      }
+      playBravoAnimation();
+
+      // 기분 좋은 햅틱 피드백
+      if (Platform.OS !== 'web') {
+        const Haptics = require('expo-haptics');
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    }
+
+    // 3. 랜덤 사운드 재생
+    const soundFiles = [
+      require('../../assets/sounds/pop-01.mp3'),
+      require('../../assets/sounds/pop-02.mp3'),
+      require('../../assets/sounds/pop-03.mp3'),
+      require('../../assets/sounds/pop-04.mp3'),
+      require('../../assets/sounds/pop-05.mp3'),
+    ];
+    const randomIdx = Math.floor(Math.random() * soundFiles.length);
+
+    try {
+      const { sound } = await Audio.Sound.createAsync(soundFiles[randomIdx]);
+      await sound.playAsync();
+      // 재생 완료 후 소스 해제
+      sound.setOnPlaybackStatusUpdate((status: any) => {
+        if (status.didJustFinish) {
+          sound.unloadAsync();
+        }
+      });
+    } catch (error) {
+      console.warn('Failed to play sound:', error);
+    }
+
+    // 3. 스토어 업데이트
+    incrementHeartCount();
+  };
+
+  // 포토카드 공유 함수
+  const sharePhotoCard = async () => {
+    if (isSharing) return;
+    setIsSharing(true);
+
+    try {
+      if (viewShotRef.current?.capture) {
+        const uri = await viewShotRef.current.capture();
+        if (Platform.OS === 'web') {
+          alert('모바일 앱에서 공유 기능을 사용할 수 있습니다.');
+        } else {
+          if (await Sharing.isAvailableAsync()) {
+            await Sharing.shareAsync(uri);
+          } else {
+            Alert.alert('오류', '이 기기에서는 공유 기능을 사용할 수 없습니다.');
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Snapshot failed', error);
+      Alert.alert('오류', '이미지 생성 중 문제가 발생했습니다.');
+    } finally {
+      setIsSharing(false);
+      setShowShareModal(false); // 공유 후 모달 닫기
+    }
+  };
+
   // 학교 타입 변경 시 학년 조정
   const handleSchoolTypeChange = (type: SchoolType) => {
     setEditSchoolType(type);
@@ -272,9 +478,9 @@ export default function ProfileScreen() {
           {
             opacity: darkBgOpacity,
             zIndex: 0,
+            pointerEvents: 'none',
           }
         ]}
-        pointerEvents="none"
       >
         <LinearGradient
           colors={['#1a1f35', '#0b0e17']}
@@ -335,7 +541,68 @@ export default function ProfileScreen() {
         <View style={[styles.profileCard, { backgroundColor: colors.background.primary }]}>
           <ProfileAvatar character={profile?.character || 'Female_1'} />
           <View style={styles.profileInfo}>
-            <Text style={[styles.profileName, { color: colors.text.primary }]}>{profile?.nickname || '탐험가'}</Text>
+            <View style={styles.nameRow}>
+              <Pressable
+                onLongPress={() => {
+                  if (Platform.OS === 'web') {
+                    if (window.confirm('하트 개수를 0으로 초기화할까요?')) {
+                      resetHeartCount();
+                    }
+                  } else {
+                    Alert.alert('하트 초기화', '하트 개수를 0으로 초기화할까요?', [
+                      { text: '취소', style: 'cancel' },
+                      { text: '초기화', onPress: () => resetHeartCount(), style: 'destructive' }
+                    ]);
+                  }
+                }}
+                delayLongPress={3000} // 3초간 길게 누르면 초기화
+              >
+                <Text style={[styles.profileName, { color: colors.text.primary }]}>{profile?.nickname || '탐험가'}</Text>
+              </Pressable>
+
+              {/* Interactive Heart */}
+              <Pressable
+                onPress={handleHeartPress}
+                style={styles.heartContainer}
+              >
+                {/* Bravo! Message */}
+                {showBravo && (
+                  <Animated.View style={[
+                    styles.bravoContainer,
+                    { opacity: bravoOpacity, transform: [{ scale: bravoScale }, { translateY: -40 }] }
+                  ]}>
+                    <Text style={styles.bravoText}>Bravo! 🎉</Text>
+                  </Animated.View>
+                )}
+
+                {/* Heart Count Badge */}
+                {profile?.heartCount && profile.heartCount > 0 ? (
+                  <View style={[
+                    styles.heartBadge,
+                    {
+                      backgroundColor: heartColor + '20', // Soft Pastel Background (15-20% opacity)
+                      borderColor: heartColor + '30'      // Subtle border
+                    }
+                  ]}>
+                    <Text style={[styles.heartBadgeText, { color: heartColor }]}>
+                      {profile.heartCount}
+                    </Text>
+                  </View>
+                ) : null}
+
+                <LottieView
+                  ref={heartAnimationRef}
+                  key={`heart-${heartColor}-${isHeartPopping}`}
+                  source={isHeartPopping ? heartPopData : heartIdleData}
+                  style={styles.heartLottie}
+                  autoPlay={!isHeartPopping}
+                  loop={!isHeartPopping}
+                  onAnimationFinish={() => {
+                    if (isHeartPopping) setIsHeartPopping(false);
+                  }}
+                />
+              </Pressable>
+            </View>
             <Text style={[styles.profileGrade, { color: colors.text.secondary }]}>
               {profile ? getFullGradeLabel(profile.schoolType, profile.grade) : '초등학교 5학년'}
             </Text>
@@ -362,6 +629,26 @@ export default function ProfileScreen() {
             <Text style={[styles.statValueDate, { color: colors.text.primary }]}>{lastTestDate}</Text>
             <Text style={[styles.statLabel, { color: colors.text.secondary }]}>최근 검사</Text>
           </View>
+        </View>
+
+        {/* Share Button (Photo Card Trigger) */}
+        <View style={{ paddingHorizontal: Spacing.md, paddingBottom: Spacing.xl }}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.shareButton,
+              pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }
+            ]}
+            onPress={() => setShowShareModal(true)}
+          >
+            <LinearGradient
+              colors={['#4facfe', '#00f2fe']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.shareButtonGradient}
+            >
+              <Text style={styles.shareButtonText}>📸 인증서 만들기</Text>
+            </LinearGradient>
+          </Pressable>
         </View>
 
         {/* 메뉴 그룹 2 */}
@@ -419,7 +706,7 @@ export default function ProfileScreen() {
 
       {/* Snow Overlay */}
       {isSnowing && (
-        <View style={[StyleSheet.absoluteFill, { zIndex: 100 }]} pointerEvents="none">
+        <View style={[StyleSheet.absoluteFill, { zIndex: 100, pointerEvents: 'none' }]}>
           <SnowOverlay />
         </View>
       )}
@@ -448,15 +735,15 @@ export default function ProfileScreen() {
                     ]}
                     onPress={() => setEditCharacter(char.id)}
                   >
-                    <View style={styles.characterPreview} pointerEvents="none">
+                    <View style={[styles.characterPreview, { pointerEvents: 'none' }]}>
                       <ModelViewer3D
-                        modelPath={`/models/characters/${char.id}.gltf`}
+                        modelPath={`/models/characters/${char.id}.glb`}
                         animations={['Idle']}
                         width={60}
                         height={60}
                         autoRotate={false}
-                        cameraDistance="8m"
-                        cameraTarget="0m 1.2m 0m"
+                        cameraDistance="10m"
+                        cameraTarget="0m 0.9m 0m"
                         disableControls
                         backgroundColor="transparent"
                       />
@@ -530,6 +817,93 @@ export default function ProfileScreen() {
               </Pressable>
               <Pressable style={styles.saveButton} onPress={handleSave}>
                 <Text style={styles.saveButtonText}>저장</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+
+      {/* 포토카드 공유 프리뷰 모달 */}
+      <Modal
+        visible={showShareModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowShareModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.photoCardModalContent, { backgroundColor: 'transparent' }]}>
+            {/* 실제 캡처될 뷰 (ViewShot) */}
+            <ViewShot
+              ref={viewShotRef}
+              options={{ format: 'png', quality: 1.0 }}
+              style={{ borderRadius: 24, overflow: 'hidden', ...Shadow.xl }}
+            >
+              <LinearGradient
+                colors={['#1a2a6c', '#b21f1f', '#fdbb2d']} // Magical Sunset Gradient
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.photoCard}
+              >
+                {/* Decorative Elements */}
+                <View style={styles.cardDecorationTop} />
+                <View style={styles.cardDecorationBottom} />
+
+                {/* Header */}
+                <View style={styles.cardHeader}>
+                  <Text style={styles.cardTitle}>Career Compass</Text>
+                  <Text style={styles.cardDate}>{formatDate(Date.now()).split(' ')[0]}</Text>
+                </View>
+
+                {/* Character */}
+                <View style={styles.cardCharacterContainer}>
+                  <ModelViewer3D
+                    modelPath={`/models/characters/${profile?.character || 'Female_1'}.glb`}
+                    animations={['Jump', 'Wave']}
+                    width={280}
+                    height={280}
+                    autoRotate={true}
+                    cameraDistance="6m"
+                    cameraTarget="0m 0.8m 0m"
+                    borderRadius={0}
+                    backgroundColor="transparent"
+                    disableControls
+                  />
+                </View>
+
+                {/* Info */}
+                <View style={styles.cardInfo}>
+                  <Text style={styles.cardName}>{profile?.nickname || '탐험가'}</Text>
+                  <Text style={styles.cardGrade}>{getFullGradeLabel(profile?.schoolType || 'elementary', profile?.grade || 5)}</Text>
+
+                  <View style={styles.cardHeartRow}>
+                    <LottieView
+                      source={require('../../assets/lottie/HeartIdle.json')}
+                      colorFilters={[{ keypath: "**", color: heartColor }]}
+                      style={{ width: 40, height: 40 }}
+                      autoPlay
+                      loop
+                    />
+                    <Text style={[styles.cardHeartCount, { color: heartColor }]}>
+                      {profile?.heartCount || 0}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Footer Badge/Logo */}
+                <View style={styles.cardFooter}>
+                  <Text style={styles.cardFooterText}>나는야 미래의 꿈 탐험가!</Text>
+                </View>
+              </LinearGradient>
+            </ViewShot>
+
+            {/* Action Buttons */}
+            <View style={styles.shareActionButtons}>
+              <Pressable style={styles.closeShareButton} onPress={() => setShowShareModal(false)}>
+                <Text style={styles.closeShareButtonText}>닫기</Text>
+              </Pressable>
+              <Pressable style={styles.doShareButton} onPress={sharePhotoCard}>
+                <Text style={styles.doShareButtonText}>{isSharing ? '생성 중...' : '공유하기'}</Text>
               </Pressable>
             </View>
           </View>
@@ -618,6 +992,58 @@ const styles = StyleSheet.create({
   profileName: {
     ...TextStyle.title2,
     color: Colors.text.primary,
+  },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+  },
+  heartContainer: {
+    width: 44,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: -4,
+  },
+  heartLottie: {
+    width: 60,
+    height: 60,
+  },
+  heartBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: 'rgba(242, 242, 247, 0.9)', // Apple Silver Gray (Translucent)
+    borderRadius: 10,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+    minWidth: 20,
+    alignItems: 'center',
+    zIndex: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
+  },
+  heartBadgeText: {
+    color: '#8E8E93', // Apple Medium Gray
+    fontSize: 10,
+    fontWeight: '700',
+    fontFamily: Platform.OS === 'ios' ? 'Apple SD Gothic Neo' : 'sans-serif-medium',
+  },
+  bravoContainer: {
+    position: 'absolute',
+    top: -20,
+    alignItems: 'center',
+    width: 100,
+    zIndex: 20,
+  },
+  bravoText: {
+    fontSize: 20,
+    fontWeight: '900',
+    color: '#FF2D55',
+    textShadowColor: 'rgba(0,0,0,0.2)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
+    fontStyle: 'italic',
   },
   profileGrade: {
     ...TextStyle.callout,
@@ -952,6 +1378,152 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
   },
+  // Share / PhotoCard Styles
+  shareButton: {
+    borderRadius: BorderRadius.lg,
+    overflow: 'hidden',
+    ...Shadow.md,
+  },
+  shareButtonGradient: {
+    paddingVertical: Spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  shareButtonText: {
+    ...TextStyle.callout,
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  photoCardModalContent: {
+    width: '100%',
+    maxWidth: 360,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  photoCard: {
+    width: 320,
+    height: 480, // 2:3 Ratio
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 30,
+    position: 'relative',
+  },
+  cardDecorationTop: {
+    position: 'absolute',
+    top: -50,
+    left: -50,
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  cardDecorationBottom: {
+    position: 'absolute',
+    bottom: -30,
+    right: -30,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  cardHeader: {
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  cardTitle: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.8)',
+    fontWeight: '600',
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+  },
+  cardDate: {
+    fontSize: 10,
+    color: 'rgba(255,255,255,0.5)',
+    marginTop: 4,
+  },
+  cardCharacterContainer: {
+    height: 250,
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
+  },
+  cardInfo: {
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    paddingVertical: 15,
+    paddingHorizontal: 30,
+    borderRadius: 20,
+    width: '85%',
+    ...Shadow.lg,
+  },
+  cardName: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#1a1f35',
+    marginBottom: 4,
+  },
+  cardGrade: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 10,
+  },
+  cardHeartRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#fff',
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#eee',
+  },
+  cardHeartCount: {
+    fontSize: 24,
+    fontWeight: '900',
+  },
+  cardFooter: {
+    marginTop: 10,
+  },
+  cardFooterText: {
+    color: 'rgba(255,255,255,0.9)',
+    fontSize: 12,
+    fontStyle: 'italic',
+    fontWeight: '600',
+  },
+  shareActionButtons: {
+    flexDirection: 'row',
+    marginTop: 20,
+    gap: 15,
+    width: '100%',
+    justifyContent: 'center',
+  },
+  closeShareButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 12,
+  },
+  closeShareButtonText: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+  doShareButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 30,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    ...Shadow.md,
+  },
+  doShareButtonText: {
+    color: '#1a2a6c',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+
 });
 
 // 이용약관 내용

@@ -7,13 +7,20 @@ import {
   Dimensions,
   FlatList,
   Animated,
+  TextInput,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors, Spacing, BorderRadius, Shadow, TextStyle } from '../src/constants';
+import { useProfileStore } from '../src/stores/profileStore';
 
 import { ModelViewer3D } from '../src/components/character/ModelViewer3D';
+import { SchoolType, GradeNumber, getSchoolTypeLabel } from '../src/stores/profileStore';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -76,25 +83,49 @@ const slides: OnboardingSlide[] = [
       />
     ),
   },
+  {
+    id: 'setup',
+    title: '프로필 설정',
+    subtitle: '함께 여행할 친구와\n닉네임을 알려주세요',
+    illustration: null,
+  },
 ];
+
+const CHARACTERS = ['Female_1', 'Female_2', 'Male_1', 'Male_2'];
 
 export default function OnboardingScreen() {
   const router = useRouter();
   const [currentIndex, setCurrentIndex] = useState(0);
   const flatListRef = useRef<FlatList>(null);
   const scrollX = useRef(new Animated.Value(0)).current;
+  const { saveProfile, profile } = useProfileStore();
+  const [nickname, setNickname] = useState(profile?.nickname || '');
+  const [selectedChar, setSelectedChar] = useState(profile?.character || 'Female_1');
+  const [schoolType, setSchoolType] = useState<SchoolType>(profile?.schoolType || 'elementary');
+  const [grade, setGrade] = useState<GradeNumber>(profile?.grade || 5);
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentIndex < slides.length - 1) {
       const nextIndex = currentIndex + 1;
-      // scrollToOffset이 웹에서 더 안정적으로 작동
       flatListRef.current?.scrollToOffset({
         offset: nextIndex * SCREEN_WIDTH,
         animated: true
       });
       setCurrentIndex(nextIndex);
     } else {
-      router.replace('/(tabs)');
+      // 마지막 단계에서 프로필 저장
+      try {
+        await saveProfile({
+          nickname: nickname.trim() || '탐험가',
+          character: selectedChar,
+          schoolType: schoolType,
+          grade: grade,
+        });
+        router.replace('/(tabs)');
+      } catch (error) {
+        console.error('Failed to save profile during onboarding:', error);
+        router.replace('/(tabs)');
+      }
     }
   };
 
@@ -102,15 +133,127 @@ export default function OnboardingScreen() {
     router.replace('/(tabs)');
   };
 
-  const renderSlide = ({ item }: { item: OnboardingSlide }) => (
-    <View style={styles.slide}>
-      <View style={styles.illustrationContainer}>
-        {item.illustration}
+  const renderSlide = ({ item }: { item: OnboardingSlide }) => {
+    if (item.id === 'setup') {
+      return (
+        <View style={styles.slide}>
+          <ScrollView
+            style={styles.setupScroll}
+            contentContainerStyle={styles.setupContent}
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.setupHeader}>
+              <Text style={styles.slideTitle}>{item.title}</Text>
+              <Text style={styles.slideSubtitle}>{item.subtitle}</Text>
+            </View>
+
+            {/* 닉네임 입력 */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>닉네임</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="닉네임을 입력하세요"
+                value={nickname}
+                onChangeText={setNickname}
+                maxLength={10}
+              />
+            </View>
+
+            {/* 학교/학년 선택 */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>학교 및 학년</Text>
+              <View style={styles.schoolRow}>
+                {(['elementary', 'middle', 'high'] as SchoolType[]).map((type) => (
+                  <TouchableOpacity
+                    key={type}
+                    style={[
+                      styles.schoolButton,
+                      schoolType === type && styles.schoolButtonSelected
+                    ]}
+                    onPress={() => {
+                      setSchoolType(type);
+                      if (type !== 'elementary' && grade > 3) setGrade(3 as GradeNumber);
+                    }}
+                  >
+                    <Text style={[
+                      styles.schoolButtonText,
+                      schoolType === type && styles.schoolButtonTextSelected
+                    ]}>
+                      {getSchoolTypeLabel(type).replace('학교', '')}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+              <View style={styles.gradeRow}>
+                {[1, 2, 3, 4, 5, 6].map((num) => {
+                  if (schoolType !== 'elementary' && num > 3) return null;
+                  return (
+                    <TouchableOpacity
+                      key={num}
+                      style={[
+                        styles.gradeButton,
+                        grade === num && styles.gradeButtonSelected
+                      ]}
+                      onPress={() => setGrade(num as GradeNumber)}
+                    >
+                      <Text style={[
+                        styles.gradeButtonText,
+                        grade === num && styles.gradeButtonTextSelected
+                      ]}>
+                        {num}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+                <Text style={styles.gradeUnitText}>학년</Text>
+              </View>
+            </View>
+
+            {/* 캐릭터 선택 */}
+            <View style={styles.charGroup}>
+              <Text style={styles.inputLabel}>캐릭터 선택</Text>
+              <View style={styles.charGrid}>
+                {CHARACTERS.map((char) => (
+                  <TouchableOpacity
+                    key={char}
+                    activeOpacity={0.7}
+                    style={[
+                      styles.charItem,
+                      selectedChar === char && styles.charItemSelected
+                    ]}
+                    onPress={() => setSelectedChar(char)}
+                  >
+                    <View style={{ pointerEvents: 'none' }}>
+                      <ModelViewer3D
+                        modelPath={`/models/characters/${char}.glb`}
+                        animations={['Idle']}
+                        width={70}
+                        height={70}
+                        autoRotate={false}
+                        cameraDistance="12m"
+                        cameraTarget="0m 1.2m 0m"
+                        disableControls={true}
+                      />
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          </ScrollView>
+        </View>
+      );
+    }
+
+    return (
+      <View style={styles.slide}>
+        <View style={styles.illustrationContainer}>
+          {item.illustration}
+        </View>
+        <Text style={styles.slideTitle}>{item.title}</Text>
+        <Text style={styles.slideSubtitle}>{item.subtitle}</Text>
       </View>
-      <Text style={styles.slideTitle}>{item.title}</Text>
-      <Text style={styles.slideSubtitle}>{item.subtitle}</Text>
-    </View>
-  );
+    );
+  };
 
   const renderDot = (index: number) => {
     const inputRange = [
@@ -151,69 +294,74 @@ export default function OnboardingScreen() {
       colors={[Colors.background.primary, Colors.background.secondary]}
       style={styles.container}
     >
-      <SafeAreaView style={styles.safeArea}>
-        {/* 스킵 버튼 */}
-        <View style={styles.header}>
-          <Pressable onPress={handleSkip} style={styles.skipButton}>
-            <Text style={styles.skipText}>건너뛰기</Text>
-          </Pressable>
-        </View>
-
-        {/* 슬라이드 - flex: 1로 제한된 공간 사용 */}
-        <View style={styles.slideContainer}>
-          <Animated.FlatList
-            ref={flatListRef}
-            data={slides}
-            renderItem={renderSlide}
-            keyExtractor={(item) => item.id}
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            getItemLayout={(_, index) => ({
-              length: SCREEN_WIDTH,
-              offset: SCREEN_WIDTH * index,
-              index,
-            })}
-            onScroll={Animated.event(
-              [{ nativeEvent: { contentOffset: { x: scrollX } } }],
-              { useNativeDriver: true }
-            )}
-            onMomentumScrollEnd={(e) => {
-              const index = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
-              setCurrentIndex(index);
-            }}
-            scrollEventThrottle={16}
-          />
-        </View>
-
-        {/* 하단 영역 */}
-        <View style={styles.footer}>
-          {/* 페이지 인디케이터 */}
-          <View style={styles.pagination}>
-            {slides.map((_, index) => renderDot(index))}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+      >
+        <SafeAreaView style={styles.safeArea}>
+          {/* 스킵 버튼 */}
+          <View style={styles.header}>
+            <Pressable onPress={handleSkip} style={styles.skipButton}>
+              <Text style={styles.skipText}>건너뛰기</Text>
+            </Pressable>
           </View>
 
-          {/* 다음 버튼 */}
-          <Pressable
-            style={({ pressed }) => [
-              styles.nextButton,
-              pressed && styles.nextButtonPressed,
-            ]}
-            onPress={handleNext}
-          >
-            <LinearGradient
-              colors={Colors.primary.gradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.nextButtonGradient}
+          {/* 슬라이드 - flex: 1로 제한된 공간 사용 */}
+          <View style={styles.slideContainer}>
+            <Animated.FlatList
+              ref={flatListRef}
+              data={slides}
+              renderItem={renderSlide}
+              keyExtractor={(item) => item.id}
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              getItemLayout={(_, index) => ({
+                length: SCREEN_WIDTH,
+                offset: SCREEN_WIDTH * index,
+                index,
+              })}
+              onScroll={Animated.event(
+                [{ nativeEvent: { contentOffset: { x: scrollX } } }],
+                { useNativeDriver: false } // 웹 지원을 위해 false로 설정 (또는 Native Driver 경고 방지)
+              )}
+              onMomentumScrollEnd={(e) => {
+                const index = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
+                setCurrentIndex(index);
+              }}
+              scrollEventThrottle={16}
+            />
+          </View>
+
+          {/* 하단 영역 */}
+          <View style={styles.footer}>
+            {/* 페이지 인디케이터 */}
+            <View style={styles.pagination}>
+              {slides.map((_, index) => renderDot(index))}
+            </View>
+
+            {/* 다음 버튼 */}
+            <Pressable
+              style={({ pressed }) => [
+                styles.nextButton,
+                pressed && styles.nextButtonPressed,
+              ]}
+              onPress={handleNext}
             >
-              <Text style={styles.nextButtonText}>
-                {currentIndex === slides.length - 1 ? '시작하기' : '다음'}
-              </Text>
-            </LinearGradient>
-          </Pressable>
-        </View>
-      </SafeAreaView>
+              <LinearGradient
+                colors={Colors.primary.gradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.nextButtonGradient}
+              >
+                <Text style={styles.nextButtonText}>
+                  {currentIndex === slides.length - 1 ? '시작하기' : '다음'}
+                </Text>
+              </LinearGradient>
+            </Pressable>
+          </View>
+        </SafeAreaView>
+      </KeyboardAvoidingView>
     </LinearGradient>
   );
 }
@@ -305,5 +453,125 @@ const styles = StyleSheet.create({
   nextButtonText: {
     ...TextStyle.headline,
     color: Colors.text.inverse,
+  },
+  setupContainer: {
+    width: '100%',
+    marginTop: Spacing.xl,
+    gap: Spacing.lg,
+  },
+  inputGroup: {
+    gap: Spacing.xs,
+  },
+  inputLabel: {
+    ...TextStyle.subhead,
+    color: Colors.text.secondary,
+    fontWeight: '600',
+    marginLeft: 4,
+  },
+  input: {
+    backgroundColor: 'white',
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
+    ...TextStyle.body,
+    ...Shadow.sm,
+  },
+  charGroup: {
+    gap: Spacing.sm,
+  },
+  charGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: Spacing.sm,
+  },
+  charItem: {
+    width: (SCREEN_WIDTH - Spacing.xl * 2 - Spacing.md * 2 - Spacing.sm * 3) / 4,
+    height: (SCREEN_WIDTH - Spacing.xl * 2 - Spacing.md * 2 - Spacing.sm * 3) / 4,
+    backgroundColor: 'white',
+    borderRadius: BorderRadius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Shadow.sm,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  charItemSelected: {
+    borderColor: Colors.primary.main,
+    backgroundColor: Colors.primary.main + '10',
+  },
+  setupScroll: {
+    flex: 1,
+    width: '100%',
+  },
+  setupContent: {
+    paddingTop: Spacing.md,
+    paddingBottom: Spacing.xl,
+    paddingHorizontal: Spacing.md,
+  },
+  setupHeader: {
+    alignItems: 'center',
+    marginBottom: Spacing.xl,
+  },
+  schoolRow: {
+    flexDirection: 'row',
+    gap: Spacing.xs,
+    marginBottom: Spacing.sm,
+  },
+  schoolButton: {
+    flex: 1,
+    paddingVertical: Spacing.sm,
+    backgroundColor: 'white',
+    borderRadius: BorderRadius.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Shadow.sm,
+    borderWidth: 1.5,
+    borderColor: 'transparent',
+  },
+  schoolButtonSelected: {
+    borderColor: Colors.primary.main,
+    backgroundColor: Colors.primary.main + '10',
+  },
+  schoolButtonText: {
+    ...TextStyle.subhead,
+    color: Colors.text.secondary,
+    fontWeight: '600',
+  },
+  schoolButtonTextSelected: {
+    color: Colors.primary.main,
+  },
+  gradeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+  },
+  gradeButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'white',
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...Shadow.sm,
+    borderWidth: 1.5,
+    borderColor: 'transparent',
+  },
+  gradeButtonSelected: {
+    borderColor: Colors.primary.main,
+    backgroundColor: Colors.primary.main,
+  },
+  gradeButtonText: {
+    ...TextStyle.body,
+    color: Colors.text.secondary,
+    fontWeight: '700',
+  },
+  gradeButtonTextSelected: {
+    color: 'white',
+  },
+  gradeUnitText: {
+    ...TextStyle.body,
+    color: Colors.text.primary,
+    fontWeight: '600',
+    marginLeft: 4,
   },
 });
