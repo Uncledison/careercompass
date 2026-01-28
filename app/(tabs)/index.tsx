@@ -336,8 +336,8 @@ export default function HomeScreen() {
           >
             <View style={styles.smallCharacterContainer}>
               <ModelViewer3D
-                modelPath={`/models/characters/${profile?.character || 'Female_1'}.gltf`}
-                animations={['Run']}
+                modelPath={`/models/characters/${profile?.character || 'Female_1'}.glb`}
+                animations={['Wave']}
                 width={56}
                 height={56}
                 autoRotate={false}

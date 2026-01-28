@@ -450,7 +450,7 @@ export default function ProfileScreen() {
                   >
                     <View style={styles.characterPreview} pointerEvents="none">
                       <ModelViewer3D
-                        modelPath={`/models/characters/${char.id}.gltf`}
+                        modelPath={`/models/characters/${char.id}.glb`}
                         animations={['Idle']}
                         width={60}
                         height={60}
