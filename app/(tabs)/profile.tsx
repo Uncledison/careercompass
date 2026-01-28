@@ -431,19 +431,22 @@ export default function ProfileScreen() {
   // 포토카드 공유 함수
   const sharePhotoCard = async () => {
     if (isSharing) return;
+
+    // Web에서는 캡처 기능 미지원 (Native Module 호환성 문제)
+    if (Platform.OS === 'web') {
+      alert('현재 웹 버전에서는 이미지 생성을 지원하지 않습니다.\n모바일 앱을 이용해 주세요!');
+      return;
+    }
+
     setIsSharing(true);
 
     try {
       if (viewShotRef.current?.capture) {
         const uri = await viewShotRef.current.capture();
-        if (Platform.OS === 'web') {
-          alert('모바일 앱에서 공유 기능을 사용할 수 있습니다.');
+        if (await Sharing.isAvailableAsync()) {
+          await Sharing.shareAsync(uri);
         } else {
-          if (await Sharing.isAvailableAsync()) {
-            await Sharing.shareAsync(uri);
-          } else {
-            Alert.alert('오류', '이 기기에서는 공유 기능을 사용할 수 없습니다.');
-          }
+          Alert.alert('오류', '이 기기에서는 공유 기능을 사용할 수 없습니다.');
         }
       }
     } catch (error) {
