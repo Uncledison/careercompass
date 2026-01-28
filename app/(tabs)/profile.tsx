@@ -428,25 +428,103 @@ export default function ProfileScreen() {
     incrementHeartCount();
   };
 
+  // 캡처용 Ref for Web
+  const captureViewRef = useRef<View>(null);
+
   // 포토카드 공유 함수
   const sharePhotoCard = async () => {
     if (isSharing) return;
-
-    // Web에서는 캡처 기능 미지원 (Native Module 호환성 문제)
-    if (Platform.OS === 'web') {
-      alert('현재 웹 버전에서는 이미지 생성을 지원하지 않습니다.\n모바일 앱을 이용해 주세요!');
-      return;
-    }
-
     setIsSharing(true);
 
     try {
-      if (viewShotRef.current?.capture) {
-        const uri = await viewShotRef.current.capture();
-        if (await Sharing.isAvailableAsync()) {
-          await Sharing.shareAsync(uri);
-        } else {
-          Alert.alert('오류', '이 기기에서는 공유 기능을 사용할 수 없습니다.');
+      if (Platform.OS === 'web') {
+        // Web: html2canvas + Static Image Overlay
+        const html2canvas = (await import('html2canvas')).default;
+        const element = captureViewRef.current; // View -> HTMLElement in RNW
+
+        if (!element) {
+          Alert.alert('오류', '캡처할 영역을 찾을 수 없습니다.');
+          return;
+        }
+
+        // 1. Capture Card Background & Text
+        const canvas = await html2canvas(element as any, {
+          backgroundColor: null,
+          scale: 2, // High resolution
+          logging: false,
+          useCORS: true,
+          allowTaint: true,
+        });
+
+        // 2. Overlay Character Image (Static PNG)
+        // WebGL canvas can't be captured by html2canvas reliably, so we use a pre-rendered PNG.
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          const characterImg = new window.Image();
+          characterImg.crossOrigin = 'anonymous';
+
+          const charId = profile?.character || 'Female_1';
+          // Ensure clean ID if needed (though profile usually stores just ID)
+          const characterBase = charId.replace('.glb', '').replace('.gltf', '');
+
+          characterImg.src = `/character-screenshots/${characterBase}.png?t=${new Date().getTime()}`;
+
+          await new Promise((resolve, reject) => {
+            characterImg.onload = () => {
+              // Calculate Position
+              // Original Card: 320x480
+              // Character Container: height 250, top area
+              // We estimate visual center based on design
+
+              const actualScale = canvas.width / (element as unknown as HTMLElement).offsetWidth;
+
+              // Target size (adjust to match ModelViewer3D size roughly)
+              // ModelViewer is 280x280, but static image might be different aspect.
+              // We assume standard square-ish framing.
+              const targetWidth = 280 * actualScale;
+              const targetHeight = 280 * actualScale;
+
+              const canvasCenterX = canvas.width / 2;
+              const x = canvasCenterX - (targetWidth / 2);
+
+              // Vertical position: Card Header is roughly 50-60px. 
+              // We offset y to match ModelViewer position.
+              const y = 60 * actualScale;
+
+              ctx.drawImage(characterImg, x, y, targetWidth, targetHeight);
+              resolve(null);
+            };
+            characterImg.onerror = () => {
+              console.warn('Character image load failed, saving without character.');
+              resolve(null); // Proceed without character
+            };
+          });
+        }
+
+        // 3. Download
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `career-compass-card-${Date.now()}.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            Alert.alert('성공', '포토카드가 저장되었습니다! 📸');
+          }
+        });
+
+      } else {
+        // Native: react-native-view-shot
+        if (viewShotRef.current?.capture) {
+          const uri = await viewShotRef.current.capture();
+          if (await Sharing.isAvailableAsync()) {
+            await Sharing.shareAsync(uri);
+          } else {
+            Alert.alert('오류', '이 기기에서는 공유 기능을 사용할 수 없습니다.');
+          }
         }
       }
     } catch (error) {
@@ -454,7 +532,7 @@ export default function ProfileScreen() {
       Alert.alert('오류', '이미지 생성 중 문제가 발생했습니다.');
     } finally {
       setIsSharing(false);
-      setShowShareModal(false); // 공유 후 모달 닫기
+      setShowShareModal(false);
     }
   };
 
@@ -843,6 +921,7 @@ export default function ProfileScreen() {
               style={{ borderRadius: 24, overflow: 'hidden', ...Shadow.xl }}
             >
               <LinearGradient
+                ref={captureViewRef} // Web 캡처용 Ref
                 colors={['#1a2a6c', '#b21f1f', '#fdbb2d']} // Magical Sunset Gradient
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
