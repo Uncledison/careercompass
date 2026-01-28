@@ -270,7 +270,7 @@ const SummaryCard = ({
           <View style={styles.characterSection}>
             <View style={styles.characterCircle}>
               <ModelViewer3D
-                modelPath={`/models/characters/${character}.gltf`}
+                modelPath={`/models/characters/${character}.glb`}
                 animations={['Wave', 'Yes']}
                 width={160}
                 height={160}

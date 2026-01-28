@@ -130,19 +130,53 @@ export const ModelViewer3D: React.FC<ModelViewer3DProps> = ({
   `;
 
   if (Platform.OS === 'web') {
-    // 웹에서는 iframe 사용
+    // 웹에서는 iframe 없이 직접 model-viewer 커스텀 엘리먼트 사용 (성능 극대화)
     return (
       <View style={[styles.container, { width, height, borderRadius }]}>
-        <iframe
-          srcDoc={htmlContent}
-          style={{
-            width: '100%',
-            height: '100%',
-            border: 'none',
-            borderRadius,
-            overflow: 'hidden',
+        <style dangerouslySetInnerHTML={{
+          __html: `
+          model-viewer {
+            width: 100%;
+            height: 100%;
+            --poster-color: transparent;
+            --progress-bar-color: transparent;
+          }
+          model-viewer::part(default-progress-bar) {
+            display: none;
+          }
+        `}} />
+        <model-viewer
+          src={modelPath}
+          auto-rotate={autoRotate ? '' : undefined}
+          auto-rotate-delay="0"
+          rotation-per-second="30deg"
+          camera-controls={disableControls ? undefined : true}
+          camera-orbit={cameraOrbit || `0deg 75deg ${cameraDistance || '2.5m'}`}
+          camera-target={cameraTarget || 'auto auto auto'}
+          interaction-prompt="none"
+          autoplay
+          loading="eager"
+          reveal="auto"
+          shadow-intensity="0"
+          environment-image="neutral"
+          onLoad={(e: any) => {
+            const viewer = e.target;
+            const availableAnimations = viewer.availableAnimations;
+            if (animations.length > 0 && availableAnimations.includes(animations[0])) {
+              viewer.animationName = animations[0];
+              viewer.play();
+            }
           }}
-          title="3D Model Viewer"
+          onFinished={(e: any) => {
+            const viewer = e.target;
+            const availableAnimations = viewer.availableAnimations;
+            const nextIndex = Math.floor(Math.random() * animations.length);
+            const nextAnimation = animations[nextIndex];
+            if (availableAnimations.includes(nextAnimation)) {
+              viewer.animationName = nextAnimation;
+              viewer.play();
+            }
+          }}
         />
       </View>
     );
