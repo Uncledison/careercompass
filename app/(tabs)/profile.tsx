@@ -920,63 +920,64 @@ export default function ProfileScreen() {
               options={{ format: 'png', quality: 1.0 }}
               style={{ borderRadius: 24, overflow: 'hidden', ...Shadow.xl }}
             >
-              <LinearGradient
-                ref={captureViewRef} // Web 캡처용 Ref
-                colors={['#1a2a6c', '#b21f1f', '#fdbb2d']} // Magical Sunset Gradient
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.photoCard}
-              >
-                {/* Decorative Elements */}
-                <View style={styles.cardDecorationTop} />
-                <View style={styles.cardDecorationBottom} />
+              <View ref={captureViewRef} collapsable={false}>
+                <LinearGradient
+                  colors={['#1a2a6c', '#b21f1f', '#fdbb2d']} // Magical Sunset Gradient
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.photoCard}
+                >
+                  {/* Decorative Elements */}
+                  <View style={styles.cardDecorationTop} />
+                  <View style={styles.cardDecorationBottom} />
 
-                {/* Header */}
-                <View style={styles.cardHeader}>
-                  <Text style={styles.cardTitle}>Career Compass</Text>
-                  <Text style={styles.cardDate}>{formatDate(Date.now()).split(' ')[0]}</Text>
-                </View>
-
-                {/* Character */}
-                <View style={styles.cardCharacterContainer}>
-                  <ModelViewer3D
-                    modelPath={`/models/characters/${profile?.character || 'Female_1'}.glb`}
-                    animations={['Jump', 'Wave']}
-                    width={280}
-                    height={280}
-                    autoRotate={true}
-                    cameraDistance="6m"
-                    cameraTarget="0m 0.8m 0m"
-                    borderRadius={0}
-                    backgroundColor="transparent"
-                    disableControls
-                  />
-                </View>
-
-                {/* Info */}
-                <View style={styles.cardInfo}>
-                  <Text style={styles.cardName}>{profile?.nickname || '탐험가'}</Text>
-                  <Text style={styles.cardGrade}>{getFullGradeLabel(profile?.schoolType || 'elementary', profile?.grade || 5)}</Text>
-
-                  <View style={styles.cardHeartRow}>
-                    <LottieView
-                      source={require('../../assets/lottie/HeartIdle.json')}
-                      colorFilters={[{ keypath: "**", color: heartColor }]}
-                      style={{ width: 40, height: 40 }}
-                      autoPlay
-                      loop
-                    />
-                    <Text style={[styles.cardHeartCount, { color: heartColor }]}>
-                      {profile?.heartCount || 0}
-                    </Text>
+                  {/* Header */}
+                  <View style={styles.cardHeader}>
+                    <Text style={styles.cardTitle}>Career Compass</Text>
+                    <Text style={styles.cardDate}>{formatDate(Date.now()).split(' ')[0]}</Text>
                   </View>
-                </View>
 
-                {/* Footer Badge/Logo */}
-                <View style={styles.cardFooter}>
-                  <Text style={styles.cardFooterText}>나는야 미래의 꿈 탐험가!</Text>
-                </View>
-              </LinearGradient>
+                  {/* Character */}
+                  <View style={styles.cardCharacterContainer}>
+                    <ModelViewer3D
+                      modelPath={`/models/characters/${profile?.character || 'Female_1'}.glb`}
+                      animations={['Jump', 'Wave']}
+                      width={280}
+                      height={280}
+                      autoRotate={true}
+                      cameraDistance="6m"
+                      cameraTarget="0m 0.8m 0m"
+                      borderRadius={0}
+                      backgroundColor="transparent"
+                      disableControls
+                    />
+                  </View>
+
+                  {/* Info */}
+                  <View style={styles.cardInfo}>
+                    <Text style={styles.cardName}>{profile?.nickname || '탐험가'}</Text>
+                    <Text style={styles.cardGrade}>{getFullGradeLabel(profile?.schoolType || 'elementary', profile?.grade || 5)}</Text>
+
+                    <View style={styles.cardHeartRow}>
+                      <LottieView
+                        source={require('../../assets/lottie/HeartIdle.json')}
+                        colorFilters={[{ keypath: "**", color: heartColor }]}
+                        style={{ width: 40, height: 40 }}
+                        autoPlay
+                        loop
+                      />
+                      <Text style={[styles.cardHeartCount, { color: heartColor }]}>
+                        {profile?.heartCount || 0}
+                      </Text>
+                    </View>
+                  </View>
+
+                  {/* Footer Badge/Logo */}
+                  <View style={styles.cardFooter}>
+                    <Text style={styles.cardFooterText}>나는야 미래의 꿈 탐험가!</Text>
+                  </View>
+                </LinearGradient>
+              </View>
             </ViewShot>
 
             {/* Action Buttons */}
