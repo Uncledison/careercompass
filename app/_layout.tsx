@@ -10,18 +10,46 @@ import { ThemeProvider } from '../src/context/ThemeContext';
 declare global {
   interface Window {
     gtag: any;
+    dataLayer: any[];
   }
 }
 
 export default function RootLayout() {
   const pathname = usePathname();
 
+  // Track Page Views (Web Only)
   useEffect(() => {
-    if (Platform.OS === 'web' && typeof window !== 'undefined' && window.gtag) {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      // 1. Initialize dataLayer and gtag if missing
+      window.dataLayer = window.dataLayer || [];
+      if (!window.gtag) {
+        window.gtag = function () {
+          window.dataLayer.push(arguments);
+        };
+        window.gtag('js', new Date());
+      }
+
+      // 2. Load Google Analytics script if not already added
+      const gaId = 'G-V9WBTTWR46';
+      const scriptId = 'google-analytics';
+      if (!document.getElementById(scriptId)) {
+        const script = document.createElement('script');
+        script.id = scriptId;
+        script.async = true;
+        script.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`;
+        document.head.appendChild(script);
+
+        // Initial config
+        window.gtag('config', gaId, {
+          send_page_view: false, // We'll handle it manually to match SPA navigation
+        });
+      }
+
+      // 3. Track current page view
       window.gtag('event', 'page_view', {
         page_path: pathname,
         page_location: window.location.href,
-        page_title: document.title,
+        page_title: document.title || 'Career Compass',
       });
     }
   }, [pathname]);
