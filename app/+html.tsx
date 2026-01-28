@@ -14,6 +14,9 @@ export default function Root({ children }: PropsWithChildren) {
                 <meta charSet="utf-8" />
                 <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
                 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+                <link rel="apple-touch-icon" href="/assets/icon.png" />
+                <link rel="icon" type="image/png" sizes="192x192" href="/assets/icon.png" />
+                <link rel="icon" type="image/png" sizes="512x512" href="/assets/icon.png" />
 
                 {/* 
           This viewport meta tag effectively disables zooming on mobile web, which is often 
