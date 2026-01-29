@@ -90,10 +90,24 @@ export default function Root({ children }: PropsWithChildren) {
                     __html: `
             window.dataLayer = window.dataLayer || [];
             window.gtag = function(){ window.dataLayer.push(arguments); }
-            window.gtag('js', new Date());
             window.gtag('config', 'G-V9WBTTWR46', {
               send_page_view: false
             });
+          `
+                }} />
+
+                {/* PWA Service Worker Registration */}
+                <script dangerouslySetInnerHTML={{
+                    __html: `
+            if ('serviceWorker' in navigator) {
+              window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js').then(function(registration) {
+                  console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                }, function(err) {
+                  console.log('ServiceWorker registration failed: ', err);
+                });
+              });
+            }
           `
                 }} />
             </head>
