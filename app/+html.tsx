@@ -14,12 +14,12 @@ export default function Root({ children }: PropsWithChildren) {
                 <meta charSet="utf-8" />
                 <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
                 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, user-scalable=0, viewport-fit=cover" />
-                <link rel="manifest" href="/manifest.json" />
+                <link rel="manifest" href="manifest.json" />
 
                 <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
-                <link rel="apple-touch-icon" href="/icon.png" />
-                <link rel="icon" type="image/png" sizes="192x192" href="/icon.png" />
-                <link rel="icon" type="image/png" sizes="512x512" href="/icon.png" />
+                <link rel="apple-touch-icon" href="icon.png" />
+                <link rel="icon" type="image/png" sizes="192x192" href="icon.png" />
+                <link rel="icon" type="image/png" sizes="512x512" href="icon.png" />
 
                 {/* Using raw CSS styles to enforce non-scalable UI and prevent touch artifacts */}
                 <style dangerouslySetInnerHTML={{
@@ -96,12 +96,11 @@ export default function Root({ children }: PropsWithChildren) {
           `
                 }} />
 
-                {/* PWA Service Worker Registration */}
                 <script dangerouslySetInnerHTML={{
                     __html: `
             if ('serviceWorker' in navigator) {
               window.addEventListener('load', function() {
-                navigator.serviceWorker.register('/sw.js').then(function(registration) {
+                navigator.serviceWorker.register('sw.js').then(function(registration) {
                   console.log('ServiceWorker registration successful with scope: ', registration.scope);
                 }, function(err) {
                   console.log('ServiceWorker registration failed: ', err);
