@@ -130,31 +130,106 @@ export const ModelViewer3D: React.FC<ModelViewer3DProps> = ({
 </html>
   `;
 
-  // 웹/네이티브 공통으로 htmlContent를 소스로 하는 뷰를 반환합니다.
-
+  // 웹 환경: iframe 대신 직접 model-viewer 태그 사용 (속도 최적화)
   if (Platform.OS === 'web') {
+    // Custom Element 타입 정의가 없으므로 any로 처리
+    const ModelViewer = 'model-viewer' as any;
+    const modelViewerRef = React.useRef<any>(null);
+
+    React.useEffect(() => {
+      // 라이브러리가 로드되지 않았다면 동적으로 로드
+      if (typeof window !== 'undefined' && !customElements.get('model-viewer')) {
+        console.log('Injecting model-viewer script dynamically...');
+        const script = document.createElement('script');
+        script.type = 'module';
+        script.src = 'https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js';
+        script.onload = () => console.log('ModelViewer script loaded successfully');
+        script.onerror = (e) => console.error('Failed to load ModelViewer script', e);
+        document.head.appendChild(script);
+      }
+    }, []);
+
+    // 애니메이션 제어 로직 복구
+    React.useEffect(() => {
+      const viewer = modelViewerRef.current;
+      if (!viewer) return;
+
+      let currentIndex = 0;
+
+      const handleLoad = () => {
+        const availableAnimations = viewer.availableAnimations || [];
+        if (animations && animations.length > 0 && availableAnimations.includes(animations[0])) {
+          viewer.animationName = animations[0];
+          viewer.play();
+        } else if (availableAnimations.length > 0) {
+          viewer.animationName = availableAnimations[0];
+          viewer.play();
+        }
+      };
+
+      const handleFinished = () => {
+        if (!animations || animations.length === 0) return;
+
+        const availableAnimations = viewer.availableAnimations || [];
+        let nextIndex;
+        // 이전 iframe 로직과 동일하게 랜덤 선택 (중복 최소화)
+        do {
+          nextIndex = Math.floor(Math.random() * animations.length);
+        } while (animations.length > 1 && nextIndex === currentIndex);
+
+        currentIndex = nextIndex;
+        const nextAnimation = animations[currentIndex];
+
+        if (availableAnimations.includes(nextAnimation)) {
+          viewer.animationName = nextAnimation;
+          viewer.play();
+        }
+      };
+
+      viewer.addEventListener('load', handleLoad);
+      viewer.addEventListener('finished', handleFinished);
+
+      return () => {
+        if (viewer) {
+          viewer.removeEventListener('load', handleLoad);
+          viewer.removeEventListener('finished', handleFinished);
+        }
+      };
+    }, [modelPath, animations]);
+
     return (
       <View
         style={[
           styles.container,
           {
-            width,
+            width, // Props로 받은 width (예: 200)
             height,
             borderRadius,
+            backgroundColor: backgroundColor || 'transparent', // 배경색 명시
           }
         ]}
       >
-        <iframe
-          srcDoc={htmlContent}
+        <ModelViewer
+          ref={modelViewerRef}
+          src={modelPath}
+          // 중요: Web Component가 부모 View를 가득 채우도록 설정
           style={{
             width: '100%',
             height: '100%',
-            border: 'none',
-            borderRadius,
-            overflow: 'hidden',
+            display: 'block',
             backgroundColor: 'transparent',
+            // 로딩 바 숨기기
+            '--progress-bar-color': 'transparent',
+            '--progress-bar-height': '0px',
+            '--poster-color': 'transparent',
           }}
-          title="3D Model Viewer"
+          auto-rotate={autoRotate ? 'true' : null}
+          camera-controls={disableControls ? null : 'true'}
+          camera-orbit={cameraOrbit || `0deg 75deg ${cameraDistance || '2.5m'}`}
+          camera-target={cameraTarget || 'auto auto auto'}
+          shadow-intensity="1"
+          autoplay
+          loading="eager" // 즉시 로딩
         />
       </View>
     );
