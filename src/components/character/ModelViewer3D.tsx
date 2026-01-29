@@ -130,9 +130,16 @@ export const ModelViewer3D: React.FC<ModelViewer3DProps> = ({
 </html>
   `;
 
-  // 웹/네이티브 공통으로 htmlContent를 소스로 하는 뷰를 반환합니다.
-
+  // 웹 환경: iframe 대신 직접 model-viewer 태그 사용 (성능 최적화)
   if (Platform.OS === 'web') {
+    // Custom Element 타입 정의가 없으므로 any로 처리하거나 ts-ignore 사용
+    const ModelViewer = 'model-viewer' as any;
+
+    React.useEffect(() => {
+      // 컴포넌트 마운트 시 스크립트가 로드되었는지 확인 (app/+html.tsx에서 로드됨)
+      // 필요한 경우 추가 로직 작성
+    }, []);
+
     return (
       <View
         style={[
@@ -141,20 +148,20 @@ export const ModelViewer3D: React.FC<ModelViewer3DProps> = ({
             width,
             height,
             borderRadius,
+            backgroundColor,
           }
         ]}
       >
-        <iframe
-          srcDoc={htmlContent}
-          style={{
-            width: '100%',
-            height: '100%',
-            border: 'none',
-            borderRadius,
-            overflow: 'hidden',
-            backgroundColor: 'transparent',
-          }}
-          title="3D Model Viewer"
+        <ModelViewer
+          src={modelPath}
+          style={{ width: '100%', height: '100%' }}
+          auto-rotate={autoRotate ? 'true' : null}
+          camera-controls={disableControls ? null : 'true'}
+          camera-orbit={cameraOrbit || `0deg 75deg ${cameraDistance || '2.5m'}`}
+          camera-target={cameraTarget || 'auto auto auto'}
+          shadow-intensity="1"
+          autoplay
+          loading="eager" // 즉시 로딩
         />
       </View>
     );
