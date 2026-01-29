@@ -58,8 +58,8 @@ export default function RootLayout() {
   return (
     <ThemeProvider>
       <Head>
-        <link rel="manifest" href="/careercompass/manifest.json" />
-        <link rel="icon" type="image/png" sizes="192x192" href="/careercompass/icon.png" />
+        <link rel="manifest" href="/manifest.json" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/icon.png" />
       </Head>
       <GestureHandlerRootView style={styles.container}>
         <StatusBar style="auto" />

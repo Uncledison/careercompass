@@ -3,19 +3,19 @@
     "name": "Career Compass - 진로 탐험",
     "icons": [
         {
-            "src": "/careercompass/icon.png",
+            "src": "/icon.png",
             "sizes": "512x512",
             "type": "image/png"
         },
         {
-            "src": "/careercompass/icon.png",
+            "src": "/icon.png",
             "sizes": "512x512",
             "type": "image/png",
             "purpose": "any maskable"
         }
     ],
-    "start_url": "/careercompass/",
+    "start_url": "/",
     "display": "standalone",
     "theme_color": "#667eea",
-    "background_color": "#F2F2F7"
+    "background_color": "#ffffff"
 }
