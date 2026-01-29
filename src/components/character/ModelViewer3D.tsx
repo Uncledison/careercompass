@@ -72,7 +72,7 @@ export const ModelViewer3D: React.FC<ModelViewer3DProps> = ({
     src="${modelPath}"
     ${autoRotate ? 'auto-rotate' : ''}
     auto-rotate-delay="0"
-    rotation-per-second="30deg"
+    rotation-per-second="60deg"
     ${disableControls ? '' : 'camera-controls'}
     camera-orbit="${cameraOrbit || `0deg 75deg ${cameraDistance || '2.5m'}`}"
     camera-target="${cameraTarget || 'auto auto auto'}"
@@ -212,6 +212,7 @@ export const ModelViewer3D: React.FC<ModelViewer3DProps> = ({
         <ModelViewer
           ref={modelViewerRef}
           src={modelPath}
+
           // 중요: Web Component가 부모 View를 가득 채우도록 설정
           style={{
             width: '100%',
@@ -224,6 +225,7 @@ export const ModelViewer3D: React.FC<ModelViewer3DProps> = ({
             '--poster-color': 'transparent',
           }}
           auto-rotate={autoRotate ? 'true' : null}
+          rotation-per-second="60deg" // 2배 속도 (기본 30deg -> 60deg)
           camera-controls={disableControls ? null : 'true'}
           camera-orbit={cameraOrbit || `0deg 75deg ${cameraDistance || '2.5m'}`}
           camera-target={cameraTarget || 'auto auto auto'}
