@@ -82,6 +82,40 @@ export default function Root({ children }: PropsWithChildren) {
                     event.preventDefault();
                 }
             });
+
+            // 6. Security: Disable Right Click
+            document.addEventListener('contextmenu', function(event) {
+                event.preventDefault();
+            });
+
+            // 7. Security: Disable F12, Ctrl+Shift+I/J/C, Ctrl+U
+            document.addEventListener('keydown', function(event) {
+                // F12
+                if (event.key === 'F12' || event.keyCode === 123) {
+                    event.preventDefault();
+                    return false;
+                }
+                // Ctrl+Shift+I (DevTools)
+                if (event.ctrlKey && event.shiftKey && (event.key === 'I' || event.key === 'i' || event.keyCode === 73)) {
+                    event.preventDefault();
+                    return false;
+                }
+                // Ctrl+Shift+J (Console)
+                if (event.ctrlKey && event.shiftKey && (event.key === 'J' || event.key === 'j' || event.keyCode === 74)) {
+                    event.preventDefault();
+                    return false;
+                }
+                // Ctrl+Shift+C (Inspect)
+                if (event.ctrlKey && event.shiftKey && (event.key === 'C' || event.key === 'c' || event.keyCode === 67)) {
+                    event.preventDefault();
+                    return false;
+                }
+                // Ctrl+U (View Source)
+                if (event.ctrlKey && (event.key === 'U' || event.key === 'u' || event.keyCode === 85)) {
+                    event.preventDefault();
+                    return false;
+                }
+            });
           ` }} />
 
                 {/* Google Analytics (GA4) Script */}
