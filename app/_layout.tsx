@@ -2,6 +2,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StyleSheet, Platform } from 'react-native';
 import { useEffect } from 'react';
 import { Stack, usePathname } from 'expo-router';
+import Head from 'expo-router/head';
 import { StatusBar } from 'expo-status-bar';
 import { Colors } from '../src/constants';
 
@@ -56,7 +57,10 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider>
-
+      <Head>
+        <link rel="manifest" href="/careercompass/manifest.json" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/careercompass/icon.png" />
+      </Head>
       <GestureHandlerRootView style={styles.container}>
         <StatusBar style="auto" />
         <Stack

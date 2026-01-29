@@ -9,7 +9,7 @@
       "destination": "/index.html"
     }
   ],
-  "buildCommand": "npx expo export -p web",
+  "buildCommand": "npx expo export -p web && node scripts/post-build.js",
   "outputDirectory": "dist",
   "framework": null,
   "installCommand": "npm install"
