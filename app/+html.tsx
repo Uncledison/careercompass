@@ -17,9 +17,9 @@ export default function Root({ children }: PropsWithChildren) {
                 <link rel="manifest" href="/manifest.json" />
 
                 <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
-                <link rel="apple-touch-icon" href="/assets/icon.png" />
-                <link rel="icon" type="image/png" sizes="192x192" href="/assets/icon.png" />
-                <link rel="icon" type="image/png" sizes="512x512" href="/assets/icon.png" />
+                <link rel="apple-touch-icon" href="/icon.png" />
+                <link rel="icon" type="image/png" sizes="192x192" href="/icon.png" />
+                <link rel="icon" type="image/png" sizes="512x512" href="/icon.png" />
 
                 {/* Using raw CSS styles to enforce non-scalable UI and prevent touch artifacts */}
                 <style dangerouslySetInnerHTML={{

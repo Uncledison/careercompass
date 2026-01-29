@@ -56,6 +56,7 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider>
+
       <GestureHandlerRootView style={styles.container}>
         <StatusBar style="auto" />
         <Stack
