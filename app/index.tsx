@@ -1,4 +1,4 @@
-import React from 'react';
+import { useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ModelViewer3D } from '../src/components/character/ModelViewer3D';
 import { Colors, Spacing, BorderRadius, Shadow, TextStyle } from '../src/constants';
+import { useProfileStore } from '../src/stores/profileStore';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -59,6 +60,17 @@ const RandomPairCharacter = () => {
 
 export default function WelcomeScreen() {
   const router = useRouter();
+  const { profile, loadProfile } = useProfileStore();
+
+  useEffect(() => {
+    loadProfile();
+  }, []);
+
+  useEffect(() => {
+    if (profile?.isOnboarded) {
+      router.replace('/(tabs)');
+    }
+  }, [profile]);
 
   const handleStart = () => {
     router.push('/onboarding');

@@ -123,6 +123,7 @@ export default function OnboardingScreen() {
           schoolType: schoolType,
           grade: grade,
           heartCount: 0,
+          isOnboarded: true,
         });
         router.replace('/(tabs)');
       } catch (error) {
