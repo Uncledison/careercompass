@@ -24,7 +24,15 @@ export const Container: React.FC<ContainerProps> = ({
         <View style={[
             styles.webBackground,
             style,
-            Platform.OS === 'web' && { height: '100dvh' as any, minHeight: '100dvh' as any }
+            Platform.OS === 'web' && {
+                position: 'fixed' as any,
+                top: 0,
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: 'auto' as any,
+                zIndex: 9999, // Ensure it's on top of everything
+            }
         ]} {...props}>
             <View style={[
                 styles.container,
