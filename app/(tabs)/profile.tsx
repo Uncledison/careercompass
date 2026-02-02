@@ -160,7 +160,7 @@ const MenuItem = ({ icon, label, value, onPress, danger, colors, isSpecial }: Me
                   color: 'transparent',
                   animation: 'rainbow-move 4s linear infinite',
                   display: 'inline-block' // Ensure transforms work
-                }
+                } as any
               ]}
             >
               {label}
