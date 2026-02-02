@@ -22,7 +22,9 @@ import { useProfileStore } from '../src/stores/profileStore';
 import { ModelViewer3D } from '../src/components/character/ModelViewer3D';
 import { SchoolType, GradeNumber, getSchoolTypeLabel } from '../src/stores/profileStore';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const { width: WINDOW_WIDTH } = Dimensions.get('window');
+// Web: Container max-width is 500, so we limit the screen width calc
+const SCREEN_WIDTH = Platform.OS === 'web' ? Math.min(WINDOW_WIDTH, 500) : WINDOW_WIDTH;
 
 interface OnboardingSlide {
   id: string;

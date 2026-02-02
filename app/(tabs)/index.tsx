@@ -26,7 +26,9 @@ import { InfiniteMarquee } from '../../src/components/InfiniteMarquee';
 import { Audio } from 'expo-av';
 
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const { width: WINDOW_WIDTH } = Dimensions.get('window');
+const SCREEN_WIDTH = Platform.OS === 'web' ? Math.min(WINDOW_WIDTH, 500) : WINDOW_WIDTH;
+
 const CARD_WIDTH = SCREEN_WIDTH - Spacing.lg * 2;
 
 // Grass Lottie dimensions (matches button width, auto-calculated height)
