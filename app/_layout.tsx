@@ -56,9 +56,7 @@ export default function RootLayout() {
     }
   }, [pathname]);
 
-  import { Container } from '../src/components/layout/Container';
 
-  // ...
 
   return (
     <ThemeProvider>
