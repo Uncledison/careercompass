@@ -141,27 +141,26 @@ const MenuItem = ({ icon, label, value, onPress, danger, colors, isSpecial }: Me
       if (Platform.OS === 'web') {
         return (
           <View>
-            {/* Inject CSS for Web Gradient Animation */}
+            {/* Inject CSS for Web Keyframes */}
             <style type="text/css">{`
               @keyframes rainbow-move {
                 0% { background-position: 0% 50%; }
                 100% { background-position: 100% 50%; }
               }
-              .rainbow-text {
-                background: linear-gradient(to left, #FF0000, #FF7F00, #D4AF37, #008000, #0000FF, #4B0082, #9400D3, #FF0000);
-                background-size: 200% auto;
-                -webkit-background-clip: text;
-                background-clip: text;
-                color: transparent;
-                animation: rainbow-move 4s linear infinite;
-              }
             `}</style>
             <Text
-              // @ts-ignore: className is supported in React Native Web
-              className="rainbow-text"
               style={[
                 styles.menuItemLabel,
-                { opacity: 1 } // Ensure visibility
+                {
+                  // @ts-ignore: Web specific styles
+                  backgroundImage: 'linear-gradient(to left, #FF0000, #FF7F00, #D4AF37, #008000, #0000FF, #4B0082, #9400D3, #FF0000)',
+                  backgroundSize: '200% auto',
+                  backgroundClip: 'text',
+                  WebkitBackgroundClip: 'text',
+                  color: 'transparent',
+                  animation: 'rainbow-move 4s linear infinite',
+                  display: 'inline-block' // Ensure transforms work
+                }
               ]}
             >
               {label}
