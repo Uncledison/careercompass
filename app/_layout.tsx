@@ -56,6 +56,49 @@ export default function RootLayout() {
     }
   }, [pathname]);
 
+  // DevTools 및 우클릭 방지 (Web Only)
+  useEffect(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      // F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U 방지
+      const handleKeyDown = (e: KeyboardEvent) => {
+        // F12
+        if (e.key === 'F12') {
+          e.preventDefault();
+          return false;
+        }
+        // Ctrl+Shift+I (개발자 도구)
+        if (e.ctrlKey && e.shiftKey && e.key === 'I') {
+          e.preventDefault();
+          return false;
+        }
+        // Ctrl+Shift+J (콘솔)
+        if (e.ctrlKey && e.shiftKey && e.key === 'J') {
+          e.preventDefault();
+          return false;
+        }
+        // Ctrl+U (소스 보기)
+        if (e.ctrlKey && e.key === 'u') {
+          e.preventDefault();
+          return false;
+        }
+      };
+
+      // 우클릭 방지
+      const handleContextMenu = (e: MouseEvent) => {
+        e.preventDefault();
+        return false;
+      };
+
+      document.addEventListener('keydown', handleKeyDown);
+      document.addEventListener('contextmenu', handleContextMenu);
+
+      return () => {
+        document.removeEventListener('keydown', handleKeyDown);
+        document.removeEventListener('contextmenu', handleContextMenu);
+      };
+    }
+  }, []);
+
 
 
   return (
