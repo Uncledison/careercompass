@@ -661,8 +661,13 @@ export default function AssessmentScreen() {
           stageColor={stageInfo.color}
         />
 
-        {/* 메인 콘텐츠 - 세로 중앙 정렬 레이아웃 */}
-        <View style={styles.content}>
+        {/* 메인 콘텐츠 - 스크롤 가능한 레이아웃으로 변경하여 화면 크기 대응 */}
+        <ScrollView
+          style={styles.content}
+          contentContainerStyle={styles.contentContainer}
+          showsVerticalScrollIndicator={false}
+          bounces={false}
+        >
           {/* 3D 캐릭터 영역 */}
           <View style={styles.characterSection}>
             <Animated.View
@@ -724,7 +729,7 @@ export default function AssessmentScreen() {
               onValueChange={(val) => setCurrentValue(val as ResponseValue)}
             />
           </View>
-        </View>
+        </ScrollView>
 
         {/* 하단 버튼 */}
         <View style={styles.footer}>
@@ -866,8 +871,12 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+  },
+  contentContainer: {
     paddingHorizontal: Spacing.lg,
     justifyContent: 'center',
+    flexGrow: 1,
+    paddingBottom: Spacing.xl,
   },
   characterSection: {
     height: 280,
