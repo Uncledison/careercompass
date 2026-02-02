@@ -120,8 +120,8 @@ export default function TabLayout() {
         headerShown: false,
         tabBarStyle: {
           ...styles.tabBar,
-          height: 60 + Math.max(insets.bottom, 12),
-          paddingBottom: Math.max(insets.bottom, 12),
+          height: 60 + Math.max(insets.bottom, Platform.OS === 'web' ? 24 : 12),
+          paddingBottom: Math.max(insets.bottom, Platform.OS === 'web' ? 24 : 12),
         },
         tabBarActiveTintColor: Colors.primary.main,
         tabBarInactiveTintColor: Colors.gray[400],

@@ -905,6 +905,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.lg,
+    paddingBottom: Platform.OS === 'web' ? Spacing.xl : Spacing.lg,
     gap: Spacing.md,
   },
   prevButton: {
