@@ -118,15 +118,14 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarShowLabel: true,
+        tabBarShowLabel: false,
         tabBarStyle: {
           ...styles.tabBar,
-          height: Platform.OS === 'web' ? 95 : 60 + Math.max(insets.bottom, 12),
-          paddingBottom: Math.max(insets.bottom, Platform.OS === 'web' ? 35 : 12),
+          height: Platform.OS === 'web' ? 80 : 60 + Math.max(insets.bottom, 12),
+          paddingBottom: Math.max(insets.bottom, Platform.OS === 'web' ? 30 : 12),
         },
         tabBarActiveTintColor: Colors.primary.main,
         tabBarInactiveTintColor: Colors.gray[400],
-        tabBarLabelStyle: styles.tabBarLabel,
         tabBarItemStyle: styles.tabBarItem,
       }}
     >
