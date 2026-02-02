@@ -118,11 +118,11 @@ const MenuItem = ({ icon, label, value, onPress, danger, colors, isSpecial }: Me
   const [rainbowAnim] = React.useState(new Animated.Value(0));
 
   React.useEffect(() => {
-    if (isSpecial) {
+    if (isSpecial && Platform.OS !== 'web') {
       Animated.loop(
         Animated.timing(rainbowAnim, {
           toValue: 1,
-          duration: 3000,
+          duration: 6000, // Slower (6s)
           useNativeDriver: false,
         })
       ).start();
@@ -136,7 +136,61 @@ const MenuItem = ({ icon, label, value, onPress, danger, colors, isSpecial }: Me
     ]
   });
 
-  // Use Gold for Yellow for better visibility on white
+  const renderLabel = () => {
+    if (isSpecial) {
+      if (Platform.OS === 'web') {
+        return (
+          <View>
+            {/* Inject CSS for Web Gradient Animation */}
+            <style type="text/css">{`
+              @keyframes rainbow-move {
+                0% { background-position: 0% 50%; }
+                100% { background-position: 100% 50%; }
+              }
+              .rainbow-text {
+                background: linear-gradient(to left, #FF0000, #FF7F00, #D4AF37, #008000, #0000FF, #4B0082, #9400D3, #FF0000);
+                background-size: 200% auto;
+                -webkit-background-clip: text;
+                background-clip: text;
+                color: transparent;
+                animation: rainbow-move 4s linear infinite;
+              }
+            `}</style>
+            <Text
+              // @ts-ignore: className is supported in React Native Web
+              className="rainbow-text"
+              style={[
+                styles.menuItemLabel,
+                { opacity: 1 } // Ensure visibility
+              ]}
+            >
+              {label}
+            </Text>
+          </View>
+        );
+      } else {
+        // Native: Color Cycle
+        return (
+          <Animated.Text style={[
+            styles.menuItemLabel,
+            { color: rainbowColor } // Original weight (removed bold)
+          ]}>
+            {label}
+          </Animated.Text>
+        );
+      }
+    }
+
+    return (
+      <Text style={[
+        styles.menuItemLabel,
+        { color: colors?.text.primary || Colors.text.primary },
+        danger && styles.menuItemLabelDanger
+      ]}>
+        {label}
+      </Text>
+    );
+  };
 
   return (
     <Pressable
@@ -149,22 +203,7 @@ const MenuItem = ({ icon, label, value, onPress, danger, colors, isSpecial }: Me
     >
       <View style={styles.menuItemLeft}>
         <Text style={styles.menuItemIcon}>{icon}</Text>
-        {isSpecial ? (
-          <Animated.Text style={[
-            styles.menuItemLabel,
-            { color: rainbowColor, fontWeight: '800' }
-          ]}>
-            {label}
-          </Animated.Text>
-        ) : (
-          <Text style={[
-            styles.menuItemLabel,
-            { color: colors?.text.primary || Colors.text.primary },
-            danger && styles.menuItemLabelDanger
-          ]}>
-            {label}
-          </Text>
-        )}
+        {renderLabel()}
       </View>
       {value ? (
         <Text style={[styles.menuItemValue, { color: colors?.text.secondary }]}>{value}</Text>
