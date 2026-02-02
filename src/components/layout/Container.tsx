@@ -21,7 +21,11 @@ export const Container: React.FC<ContainerProps> = ({
 
     // Web: constrain width
     return (
-        <View style={[styles.webBackground, style]} {...props}>
+        <View style={[
+            styles.webBackground,
+            style,
+            Platform.OS === 'web' && { height: '100dvh' as any, minHeight: '100dvh' as any }
+        ]} {...props}>
             <View style={[
                 styles.container,
                 { maxWidth },
