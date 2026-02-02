@@ -114,32 +114,66 @@ interface MenuItemProps {
   colors?: any;
 }
 
-const MenuItem = ({ icon, label, value, onPress, danger, colors }: MenuItemProps) => (
-  <Pressable
-    style={({ pressed }) => [
-      styles.menuItem,
-      { borderBottomColor: colors?.gray[200] || Colors.gray[200] },
-      pressed && { backgroundColor: colors?.background.secondary || Colors.gray[50] },
-    ]}
-    onPress={onPress}
-  >
-    <View style={styles.menuItemLeft}>
-      <Text style={styles.menuItemIcon}>{icon}</Text>
-      <Text style={[
-        styles.menuItemLabel,
-        { color: colors?.text.primary || Colors.text.primary },
-        danger && styles.menuItemLabelDanger
-      ]}>
-        {label}
-      </Text>
-    </View>
-    {value ? (
-      <Text style={[styles.menuItemValue, { color: colors?.text.secondary }]}>{value}</Text>
-    ) : (
-      <Text style={[styles.menuItemArrow, { color: colors?.gray[400] }]}>›</Text>
-    )}
-  </Pressable>
-);
+const MenuItem = ({ icon, label, value, onPress, danger, colors, isSpecial }: MenuItemProps & { isSpecial?: boolean }) => {
+  const [rainbowAnim] = React.useState(new Animated.Value(0));
+
+  React.useEffect(() => {
+    if (isSpecial) {
+      Animated.loop(
+        Animated.timing(rainbowAnim, {
+          toValue: 1,
+          duration: 3000,
+          useNativeDriver: false,
+        })
+      ).start();
+    }
+  }, [isSpecial]);
+
+  const rainbowColor = rainbowAnim.interpolate({
+    inputRange: [0, 0.14, 0.28, 0.42, 0.57, 0.71, 0.85, 1],
+    outputRange: [
+      '#FF0000', '#FF7F00', '#D4AF37', '#008000', '#0000FF', '#4B0082', '#9400D3', '#FF0000'
+    ]
+  });
+
+  // Use Gold for Yellow for better visibility on white
+
+  return (
+    <Pressable
+      style={({ pressed }) => [
+        styles.menuItem,
+        { borderBottomColor: colors?.gray[200] || Colors.gray[200] },
+        pressed && { backgroundColor: colors?.background.secondary || Colors.gray[50] },
+      ]}
+      onPress={onPress}
+    >
+      <View style={styles.menuItemLeft}>
+        <Text style={styles.menuItemIcon}>{icon}</Text>
+        {isSpecial ? (
+          <Animated.Text style={[
+            styles.menuItemLabel,
+            { color: rainbowColor, fontWeight: '800' }
+          ]}>
+            {label}
+          </Animated.Text>
+        ) : (
+          <Text style={[
+            styles.menuItemLabel,
+            { color: colors?.text.primary || Colors.text.primary },
+            danger && styles.menuItemLabelDanger
+          ]}>
+            {label}
+          </Text>
+        )}
+      </View>
+      {value ? (
+        <Text style={[styles.menuItemValue, { color: colors?.text.secondary }]}>{value}</Text>
+      ) : (
+        <Text style={[styles.menuItemArrow, { color: colors?.gray[400] }]}>›</Text>
+      )}
+    </Pressable>
+  );
+};
 
 // 학교 선택 버튼
 const SchoolTypeButton = ({
@@ -792,6 +826,7 @@ export default function ProfileScreen() {
               value=""
               onPress={() => Linking.openURL('https://fun.uncledison.com')}
               colors={colors}
+              isSpecial={true}
             />
             <MenuItem
               icon="📜"
