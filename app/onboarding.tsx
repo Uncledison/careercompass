@@ -122,6 +122,7 @@ export default function OnboardingScreen() {
           character: selectedChar,
           schoolType: schoolType,
           grade: grade,
+          heartCount: 0,
         });
         router.replace('/(tabs)');
       } catch (error) {
