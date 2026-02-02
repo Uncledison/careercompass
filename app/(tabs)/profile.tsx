@@ -787,8 +787,8 @@ export default function ProfileScreen() {
               colors={colors}
             />
             <MenuItem
-              icon="🌐"
-              label="웹사이트 방문"
+              icon="🎮"
+              label="Fun.Uncle 놀러가기"
               value=""
               onPress={() => Linking.openURL('https://fun.uncledison.com')}
               colors={colors}
