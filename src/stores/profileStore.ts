@@ -21,6 +21,7 @@ export interface UserProfile {
   heartCount: number;
   createdAt: number;
   updatedAt: number;
+  isOnboarded: boolean;
 }
 
 interface ProfileState {
@@ -84,6 +85,7 @@ const defaultProfile: UserProfile = {
   grade: 5,
   character: 'Female_1',
   heartCount: 0,
+  isOnboarded: false,
   createdAt: Date.now(),
   updatedAt: Date.now(),
 };
@@ -99,6 +101,10 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
       const stored = await storage.getItem(STORAGE_KEY);
       if (stored) {
         const profile: UserProfile = JSON.parse(stored);
+        // Migration: If isOnboarded is undefined (existing user), assume true
+        if (profile.isOnboarded === undefined) {
+          profile.isOnboarded = true;
+        }
         set({ profile });
       } else {
         // 기본 프로필 설정
