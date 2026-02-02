@@ -24,11 +24,16 @@ import Animated, {
 import LottieView from 'lottie-react-native';
 import { Colors, Spacing, BorderRadius, Shadow, TextStyle } from '../../constants';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-// 슬라이더 너비: 화면너비 - 양쪽 이모지(44*2) - gap(8*2) - 양쪽 여백(16*2)
-const SLIDER_WIDTH = SCREEN_WIDTH - 152;
+import { useWindowDimensions } from 'react-native';
+
+// ...
+
+// 상수 제거: 컴포넌트 내부에서 계산
+// const { width: SCREEN_WIDTH } = Dimensions.get('window');
+// const SLIDER_WIDTH = SCREEN_WIDTH - 152;
 const THUMB_SIZE = 32;
 const TRACK_HEIGHT = 8;
+const MAX_APP_WIDTH = 500; // 앱 최대 너비 제한에 맞춤
 
 interface EmotionSliderProps {
   value: number; // 1~5
@@ -36,29 +41,17 @@ interface EmotionSliderProps {
   disabled?: boolean;
 }
 
-// Lottie 이모지 애니메이션
-const LottieEmoji = ({ type }: { type: 'sad' | 'happy' }) => (
-  <View style={styles.lottieContainer}>
-    <LottieView
-      source={
-        type === 'sad'
-          ? require('../../../assets/sad-emoji.json')
-          : require('../../../assets/smiley-emoji.json')
-      }
-      autoPlay
-      loop
-      speed={1}
-      style={styles.lottieEmoji}
-      resizeMode="cover"
-    />
-  </View>
-);
+// ...
 
 export const EmotionSlider: React.FC<EmotionSliderProps> = ({
   value,
   onValueChange,
   disabled = false,
 }) => {
+  const { width: windowWidth } = useWindowDimensions();
+  // 앱 컨테이너 너비(최대 500)에 맞춰 슬라이더 너비 계산
+  const SLIDER_WIDTH = Math.min(windowWidth, MAX_APP_WIDTH) - 152;
+
   // 슬라이더 위치 상태
   const translateX = useSharedValue(((value - 1) / 4) * SLIDER_WIDTH);
 
