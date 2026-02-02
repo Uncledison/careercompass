@@ -43,6 +43,24 @@ interface EmotionSliderProps {
 
 // ...
 
+// Lottie 이모지 애니메이션
+const LottieEmoji = ({ type }: { type: 'sad' | 'happy' }) => (
+  <View style={styles.lottieContainer}>
+    <LottieView
+      source={
+        type === 'sad'
+          ? require('../../../assets/sad-emoji.json')
+          : require('../../../assets/smiley-emoji.json')
+      }
+      autoPlay
+      loop
+      speed={1}
+      style={styles.lottieEmoji}
+      resizeMode="cover"
+    />
+  </View>
+);
+
 export const EmotionSlider: React.FC<EmotionSliderProps> = ({
   value,
   onValueChange,

@@ -461,7 +461,6 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    // height removed from here, dynamic inline
   },
   // ... (rest of styles)
   safeArea: {
@@ -616,7 +615,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   modalContent: {
-    width: SCREEN_WIDTH - 60,
+    width: '85%',
+    maxWidth: 440,
     backgroundColor: Colors.background.primary,
     borderRadius: BorderRadius.xxl,
     padding: Spacing.xl,
