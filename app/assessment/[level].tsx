@@ -665,8 +665,8 @@ const styles = StyleSheet.create({
   // 축하 애니메이션 스타일
   confettiAnimation: {
     position: 'absolute',
-    width: SCREEN_WIDTH,
-    height: SCREEN_HEIGHT,
+    width: '100%',
+    height: '100%',
     zIndex: 0,
   },
   celebrationCharacterContainer: {
