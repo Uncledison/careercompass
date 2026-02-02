@@ -790,7 +790,7 @@ export default function ProfileScreen() {
               icon="🌐"
               label="웹사이트 방문"
               value=""
-              onPress={() => Linking.openURL('https://ai.uncledison.com')}
+              onPress={() => Linking.openURL('https://fun.uncledison.com')}
               colors={colors}
             />
             <MenuItem

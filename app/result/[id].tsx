@@ -366,12 +366,12 @@ const SummaryCard = ({
 
           {/* 10. URL Footer */}
           <Text style={[styles.urlFooter, { color: 'rgba(255,255,255,0.75)' }]}>
-            https://ai-careercompass.vercel.app
+            https://fun.uncledison.com/career
           </Text>
 
         </LinearGradient>
       </View>
-    </Animated.View>
+    </Animated.View >
   );
 };
 
