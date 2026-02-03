@@ -191,6 +191,46 @@ const getLevelRoute = (level: string): string => {
   return level;
 };
 
+const HoverableHeaderTitle = () => {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const handleHoverIn = () => {
+    Animated.timing(scaleAnim, {
+      toValue: 1.1,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const handleHoverOut = () => {
+    Animated.timing(scaleAnim, {
+      toValue: 1,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  return (
+    <Pressable
+      style={styles.headerLeft}
+      onHoverIn={handleHoverIn}
+      onHoverOut={handleHoverOut}
+      onPress={() => {
+        if (Platform.OS === 'web') {
+          window.location.href = 'https://fun.uncledison.com';
+        } else {
+          require('react-native').Linking.openURL('https://fun.uncledison.com');
+        }
+      }}
+    >
+      <Animated.View style={{ flexDirection: 'row', alignItems: 'center', transform: [{ scale: scaleAnim }] }}>
+        <Text style={[styles.userName, { color: Colors.primary.main, fontSize: 28 }]}>Fun.</Text>
+        <Text style={[styles.userName, { fontSize: 28 }]}>Uncle</Text>
+      </Animated.View>
+    </Pressable>
+  );
+};
+
 export default function HomeScreen() {
   const router = useRouter();
   const [savedProgress, setSavedProgress] = useState<SavedAssessmentState | null>(null);
@@ -323,27 +363,11 @@ export default function HomeScreen() {
       >
         {/* 헤더 */}
         <View style={styles.header}>
-          <Pressable
-            style={styles.headerLeft}
-            onPress={() => {
-              if (Platform.OS === 'web') {
-                window.location.href = 'https://fun.uncledison.com';
-              } else {
-                // React Native Linking handled below via import if needed, or simple web-focused fix
-                // Assuming Linking is imported or using web logic for now as user emphasizes web link
-                require('react-native').Linking.openURL('https://fun.uncledison.com');
-              }
-            }}
-          >
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Text style={[styles.userName, { color: Colors.primary.main, fontSize: 28 }]}>Fun.</Text>
-              <Text style={[styles.userName, { fontSize: 28 }]}>Uncle</Text>
-            </View>
-          </Pressable>
+          <HoverableHeaderTitle />
 
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-            <View style={{ alignItems: 'flex-end' }}>
-              <Text style={{ fontSize: 13, color: Colors.text.secondary }}>안녕!</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 4 }}>
+              <Text style={{ fontSize: 14, color: Colors.text.secondary }}>안녕!</Text>
               <Text style={{ fontSize: 17, fontWeight: '700', color: Colors.text.primary }}>
                 {profile?.nickname || '탐험가'}님
               </Text>
