@@ -325,34 +325,51 @@ export default function HomeScreen() {
         <View style={styles.header}>
           <Pressable
             style={styles.headerLeft}
-            onPress={() => router.push('/(tabs)/profile')}
+            onPress={() => {
+              if (Platform.OS === 'web') {
+                window.location.href = 'https://fun.uncledison.com';
+              } else {
+                // React Native Linking handled below via import if needed, or simple web-focused fix
+                // Assuming Linking is imported or using web logic for now as user emphasizes web link
+                require('react-native').Linking.openURL('https://fun.uncledison.com');
+              }
+            }}
           >
-            <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 4 }}>
-              <Text style={styles.greeting}>안녕하세요!</Text>
-              <Text style={styles.userName}>{profile?.nickname || '탐험가'}님</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Text style={[styles.userName, { color: Colors.primary.main, fontSize: 28 }]}>Fun.</Text>
+              <Text style={[styles.userName, { fontSize: 28 }]}>Uncle</Text>
             </View>
           </Pressable>
-          <Pressable
-            onPress={() => router.push('/(tabs)/profile')}
-            style={({ pressed }) => pressed && { opacity: 0.7 }}
-          >
-            <View style={styles.smallCharacterContainer}>
-              <ModelViewer3D
-                modelPath={`/models/characters/${profile?.character || 'Female_1'}.glb`}
-                animations={['Wave']}
-                width={56}
-                height={56}
-                autoRotate={false}
-                cameraDistance="8.0m"
-                cameraTarget="0m 1.2m 0m"
-                disableControls={true}
-                backgroundColor={Colors.primary.main + '15'}
-                borderRadius={28}
-              />
-              {/* 터치 이벤트 가로채기용 오버레이 */}
-              <View style={StyleSheet.absoluteFill} />
+
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <View style={{ alignItems: 'flex-end' }}>
+              <Text style={{ fontSize: 13, color: Colors.text.secondary }}>안녕!</Text>
+              <Text style={{ fontSize: 17, fontWeight: '700', color: Colors.text.primary }}>
+                {profile?.nickname || '탐험가'}님
+              </Text>
             </View>
-          </Pressable>
+            <Pressable
+              onPress={() => router.push('/(tabs)/profile')}
+              style={({ pressed }) => pressed && { opacity: 0.7 }}
+            >
+              <View style={styles.smallCharacterContainer}>
+                <ModelViewer3D
+                  modelPath={`/models/characters/${profile?.character || 'Female_1'}.glb`}
+                  animations={['Wave']}
+                  width={56}
+                  height={56}
+                  autoRotate={false}
+                  cameraDistance="8.0m"
+                  cameraTarget="0m 1.2m 0m"
+                  disableControls={true}
+                  backgroundColor={Colors.primary.main + '15'}
+                  borderRadius={28}
+                />
+                {/* 터치 이벤트 가로채기용 오버레이 */}
+                <View style={StyleSheet.absoluteFill} />
+              </View>
+            </Pressable>
+          </View>
         </View>
 
         {/* 이어서 하기 카드 (저장된 진행 상태가 있을 때) */}
