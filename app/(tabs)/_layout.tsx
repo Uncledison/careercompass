@@ -111,60 +111,65 @@ const StatsIcon = ({ focused }: { focused: boolean }) => (
   </Svg>
 );
 
+import { KakaoFloatingButton } from '../../src/components/KakaoFloatingButton';
+
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
 
   return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarShowLabel: false,
-        tabBarStyle: {
-          ...styles.tabBar,
-          height: Platform.OS === 'web' ? 80 : 60 + Math.max(insets.bottom, 12),
-          paddingBottom: Math.max(insets.bottom, Platform.OS === 'web' ? 30 : 12),
-        },
-        tabBarActiveTintColor: Colors.primary.main,
-        tabBarInactiveTintColor: Colors.gray[400],
-        tabBarItemStyle: styles.tabBarItem,
-      }}
-    >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: '홈',
-          tabBarIcon: ({ focused }) => <HomeIcon focused={focused} />,
+    <>
+      <Tabs
+        screenOptions={{
+          headerShown: false,
+          tabBarShowLabel: false,
+          tabBarStyle: {
+            ...styles.tabBar,
+            height: Platform.OS === 'web' ? 80 : 60 + Math.max(insets.bottom, 12),
+            paddingBottom: Math.max(insets.bottom, Platform.OS === 'web' ? 30 : 12),
+          },
+          tabBarActiveTintColor: Colors.primary.main,
+          tabBarInactiveTintColor: Colors.gray[400],
+          tabBarItemStyle: styles.tabBarItem,
         }}
-      />
-      <Tabs.Screen
-        name="assessment"
-        options={{
-          title: '검사',
-          tabBarIcon: ({ focused }) => <AssessmentIcon focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
-        name="history"
-        options={{
-          title: '기록',
-          tabBarIcon: ({ focused }) => <HistoryIcon focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
-        name="stats"
-        options={{
-          title: '분석',
-          tabBarIcon: ({ focused }) => <StatsIcon focused={focused} />,
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: '내 정보',
-          tabBarIcon: ({ focused }) => <ProfileIcon focused={focused} />,
-        }}
-      />
-    </Tabs>
+      >
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: '홈',
+            tabBarIcon: ({ focused }) => <HomeIcon focused={focused} />,
+          }}
+        />
+        <Tabs.Screen
+          name="assessment"
+          options={{
+            title: '검사',
+            tabBarIcon: ({ focused }) => <AssessmentIcon focused={focused} />,
+          }}
+        />
+        <Tabs.Screen
+          name="history"
+          options={{
+            title: '기록',
+            tabBarIcon: ({ focused }) => <HistoryIcon focused={focused} />,
+          }}
+        />
+        <Tabs.Screen
+          name="stats"
+          options={{
+            title: '분석',
+            tabBarIcon: ({ focused }) => <StatsIcon focused={focused} />,
+          }}
+        />
+        <Tabs.Screen
+          name="profile"
+          options={{
+            title: '내 정보',
+            tabBarIcon: ({ focused }) => <ProfileIcon focused={focused} />,
+          }}
+        />
+      </Tabs>
+      <KakaoFloatingButton />
+    </>
   );
 }
 
