@@ -36,7 +36,7 @@ export const KakaoFloatingButton = () => {
                 content: {
                     title: 'CareerCompass - 나의 진로 찾기',
                     description: '성격 유형부터 추천 직업까지, AI가 분석해주는 나만의 커리어! 🧭',
-                    imageUrl: 'https://fun.uncledison.com/assets/career_banner.png',
+                    imageUrl: 'https://fun.uncledison.com/assets/career_share_square.png',
                     link: {
                         mobileWebUrl: 'https://fun.uncledison.com/career',
                         webUrl: 'https://fun.uncledison.com/career',
