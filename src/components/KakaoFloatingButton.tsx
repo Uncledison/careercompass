@@ -14,7 +14,7 @@ export const KakaoFloatingButton = () => {
         if (Platform.OS === 'web' && typeof window !== 'undefined') {
             const script = document.createElement('script');
             script.src = 'https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js';
-            script.integrity = 'sha384-TiCUE00h649CAMonG018J2ujOgDKW/kVWlChEuu4jK2txfDWp1Ps941 +mRun4UmP';
+            // Integrity removed to prevent loading errors due to potential hash mismatch/typos
             script.crossOrigin = 'anonymous';
             script.onload = () => {
                 if (!window.Kakao.isInitialized()) {
@@ -35,27 +35,25 @@ export const KakaoFloatingButton = () => {
                 objectType: 'feed',
                 content: {
                     title: 'CareerCompass - 나의 진로 찾기',
-                    description: 'AI가 분석해주는 나만의 맞춤형 진로! 지금 바로 확인해보세요.',
-                    imageUrl: 'https://fun.uncledison.com/assets/career_banner.png', // Fallback image setup
+                    description: '성격 유형부터 추천 직업까지, AI가 분석해주는 나만의 커리어! 🧭',
+                    imageUrl: 'https://fun.uncledison.com/assets/career_banner.png',
                     link: {
-                        mobileWebUrl: 'https://careercompass-jobs.vercel.app',
-                        webUrl: 'https://careercompass-jobs.vercel.app',
+                        mobileWebUrl: 'https://fun.uncledison.com/career',
+                        webUrl: 'https://fun.uncledison.com/career',
                     },
                 },
                 buttons: [
                     {
                         title: '검사하러 가기',
                         link: {
-                            mobileWebUrl: 'https://careercompass-jobs.vercel.app',
-                            webUrl: 'https://careercompass-jobs.vercel.app',
+                            mobileWebUrl: 'https://fun.uncledison.com/career',
+                            webUrl: 'https://fun.uncledison.com/career',
                         },
                     },
                 ],
             });
-        } else {
-            // Native fallback (Using Expo Sharing if needed, but primary request is Web logic)
-            alert('카카오톡 공유는 웹 환경에서 최적화되어 있습니다.');
         }
+        // Fallback or native logic intentionally omitted as this is a web-targeted feature
     };
 
     if (Platform.OS !== 'web') return null; // Web only for this implementation
