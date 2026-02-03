@@ -217,7 +217,17 @@ const HoverableHeaderTitle = () => {
       onHoverOut={handleHoverOut}
       onPress={() => {
         if (Platform.OS === 'web') {
-          window.location.href = 'https://fun.uncledison.com';
+          // Check if running in iframe and try to navigate top window
+          try {
+            if (window.top) {
+              window.top.location.href = 'https://fun.uncledison.com';
+            } else {
+              window.location.href = 'https://fun.uncledison.com';
+            }
+          } catch (e) {
+            // Fallback if cross-origin blocking occurs (though navigation usually works)
+            window.location.href = 'https://fun.uncledison.com';
+          }
         } else {
           require('react-native').Linking.openURL('https://fun.uncledison.com');
         }
