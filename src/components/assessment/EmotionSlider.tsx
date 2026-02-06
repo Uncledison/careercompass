@@ -81,11 +81,11 @@ export const EmotionSlider: React.FC<EmotionSliderProps> = ({
   useEffect(() => {
     arrowOpacity.value = withRepeat(
       withSequence(
-        withTiming(0.3, { duration: 800, easing: Easing.inOut(Easing.ease) }),
-        withTiming(1, { duration: 800, easing: Easing.inOut(Easing.ease) })
+        withTiming(0.2, { duration: 600 }), // 600ms 동안 0.2로 어두워짐
+        withTiming(1, { duration: 600 })    // 600ms 동안 1.0으로 밝아짐
       ),
-      -1,
-      true
+      -1, // 무한 반복
+      true // 역재생 (부드럽게 연결)
     );
   }, []);
 
