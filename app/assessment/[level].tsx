@@ -688,8 +688,8 @@ export default function AssessmentScreen() {
                   modelPath={MODEL_PATHS[level || 'elementary'][currentStage].path}
                   animations={MODEL_PATHS[level || 'elementary'][currentStage].animations}
                   cameraDistance={MODEL_PATHS[level || 'elementary'][currentStage].cameraDistance}
-                  width={210}
-                  height={200}
+                  width={190}
+                  height={180}
                   autoRotate={true}
                   borderRadius={16}
                 />
@@ -697,7 +697,7 @@ export default function AssessmentScreen() {
                 <Character3D
                   stage={currentStage}
                   level={level as 'elementary' | 'middle' | 'high'}
-                  size={110}
+                  size={100}
                 />
               )}
             </Animated.View>
@@ -886,7 +886,7 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.xl,
   },
   characterSection: {
-    height: 200,
+    height: 180,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing.md,
