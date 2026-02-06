@@ -19,15 +19,17 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
+  withRepeat,
+  withSequence,
+  withTiming,
   runOnJS,
+  Easing,
 } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import LottieView from 'lottie-react-native';
 import { Colors, Spacing, BorderRadius, Shadow, TextStyle } from '../../constants';
 
 import { useWindowDimensions } from 'react-native';
-
-// ...
 
 // 상수 제거: 컴포넌트 내부에서 계산
 // const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -41,8 +43,6 @@ interface EmotionSliderProps {
   onValueChange: (value: number) => void;
   disabled?: boolean;
 }
-
-// ...
 
 // Lottie 이모지 애니메이션
 const LottieEmoji = ({ type }: { type: 'sad' | 'happy' }) => (
@@ -73,6 +73,25 @@ export const EmotionSlider: React.FC<EmotionSliderProps> = ({
 
   // 슬라이더 위치 상태
   const translateX = useSharedValue(((value - 1) / 4) * SLIDER_WIDTH);
+
+  // 화살표 애니메이션 상태 (투명도)
+  const arrowOpacity = useSharedValue(1);
+
+  // 화살표 깜빡임 애니메이션 시작
+  useEffect(() => {
+    arrowOpacity.value = withRepeat(
+      withSequence(
+        withTiming(0.3, { duration: 800, easing: Easing.inOut(Easing.ease) }),
+        withTiming(1, { duration: 800, easing: Easing.inOut(Easing.ease) })
+      ),
+      -1,
+      true
+    );
+  }, []);
+
+  const arrowAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: arrowOpacity.value,
+  }));
 
   // value prop이 변경될 때 슬라이더 위치 동기화
   useEffect(() => {
@@ -146,17 +165,27 @@ export const EmotionSlider: React.FC<EmotionSliderProps> = ({
     }
   };
 
+  // 화살표 표시 로직: 1은 오른쪽만, 5는 왼쪽만, 나머지는 양쪽
+  const showLeftArrow = value > 1;
+  const showRightArrow = value < 5;
+
   return (
     <View style={styles.container}>
       {/* 현재 값 라벨 */}
       <View style={styles.labelContainer}>
         <View style={styles.labelContent}>
-          {value === 3 && (
-            <Ionicons name="chevron-back" size={20} color={Colors.primary.main} />
+          {showLeftArrow && (
+            <Animated.View style={arrowAnimatedStyle}>
+              <Ionicons name="chevron-back" size={20} color={Colors.primary.main} />
+            </Animated.View>
           )}
+
           <Text style={styles.label}>{getLabel(value)}</Text>
-          {value === 3 && (
-            <Ionicons name="chevron-forward" size={20} color={Colors.primary.main} />
+
+          {showRightArrow && (
+            <Animated.View style={arrowAnimatedStyle}>
+              <Ionicons name="chevron-forward" size={20} color={Colors.primary.main} />
+            </Animated.View>
           )}
         </View>
       </View>
@@ -238,10 +267,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    minWidth: 120, // 화살표가 있거나 없을 때 중앙 정렬 유지를 위한 최소 너비
+    justifyContent: 'center',
   },
   label: {
     ...TextStyle.headline,
     color: Colors.primary.main,
+    textAlign: 'center',
   },
   sliderRow: {
     flexDirection: 'row',
