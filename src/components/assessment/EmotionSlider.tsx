@@ -21,6 +21,7 @@ import Animated, {
   withSpring,
   runOnJS,
 } from 'react-native-reanimated';
+import { Ionicons } from '@expo/vector-icons';
 import LottieView from 'lottie-react-native';
 import { Colors, Spacing, BorderRadius, Shadow, TextStyle } from '../../constants';
 
@@ -149,7 +150,15 @@ export const EmotionSlider: React.FC<EmotionSliderProps> = ({
     <View style={styles.container}>
       {/* 현재 값 라벨 */}
       <View style={styles.labelContainer}>
-        <Text style={styles.label}>{getLabel(value)}</Text>
+        <View style={styles.labelContent}>
+          {value === 3 && (
+            <Ionicons name="chevron-back" size={20} color={Colors.primary.main} />
+          )}
+          <Text style={styles.label}>{getLabel(value)}</Text>
+          {value === 3 && (
+            <Ionicons name="chevron-forward" size={20} color={Colors.primary.main} />
+          )}
+        </View>
       </View>
 
       {/* 슬라이더 영역 */}
@@ -224,6 +233,11 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
     backgroundColor: Colors.primary.main + '15',
     borderRadius: BorderRadius.full,
+  },
+  labelContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   label: {
     ...TextStyle.headline,
