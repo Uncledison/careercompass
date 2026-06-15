@@ -26,8 +26,8 @@ export default function Root({ children }: PropsWithChildren) {
                 <meta property="og:description" content="성격 유형부터 추천 직업까지, AI가 분석하는 우리 아이 맞춤 진로가이드. 5분 진로적성 검사." />
                 <meta property="og:url" content="https://career.uncledison.com/" />
                 <meta property="og:image" content="https://fun.uncledison.com/assets/career_share_square_v2.png" />
-                {/* 사이트 인증: 서치콘솔/네이버에서 코드 받으면 아래 두 줄 채우기
-                <meta name="google-site-verification" content="" />
+                <meta name="google-site-verification" content="gafyxybm6dpWY1dRDbk02J00e05KAD5QRgg34khfozM" />
+                {/* 네이버 인증: 코드 받으면 아래 채우기
                 <meta name="naver-site-verification" content="" /> */}
 
                 <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
