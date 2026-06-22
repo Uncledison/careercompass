@@ -18,7 +18,7 @@ export const KakaoFloatingButton = () => {
             script.crossOrigin = 'anonymous';
             script.onload = () => {
                 if (!window.Kakao.isInitialized()) {
-                    window.Kakao.init('8e68190d1ba932955a557fbf0ae0b659');
+                    window.Kakao.init('b176649d7c304af7de3437e1fbeed519');
                 }
             };
             document.head.appendChild(script);
@@ -28,7 +28,7 @@ export const KakaoFloatingButton = () => {
     const handleShare = () => {
         if (Platform.OS === 'web' && window.Kakao) {
             if (!window.Kakao.isInitialized()) {
-                window.Kakao.init('8e68190d1ba932955a557fbf0ae0b659');
+                window.Kakao.init('b176649d7c304af7de3437e1fbeed519');
             }
 
             window.Kakao.Share.sendDefault({
