@@ -38,16 +38,16 @@ export const KakaoFloatingButton = () => {
                     description: '성격 유형부터 추천 직업까지, AI가 분석해주는 나만의 커리어! 🧭',
                     imageUrl: 'https://fun.uncledison.com/assets/career_share_square_v2.png',
                     link: {
-                        mobileWebUrl: 'https://fun.uncledison.com/career',
-                        webUrl: 'https://fun.uncledison.com/career',
+                        mobileWebUrl: 'https://career.uncledison.com',
+                        webUrl: 'https://career.uncledison.com',
                     },
                 },
                 buttons: [
                     {
                         title: '검사하러 가기',
                         link: {
-                            mobileWebUrl: 'https://fun.uncledison.com/career',
-                            webUrl: 'https://fun.uncledison.com/career',
+                            mobileWebUrl: 'https://career.uncledison.com',
+                            webUrl: 'https://career.uncledison.com',
                         },
                     },
                 ],
